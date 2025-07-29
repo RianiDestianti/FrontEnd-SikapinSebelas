@@ -1,0 +1,631 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'detail.dart'; 
+
+class SiswaScreen extends StatefulWidget {
+  const SiswaScreen({Key? key}) : super(key: key);
+
+  @override
+  State<SiswaScreen> createState() => _SiswaScreenState();
+}
+
+class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin {
+  int _selectedFilter = 0;
+  String _searchQuery = '';
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  TextEditingController _searchController = TextEditingController();
+
+  final List<Map<String, dynamic>> students = [
+    {"name": "Ahmad Sudarji", "nisn": "23000001", "status": "Aman", "points": 20, "absent": 2},
+    {"name": "Agus Berto", "nisn": "23000002", "status": "Aman", "points": 0, "absent": 0},
+    {"name": "Bobby Dasta", "nisn": "23000003", "status": "Bermasalah", "points": -15, "absent": 5},
+    {"name": "Berto", "nisn": "23000004", "status": "Prioritas", "points": -25, "absent": 8},
+    {"name": "Celine Agustinus", "nisn": "23000006", "status": "Aman", "points": 10, "absent": 1},
+    {"name": "Diana Sari", "nisn": "23000007", "status": "Aman", "points": 15, "absent": 1},
+    {"name": "Eko Prasetyo", "nisn": "23000008", "status": "Bermasalah", "points": -10, "absent": 7},
+    {"name": "Fitri Handayani", "nisn": "23000009", "status": "Aman", "points": 25, "absent": 0},
+    {"name": "Gilang Ramadan", "nisn": "23000010", "status": "Prioritas", "points": -30, "absent": 10},
+    {"name": "Haniatul Kamilah", "nisn": "23000011", "status": "Aman", "points": 18, "absent": 2},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Map<String, dynamic>> getFilteredStudents() {
+    List<Map<String, dynamic>> filtered = List.from(students);
+    
+    if (_selectedFilter == 1) {
+      filtered = filtered.where((s) => s['status'] == 'Aman').toList();
+    } else if (_selectedFilter == 2) {
+      filtered = filtered.where((s) => 
+        s['status'] == 'Bermasalah' || s['status'] == 'Prioritas'
+      ).toList();
+    }
+    
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((s) => 
+        s['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
+        s['nisn'].toString().contains(_searchQuery)
+      ).toList();
+    }
+    
+    return filtered;
+  }
+
+  void _navigateToDetail(Map<String, dynamic> student) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetailScreen(student: student),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredStudents = getFilteredStudents();
+    
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(32),
+                      bottomRight: Radius.circular(32),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x200083EE),
+                        blurRadius: 20,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Container(width: 16, height: 2, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(1))),
+                                  Positioned(top: 8, child: Container(width: 16, height: 2, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(1)))),
+                                  Positioned(top: 16, child: Container(width: 16, height: 2, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(1)))),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      const Center(
+                                        child: Icon(Icons.notifications_outlined, color: Color(0xFF0083EE), size: 22),
+                                      ),
+                                      Positioned(
+                                        top: 10,
+                                        right: 10,
+                                        child: Container(
+                                          width: 10,
+                                          height: 10,
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                                            ),
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(0xFFFF6B6D).withOpacity(0.4),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 1),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(22),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFFF6B6D).withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(Icons.person, color: Colors.white, size: 22),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 28),
+                        
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Daftar Siswa XI RPL 2',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Semester Ganjil 2025/2026',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        Container(
+                          height: 50,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(25),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.search, color: Colors.white, size: 18),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _searchQuery = value;
+                                    });
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: 'Cari nama siswa...',
+                                    hintStyle: GoogleFonts.poppins(
+                                      color: const Color(0xFF9CA3AF),
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    color: const Color(0xFF1F2937),
+                                  ),
+                                ),
+                              ),
+                              if (_searchQuery.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _searchQuery = '';
+                                      _searchController.clear();
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    child: const Icon(
+                                      Icons.clear,
+                                      color: Color(0xFF6B7280),
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Daftar Siswa',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF1F2937),
+                                  ),
+                                ),
+                                if (_searchQuery.isNotEmpty || _selectedFilter != 0)
+                                  Text(
+                                    'Ditemukan ${filteredStudents.length} siswa',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: const Color(0xFF6B7280),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                _buildFilterChip('Semua', 0),
+                                const SizedBox(width: 8),
+                                _buildFilterChip('Aman', 1),
+                                const SizedBox(width: 8),
+                                _buildFilterChip('Bermasalah', 2),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      filteredStudents.isEmpty
+                          ? _buildEmptyState()
+                          : Column(
+                              children: filteredStudents.asMap().entries.map((entry) {
+                                return _buildStudentCard(entry.value, entry.key);
+                              }).toList(),
+                            ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String text, int index) {
+    bool isActive = _selectedFilter == index;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedFilter = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFF0083EE) : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isActive ? const Color(0xFF0083EE) : const Color(0xFFE5E7EB),
+          ),
+        ),
+        child: Text(
+          text,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isActive ? Colors.white : const Color(0xFF374151),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStudentCard(Map<String, dynamic> student, int index) {
+    return GestureDetector(
+      onTap: () => _navigateToDetail(student),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: _getStatusColor(student['status']).withOpacity(0.2),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEDBCC),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child: Text(
+                  student['name'][0].toUpperCase(),
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFEA580C),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    student['name'],
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1F2937),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'NISN: ${student['nisn']} • Absen: ${student['absent']}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: student['status'] == 'Aman' ? 0.8 : (student['status'] == 'Bermasalah' ? 0.4 : 0.2),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(student['status']),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${student['points'] > 0 ? '+' : ''}${student['points']}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: _getStatusColor(student['status']),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(student['status']).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    student['status'],
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: _getStatusColor(student['status']),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: const Color(0xFF9CA3AF),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+              ),
+              borderRadius: BorderRadius.circular(50),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0083EE).withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.search_off, color: Colors.white, size: 50),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Tidak ada siswa ditemukan',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Coba ubah filter atau kata kunci pencarian',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: const Color(0xFF9CA3AF),
+            ),
+          ),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _searchQuery = '';
+                _searchController.clear();
+                _selectedFilter = 0;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0083EE).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Text(
+                'Reset Filter',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Aman':
+        return const Color(0xFF10B981); 
+      case 'Bermasalah':
+        return const Color(0xFFEA580C); 
+      case 'Prioritas':
+        return const Color(0xFFFF6B6D); 
+      default:
+        return const Color(0xFF0083EE);
+    }
+  }
+}

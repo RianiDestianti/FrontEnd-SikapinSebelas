@@ -78,7 +78,6 @@ class _WalikelasNavigationState extends State<WalikelasNavigation> {
           height: 70,
           child: Stack(
             children: [
-              // Blue indicator line at top
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
@@ -95,7 +94,6 @@ class _WalikelasNavigationState extends State<WalikelasNavigation> {
                   ),
                 ),
               ),
-              // Content
               Center(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
