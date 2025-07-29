@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'beripoint.dart';
+import 'berinote.dart'; 
 
 class DetailScreen extends StatefulWidget {
   final Map<String, dynamic> student;
@@ -266,34 +268,73 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-                                    
                                     Expanded(
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-                                          ),
-                                          borderRadius: BorderRadius.circular(16),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFF0083EE).withOpacity(0.3),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 4),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          showPointPopup(context, widget.student['name']);
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
                                             ),
-                                          ],
-                                        ),
-                                        child: Text(
-                                          'Berikan Poin',
-                                          textAlign: TextAlign.center,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(16),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(0xFF0083EE).withOpacity(0.3),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Text(
+                                            'Berikan Poin',
+                                            textAlign: TextAlign.center,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
+                                    if (widget.student['status'] != 'Aman') ...[
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: GestureDetector(
+                                         onTap: () {
+  showBKNotePopup(context, widget.student['name'] ?? 'Nama Siswa');
+},
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(vertical: 12),
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [Color(0xFFFF6B6D), Color(0xFFEA580C)],
+                                              ),
+                                              borderRadius: BorderRadius.circular(16),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFFFF6B6D).withOpacity(0.3),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Text(
+                                              'Beri Catatan BK',
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ],
@@ -352,7 +393,6 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                             ),
                             child: Row(
                               children: [
-                                // Icon
                                 Container(
                                   width: 48,
                                   height: 48,

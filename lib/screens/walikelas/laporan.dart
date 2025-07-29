@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:skoring/screens/notifikasi.dart';
+import 'package:skoring/screens/profile.dart';
 
 class LaporanScreen extends StatefulWidget {
   const LaporanScreen({Key? key}) : super(key: key);
@@ -258,19 +260,16 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                                 Navigator.pop(context);
                               },
                               child: Container(
-                                width: 28,
-                                height: 28,
+                                width: 40,
+                                height: 40,
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    Container(width: 16, height: 2, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(1))),
-                                    Positioned(top: 8, child: Container(width: 16, height: 2, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(1)))),
-                                    Positioned(top: 16, child: Container(width: 16, height: 2, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(1)))),
-                                  ],
+                                child: const Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  color: Colors.white,
+                                  size: 18,
                                 ),
                               ),
                             ),
@@ -278,52 +277,61 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Profile 1 diklik')),
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const NotifikasiScreen()),
                                     );
                                   },
                                   child: Container(
-                                    width: 36,
-                                    height: 36,
+                                    width: 40,
+                                    height: 40,
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: Colors.white.withOpacity(0.2),
                                       borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
                                     ),
-                                    child: const Icon(Icons.person, color: Color(0xFF0083EE), size: 20),
+                                    child: const Icon(
+                                      Icons.notifications_rounded,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Profile 2 diklik')),
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 36,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
-                                      ),
-                                      borderRadius: BorderRadius.circular(18),
-                                    ),
-                                    child: const Icon(Icons.person, color: Colors.white, size: 20),
-                                  ),
-                                ),
+                               GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ProfileScreen()),
+    );
+  },
+  child: Container(
+    width: 40,
+    height: 40,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(30),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.1),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: const Icon(
+      Icons.person_rounded,
+      color: Color(0xFF0083EE),
+      size: 24,
+    ),
+  ),
+),
+                                const SizedBox(width: 8),
+                               
                               ],
                             ),
                           ],
                         ),
                         const SizedBox(height: 24),
-                        
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Column(
@@ -351,7 +359,6 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                           ),
                         ),
                         const SizedBox(height: 24),
-                        
                         Container(
                           height: 50,
                           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -427,7 +434,6 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                     ),
                   ),
                 ),
-                
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -454,7 +460,6 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                         ],
                       ),
                       const SizedBox(height: 12),
-                      
                       Row(
                         children: [
                           Expanded(
@@ -477,7 +482,6 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                         ],
                       ),
                       const SizedBox(height: 20),
-                      
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
@@ -538,7 +542,6 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
                       if (_filteredAndSortedStudents.isEmpty && _searchQuery.isNotEmpty)
                         Container(
                           padding: const EdgeInsets.all(40),
@@ -771,7 +774,6 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
               ),
             ),
             const SizedBox(width: 16),
-            // Student Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -827,7 +829,6 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
               ),
             ),
             const SizedBox(width: 16),
-            // Points
             Column(
               children: [
                 Text(
@@ -918,7 +919,6 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                 ],
               ),
               const SizedBox(height: 24),
-              
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -993,7 +993,6 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                 ),
               ),
               const SizedBox(height: 20),
-              
               Text(
                 'Aksi Cepat',
                 style: GoogleFonts.poppins(
