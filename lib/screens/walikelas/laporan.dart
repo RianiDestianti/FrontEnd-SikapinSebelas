@@ -2,6 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/screens/notifikasi.dart';
 import 'package:skoring/screens/profile.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:docx_template/docx_template.dart';
+import 'package:excel/excel.dart' as excel;
+import 'package:file_saver/file_saver.dart';
+import 'dart:typed_data';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class LaporanScreen extends StatefulWidget {
   const LaporanScreen({Key? key}) : super(key: key);
@@ -25,7 +34,12 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
       'pelanggaran': 3,
       'isPositive': true,
       'color': const Color(0xFF10B981),
-      'avatar': 'AP'
+      'avatar': 'AP',
+      'scores': [
+        {'keterangan': 'Terlibat Tawuran', 'tanggal': '12 Juli 2025', 'poin': -45, 'type': 'pelanggaran'},
+        {'keterangan': 'Juara 1 Olimpiade', 'tanggal': '10 Juli 2025', 'poin': 50, 'type': 'apresiasi'},
+        {'keterangan': 'Membantu Guru', 'tanggal': '8 Juli 2025', 'poin': 22, 'type': 'apresiasi'},
+      ]
     },
     {
       'name': 'Ahmad Lutfi Khairul',
@@ -34,7 +48,12 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
       'pelanggaran': 50,
       'isPositive': false,
       'color': const Color(0xFFFF6B6D),
-      'avatar': 'AL'
+      'avatar': 'AL',
+      'scores': [
+        {'keterangan': 'Terlibat Tawuran', 'tanggal': '12 Juli 2025', 'poin': -45, 'type': 'pelanggaran'},
+        {'keterangan': 'Datang Terlambat', 'tanggal': '11 Juli 2025', 'poin': -5, 'type': 'pelanggaran'},
+        {'keterangan': 'Membantu Teman', 'tanggal': '9 Juli 2025', 'poin': 5, 'type': 'apresiasi'},
+      ]
     },
     {
       'name': 'Arga Teja',
@@ -43,7 +62,11 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
       'pelanggaran': 20,
       'isPositive': false,
       'color': const Color(0xFFFF6B6D),
-      'avatar': 'AT'
+      'avatar': 'AT',
+      'scores': [
+        {'keterangan': 'Tidak Mengerjakan PR', 'tanggal': '13 Juli 2025', 'poin': -20, 'type': 'pelanggaran'},
+        {'keterangan': 'Membantu Kebersihan', 'tanggal': '10 Juli 2025', 'poin': 12, 'type': 'apresiasi'},
+      ]
     },
     {
       'name': 'Budi Santoso',
@@ -52,7 +75,12 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
       'pelanggaran': 5,
       'isPositive': true,
       'color': const Color(0xFF10B981),
-      'avatar': 'BS'
+      'avatar': 'BS',
+      'scores': [
+        {'keterangan': 'Juara 1 Lomba Desain', 'tanggal': '14 Juli 2025', 'poin': 50, 'type': 'apresiasi'},
+        {'keterangan': 'Aktif di Kelas', 'tanggal': '12 Juli 2025', 'poin': 30, 'type': 'apresiasi'},
+        {'keterangan': 'Terlambat', 'tanggal': '11 Juli 2025', 'poin': -5, 'type': 'pelanggaran'},
+      ]
     },
     {
       'name': 'Citra Dewi',
@@ -61,7 +89,12 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
       'pelanggaran': 8,
       'isPositive': true,
       'color': const Color(0xFF10B981),
-      'avatar': 'CD'
+      'avatar': 'CD',
+      'scores': [
+        {'keterangan': 'Terlibat Tawuran', 'tanggal': '12 Juli 2025', 'poin': -45, 'type': 'pelanggaran'},
+        {'keterangan': 'Membantu Guru', 'tanggal': '10 Juli 2025', 'poin': 20, 'type': 'apresiasi'},
+        {'keterangan': 'Piket Kelas', 'tanggal': '8 Juli 2025', 'poin': 15, 'type': 'apresiasi'},
+      ]
     },
     {
       'name': 'Deni Ramadan',
@@ -70,7 +103,11 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
       'pelanggaran': 25,
       'isPositive': false,
       'color': const Color(0xFFFF6B6D),
-      'avatar': 'DR'
+      'avatar': 'DR',
+      'scores': [
+        {'keterangan': 'Bolos Sekolah', 'tanggal': '13 Juli 2025', 'poin': -25, 'type': 'pelanggaran'},
+        {'keterangan': 'Membantu Teman', 'tanggal': '9 Juli 2025', 'poin': 10, 'type': 'apresiasi'},
+      ]
     },
     {
       'name': 'Eka Putri',
@@ -79,7 +116,12 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
       'pelanggaran': 5,
       'isPositive': true,
       'color': const Color(0xFF10B981),
-      'avatar': 'EP'
+      'avatar': 'EP',
+      'scores': [
+        {'keterangan': 'Juara 1 Olimpiade Nasional', 'tanggal': '15 Juli 2025', 'poin': 100, 'type': 'apresiasi'},
+        {'keterangan': 'Ketua Kelas Teladan', 'tanggal': '12 Juli 2025', 'poin': 25, 'type': 'apresiasi'},
+        {'keterangan': 'Terlambat', 'tanggal': '10 Juli 2025', 'poin': -5, 'type': 'pelanggaran'},
+      ]
     },
     {
       'name': 'Fajar Ahmad',
@@ -88,7 +130,12 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
       'pelanggaran': 5,
       'isPositive': true,
       'color': const Color(0xFF10B981),
-      'avatar': 'FA'
+      'avatar': 'FA',
+      'scores': [
+        {'keterangan': 'Juara 2 Lomba Programming', 'tanggal': '14 Juli 2025', 'poin': 40, 'type': 'apresiasi'},
+        {'keterangan': 'Membantu Guru', 'tanggal': '11 Juli 2025', 'poin': 30, 'type': 'apresiasi'},
+        {'keterangan': 'Lupa PR', 'tanggal': '9 Juli 2025', 'poin': -5, 'type': 'pelanggaran'},
+      ]
     },
   ];
 
@@ -133,7 +180,7 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
   List<Map<String, dynamic>> get _filteredAndSortedStudents {
     List<Map<String, dynamic>> filtered = _studentsData.where((student) {
       bool matchesSearch = student['name'].toLowerCase().contains(_searchQuery.toLowerCase());
-      
+
       if (!matchesSearch) return false;
 
       int poin = student['totalPoin'];
@@ -153,7 +200,6 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
     }).toList();
 
     filtered.sort((a, b) => b['totalPoin'].compareTo(a['totalPoin']));
-
     return filtered;
   }
 
@@ -183,7 +229,7 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                 String displayText = filter;
                 if (filter == 'Negatif') displayText = 'Nilai Negatif';
                 if (filter == '101+') displayText = '101 ke atas';
-                
+
                 return ListTile(
                   title: Text(
                     displayText,
@@ -216,6 +262,200 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
           ),
         );
       },
+    );
+  }
+
+  void _showExportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            'Ekspor Data',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1F2937),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Pilih format ekspor untuk ${_filteredAndSortedStudents.length} siswa dengan filter $_selectedFilter:',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF6B7280),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                title: Text('PDF', style: GoogleFonts.poppins(fontSize: 15)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _exportToPDF();
+                },
+              ),
+              ListTile(
+                title: Text('Word', style: GoogleFonts.poppins(fontSize: 15)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _exportToWord();
+                },
+              ),
+              ListTile(
+                title: Text('Excel', style: GoogleFonts.poppins(fontSize: 15)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _exportToExcel();
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Batal',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF0083EE),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _exportToPDF() async {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) {
+          return [
+            pw.Header(
+              level: 0,
+              child: pw.Text(
+                'Laporan Penilaian Siswa XII RPL 2 - Semester Ganjil 2025/2026',
+                style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+              ),
+            ),
+            pw.SizedBox(height: 20),
+            pw.Table.fromTextArray(
+              headers: ['Nama', 'Total Poin', 'Apresiasi', 'Pelanggaran'],
+              data: _filteredAndSortedStudents.map((student) => [
+                student['name'],
+                student['totalPoin'].toString(),
+                student['apresiasi'].toString(),
+                student['pelanggaran'].toString(),
+              ]).toList(),
+            ),
+            pw.SizedBox(height: 20),
+            pw.Text('Detail Nilai', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            ..._filteredAndSortedStudents.map((student) {
+              return pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.SizedBox(height: 10),
+                  pw.Text(student['name'], style: const pw.TextStyle(fontSize: 14)),
+                  pw.Table.fromTextArray(
+                    headers: ['Keterangan', 'Tanggal', 'Poin', 'Tipe'],
+                    data: (student['scores'] as List<Map<String, dynamic>>).map((score) => [
+                      score['keterangan'],
+                      score['tanggal'],
+                      score['poin'].toString(),
+                      score['type'],
+                    ]).toList(),
+                  ),
+                ],
+              );
+            }).toList(),
+          ];
+        },
+      ),
+    );
+
+    final bytes = await pdf.save();
+    await FileSaver.instance.saveFile(
+      name: 'Laporan_Siswa_XII_RPL_2.pdf',
+      bytes: bytes,
+      mimeType: MimeType.pdf,
+    );
+  }
+
+  Future<void> _exportToWord() async {
+  try {
+    // Membaca file template dari assets
+    final templateBytes = await DefaultAssetBundle.of(context).load('assets/template.docx');
+    final doc = await DocxTemplate.fromBytes(templateBytes.buffer.asUint8List());
+    final content = Content();
+    final rows = _filteredAndSortedStudents.map((student) {
+      return RowContent({
+        'name': TextContent('name', student['name']),
+        'totalPoin': TextContent('totalPoin', student['totalPoin'].toString()),
+        'apresiasi': TextContent('apresiasi', student['apresiasi'].toString()),
+        'pelanggaran': TextContent('pelanggaran', student['pelanggaran'].toString()),
+      });
+    }).toList();
+    content.add(TableContent('students', rows));
+    final docGenerated = await doc.generate(content);
+    
+    if (docGenerated == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal menghasilkan dokumen Word')),
+      );
+      return;
+    }
+
+    await FileSaver.instance.saveFile(
+      name: 'Laporan_Siswa_XII_RPL_2.docx',
+      bytes: Uint8List.fromList(docGenerated),
+      mimeType: MimeType.microsoftWord,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Dokumen Word berhasil diekspor')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error saat ekspor Word: $e')),
+    );
+  }
+}
+
+  Future<void> _exportToExcel() async {
+    final excelInstance = excel.Excel.createExcel();
+    final sheet = excelInstance['Sheet1'];
+    sheet.appendRow(['Nama', 'Total Poin', 'Apresiasi', 'Pelanggaran']);
+    for (var student in _filteredAndSortedStudents) {
+      sheet.appendRow([
+        student['name'],
+        student['totalPoin'].toString(),
+        student['apresiasi'].toString(),
+        student['pelanggaran'].toString(),
+      ]);
+      sheet.appendRow(['Keterangan', 'Tanggal', 'Poin', 'Tipe']);
+      for (var score in student['scores']) {
+        sheet.appendRow([
+          score['keterangan'],
+          score['tanggal'],
+          score['poin'].toString(),
+          score['type'],
+        ]);
+      }
+      sheet.appendRow(['']);
+    }
+    final bytes = excelInstance.encode();
+    await FileSaver.instance.saveFile(
+      name: 'Laporan_Siswa_XII_RPL_2.xlsx',
+      bytes: Uint8List.fromList(bytes!),
+      mimeType: MimeType.microsoftExcel,
     );
   }
 
@@ -297,36 +537,51 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                               GestureDetector(
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ProfileScreen()),
-    );
-  },
-  child: Container(
-    width: 40,
-    height: 40,
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(30),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: const Icon(
-      Icons.person_rounded,
-      color: Color(0xFF0083EE),
-      size: 24,
-    ),
-  ),
-),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(30),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.person_rounded,
+                                      color: Color(0xFF0083EE),
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
                                 const SizedBox(width: 8),
-                               
+                                GestureDetector(
+                                  onTap: _showExportDialog,
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.download_rounded,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -381,7 +636,7 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                                   gradient: const LinearGradient(
                                     colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
                                   ),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(30),
                                 ),
                                 child: const Icon(Icons.search, color: Colors.white, size: 18),
                               ),
@@ -865,7 +1120,7 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
       builder: (context) {
         return Container(
           padding: const EdgeInsets.all(24),
-          height: MediaQuery.of(context).size.height * 0.6,
+          height: MediaQuery.of(context).size.height * 0.8,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -994,7 +1249,7 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
               ),
               const SizedBox(height: 20),
               Text(
-                'Aksi Cepat',
+                'Daftar Nilai',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -1002,90 +1257,120 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
                 ),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Tambah apresiasi untuk ${student['name']}')),
-                        );
-                      },
-                      icon: const Icon(Icons.add, color: Colors.white),
-                      label: Text(
-                        'Tambah Apresiasi',
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        'Keterangan',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Tambah pelanggaran untuk ${student['name']}')),
-                        );
-                      },
-                      icon: const Icon(Icons.warning, color: Colors.white),
-                      label: Text(
-                        'Tambah Pelanggaran',
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Tanggal',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF6B6D),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        'Poin',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Lihat detail lengkap ${student['name']}')),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: student['scores'].length,
+                  itemBuilder: (context, index) {
+                    final score = student['scores'][index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: score['type'] == 'apresiasi' 
+                            ? const Color(0xFF10B981).withOpacity(0.2)
+                            : const Color(0xFFFF6B6D).withOpacity(0.2),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              score['keterangan'],
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF1F2937),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              score['tanggal'],
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: const Color(0xFF0083EE),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: score['type'] == 'apresiasi' 
+                                  ? const Color(0xFF10B981).withOpacity(0.1)
+                                  : const Color(0xFFFF6B6D).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${score['poin']}',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: score['type'] == 'apresiasi' 
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFFFF6B6D),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   },
-                  icon: const Icon(Icons.visibility, color: Color(0xFF0083EE)),
-                  label: Text(
-                    'Lihat Detail Lengkap',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF0083EE),
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(color: Color(0xFF0083EE)),
-                    ),
-                  ),
                 ),
               ),
             ],

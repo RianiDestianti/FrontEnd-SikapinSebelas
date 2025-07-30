@@ -253,7 +253,7 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                                   gradient: const LinearGradient(
                                     colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
                                   ),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(30),
                                 ),
                                 child: const Icon(Icons.search, color: Colors.white, size: 18),
                               ),
@@ -302,6 +302,17 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                             ],
                           ),
                         ),
+                        
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            _buildActionButton('Semua', 0),
+                            const SizedBox(width: 10),
+                            _buildActionButton('Aman', 1),
+                            const SizedBox(width: 10),
+                            _buildActionButton('Bermasalah', 2),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -311,57 +322,42 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Daftar Siswa',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF1F2937),
-                                  ),
+                      // Header info
+                      if (_searchQuery.isNotEmpty || _selectedFilter != 0)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                color: const Color(0xFF0083EE),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Ditemukan ${filteredStudents.length} siswa',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF1F2937),
                                 ),
-                                if (_searchQuery.isNotEmpty || _selectedFilter != 0)
-                                  Text(
-                                    'Ditemukan ${filteredStudents.length} siswa',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: const Color(0xFF6B7280),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                _buildFilterChip('Semua', 0),
-                                const SizedBox(width: 8),
-                                _buildFilterChip('Aman', 1),
-                                const SizedBox(width: 8),
-                                _buildFilterChip('Bermasalah', 2),
-                              ],
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
                       
                       filteredStudents.isEmpty
                           ? _buildEmptyState()
@@ -381,25 +377,70 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildFilterChip(String text, int index) {
+  Widget _buildActionButton(String text, int index) {
     bool isActive = _selectedFilter == index;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedFilter = index),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF0083EE) : const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isActive ? const Color(0xFF0083EE) : const Color(0xFFE5E7EB),
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedFilter = index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 40,
+          decoration: BoxDecoration(
+            color: isActive ? Colors.white : Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: isActive ? [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ] : null,
           ),
-        ),
-        child: Text(
-          text,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isActive ? Colors.white : const Color(0xFF374151),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isActive && index == 0)
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)]),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              if (isActive && index == 1)
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [Color(0xFF10B981), Color(0xFF34D399)]),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              if (isActive && index == 2)
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [Color(0xFFEA580C), Color(0xFFFF6B6D)]),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              Text(
+                text,
+                style: GoogleFonts.poppins(
+                  color: isActive 
+                    ? (index == 0 ? const Color(0xFF1F2937) : 
+                       index == 1 ? const Color(0xFF10B981) : const Color(0xFFEA580C))
+                    : Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
           ),
         ),
       ),

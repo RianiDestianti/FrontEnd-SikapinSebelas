@@ -198,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Hello, Mam Euis! 👋',
+                                'Hello, Maam Euis! 👋',
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
                                   fontSize: 26,
@@ -242,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   gradient: const LinearGradient(
                                     colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
                                   ),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(30),
                                 ),
                                 child: const Icon(Icons.search, color: Colors.white, size: 18),
                               ),
@@ -274,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           children: [
                             _buildActionButton('Umum', 0),
                             const SizedBox(width: 10),
-                            _buildActionButton('Kelas', 1),
+                           
                             const SizedBox(width: 10),
                             _buildActionButton('Terbaik', 2),
                           ],
