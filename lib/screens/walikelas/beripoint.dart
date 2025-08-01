@@ -315,7 +315,6 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 30),
 
-                  // Action Buttons
                   Row(
                     children: [
                       Expanded(

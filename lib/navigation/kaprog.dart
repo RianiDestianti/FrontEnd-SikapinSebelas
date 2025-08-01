@@ -64,7 +64,6 @@ class _KaprogNavigationState extends State<KaprogNavigation> {
     required String label,
   }) {
     final bool isActive = widget.currentIndex == index;
-    
     return Expanded(
       child: GestureDetector(
         onTap: () => widget.onTap(index),
@@ -88,7 +87,6 @@ class _KaprogNavigationState extends State<KaprogNavigation> {
                   ),
                 ),
               ),
-              // Content
               Center(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),

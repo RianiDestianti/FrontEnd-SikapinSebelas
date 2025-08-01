@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:skoring/screens/kaprog/siswa.dart'; 
 
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({Key? key}) : super(key: key);
@@ -139,8 +140,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                       end: Alignment.bottomRight,
                     ),
                     onTap: () {
-                      print('Navigating to Kaprog...');
-                      Navigator.pushNamed(context, '/kaprog');
+                      print('Navigating to ProgramSelectionScreen...');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProgramKeahlianScreen(),
+                        ),
+                      );
                     },
                   ),
 
@@ -335,237 +341,6 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class KaprogMainScreen extends StatefulWidget {
-  const KaprogMainScreen({Key? key}) : super(key: key);
-
-  @override
-  State<KaprogMainScreen> createState() => _KaprogMainScreenState();
-}
-
-class _KaprogMainScreenState extends State<KaprogMainScreen> {
-  int _currentIndex = 0;
-
-  final List<Widget> _screens = [
-    const KaprogHomeScreen(),
-    const KaprogSiswaScreen(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_currentIndex],
-      bottomNavigationBar: KaprogNavigation(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-      ),
-    );
-  }
-}
-
-class KaprogHomeScreen extends StatelessWidget {
-  const KaprogHomeScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text('Dashboard Kaprog', style: GoogleFonts.poppins()),
-        backgroundColor: const Color(0xFF0083EE),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.admin_panel_settings,
-              size: 64,
-              color: Colors.blue.shade300,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Dashboard Kepala Program',
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Berhasil masuk sebagai Kaprog!',
-              style: GoogleFonts.poppins(color: Colors.grey.shade600),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class KaprogSiswaScreen extends StatelessWidget {
-  const KaprogSiswaScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text('Data Siswa Kaprog', style: GoogleFonts.poppins()),
-        backgroundColor: const Color(0xFF0083EE),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Text(
-          'Halaman Data Siswa Kaprog',
-          style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey.shade600),
-        ),
-      ),
-    );
-  }
-}
-
-class KaprogNavigation extends StatefulWidget {
-  final int currentIndex;
-  final Function(int) onTap;
-
-  const KaprogNavigation({
-    Key? key,
-    required this.currentIndex,
-    required this.onTap,
-  }) : super(key: key);
-
-  @override
-  State<KaprogNavigation> createState() => _KaprogNavigationState();
-}
-
-class _KaprogNavigationState extends State<KaprogNavigation> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      height: 70,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            spreadRadius: 0,
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          _buildNavItem(
-            index: 0,
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home,
-            label: 'Home',
-          ),
-          _buildNavItem(
-            index: 1,
-            icon: Icons.groups_outlined,
-            activeIcon: Icons.groups,
-            label: 'Siswa',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required int index,
-    required IconData icon,
-    required IconData activeIcon,
-    required String label,
-  }) {
-    final bool isActive = widget.currentIndex == index;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => widget.onTap(index),
-        child: Container(
-          height: 70,
-          child: Stack(
-            children: [
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                top: 0,
-                left: isActive ? 20 : 35,
-                right: isActive ? 20 : 35,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  height: isActive ? 3 : 0,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0083EE),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              // Content
-              Center(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 4),
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        child: Icon(
-                          isActive ? activeIcon : icon,
-                          color:
-                              isActive
-                                  ? const Color(0xFF0083EE)
-                                  : Colors.grey.shade600,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 300),
-                        style: TextStyle(
-                          color:
-                              isActive
-                                  ? const Color(0xFF0083EE)
-                                  : Colors.grey.shade600,
-                          fontSize: 11,
-                          fontWeight:
-                              isActive ? FontWeight.w600 : FontWeight.w500,
-                        ),
-                        child: Text(label),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

@@ -206,11 +206,11 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      'Absen: ${widget.student['absent']}',
+                                      'NISN: ${widget.student['nisn']}',
                                       style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: const Color(0xFF6B7280),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF374151),
                                       ),
                                     ),
                                     Container(
@@ -223,7 +223,7 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                       ),
                                     ),
                                     Text(
-                                      'Poin: ${widget.student['points'] < 0 ? '' : '+'}${widget.student['points']}',
+                                      'Absen: ${widget.student['absent']}',
                                       style: GoogleFonts.poppins(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
@@ -232,49 +232,39 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 20),
                                 
-                                Text(
-                                  'NISN: ${widget.student['nisn']}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF374151),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: _getStatusColor(widget.student['status']).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: _getStatusColor(widget.student['status']).withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    widget.student['status'],
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: _getStatusColor(widget.student['status']),
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 16),
                                 
                                 Row(
                                   children: [
-                                    Expanded(
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                        decoration: BoxDecoration(
-                                          color: _getStatusColor(widget.student['status']).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(16),
-                                          border: Border.all(
-                                            color: _getStatusColor(widget.student['status']).withOpacity(0.3),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          widget.student['status'],
-                                          textAlign: TextAlign.center,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w700,
-                                            color: _getStatusColor(widget.student['status']),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
                                     Expanded(
                                       child: GestureDetector(
                                         onTap: () {
                                           showPointPopup(context, widget.student['name']);
                                         },
                                         child: Container(
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          padding: const EdgeInsets.symmetric(vertical: 14),
                                           decoration: BoxDecoration(
                                             gradient: const LinearGradient(
                                               colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
@@ -288,14 +278,24 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                               ),
                                             ],
                                           ),
-                                          child: Text(
-                                            'Berikan Poin',
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white,
-                                            ),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Icon(
+                                                Icons.star_outline,
+                                                color: Colors.white,
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Berikan Poin',
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),
@@ -304,11 +304,11 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: GestureDetector(
-                                         onTap: () {
-  showBKNotePopup(context, widget.student['name'] ?? 'Nama Siswa');
-},
+                                          onTap: () {
+                                            showBKNotePopup(context, widget.student['name'] ?? 'Nama Siswa');
+                                          },
                                           child: Container(
-                                            padding: const EdgeInsets.symmetric(vertical: 12),
+                                            padding: const EdgeInsets.symmetric(vertical: 14),
                                             decoration: BoxDecoration(
                                               gradient: const LinearGradient(
                                                 colors: [Color(0xFFFF6B6D), Color(0xFFEA580C)],
@@ -322,14 +322,24 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                                 ),
                                               ],
                                             ),
-                                            child: Text(
-                                              'Beri Catatan BK',
-                                              textAlign: TextAlign.center,
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.white,
-                                              ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(
+                                                  Icons.note_add_outlined,
+                                                  color: Colors.white,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  'Catatan BK',
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ),

@@ -274,7 +274,6 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                   ),
                 ),
                 
-                // Enhanced Main Content Container
                 Expanded(
                   child: ScaleTransition(
                     scale: _scaleAnimation,
@@ -298,7 +297,6 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                         padding: const EdgeInsets.all(28),
                         child: Column(
                           children: [
-                            // Enhanced Profile Section
                             Container(
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
@@ -318,7 +316,6 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                               ),
                               child: Row(
                                 children: [
-                                  // Enhanced Profile Picture
                                   Stack(
                                     children: [
                                       Container(
@@ -351,7 +348,6 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                           ),
                                         ),
                                       ),
-                                      // Enhanced Green check indicator
                                       Positioned(
                                         bottom: -2,
                                         right: -2,
@@ -434,7 +430,6 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                             
                             const SizedBox(height: 32),
                             
-                            // Enhanced Profile Fields
                             Expanded(
                               child: SingleChildScrollView(
                                 physics: const BouncingScrollPhysics(),
@@ -459,7 +454,6 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                             
                             const SizedBox(height: 32),
                             
-                            // Enhanced Logout Button
                             GestureDetector(
                               onTapDown: (_) => _buttonController.forward(),
                               onTapUp: (_) => _buttonController.reverse(),

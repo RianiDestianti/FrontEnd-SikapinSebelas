@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'screens/walikelas/home.dart';
-import 'navigation/button.dart'; 
+import 'package:skoring/introduction/onboarding.dart';
+import 'package:skoring/screens/kaprog/siswa.dart';
+import 'package:skoring/screens/walikelas/home.dart';
+import 'package:skoring/navigation/button.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,17 +21,16 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Roboto',
       ),
       debugShowCheckedModeBanner: false,
-      
-      initialRoute: '/',
+      initialRoute: '/introduction',
       routes: {
-        '/': (context) => const RoleSelectionScreen(), 
-        '/walikelas': (context) => const WalikelasMainScreen(), 
-        '/kaprog': (context) => const KaprogMainScreen(), 
+        '/introduction': (context) => const IntroductionScreen(),
+        '/role': (context) => const RoleSelectionScreen(),
+        '/walikelas': (context) => const WalikelasMainScreen(),
+        '/kaprog': (context) => const ProgramKeahlianScreen(),
       },
-      
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
-          builder: (context) => const RoleSelectionScreen(),
+          builder: (context) => const IntroductionScreen(),
         );
       },
     );

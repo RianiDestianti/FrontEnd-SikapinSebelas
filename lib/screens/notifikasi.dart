@@ -236,7 +236,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
           opacity: _fadeAnimation,
           child: Column(
             children: [
-              // Header
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -260,7 +259,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                   padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
                   child: Column(
                     children: [
-                      // Top Bar
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -314,7 +312,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                       ),
                       const SizedBox(height: 24),
                       
-                      // Title
                       Row(
                         children: [
                           Container(
@@ -360,13 +357,11 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                 ),
               ),
               
-              // Filter and Content
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      // Filter Section
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -425,7 +420,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                       ),
                       const SizedBox(height: 16),
                       
-                      // Notifications List
                       Expanded(
                         child: _filteredNotifications.isEmpty
                             ? _buildEmptyState()
@@ -692,7 +686,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
               ),
               const SizedBox(height: 24),
               
-              // Content
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
@@ -809,7 +802,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                 ),
               ),
               
-              // Action Buttons
               if (notification['type'] == 'warning' || notification['type'] == 'achievement')
                 Column(
                   children: [
