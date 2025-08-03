@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:skoring/introduction/onboarding.dart';
 import 'package:skoring/screens/kaprog/siswa.dart';
 import 'package:skoring/screens/walikelas/home.dart';
-import 'package:skoring/navigation/button.dart';
+import 'package:skoring/screens/login.dart';
 
 void main() {
   runApp(const MyApp());

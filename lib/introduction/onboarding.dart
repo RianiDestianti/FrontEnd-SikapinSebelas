@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:skoring/navigation/button.dart';
+import 'package:skoring/screens/login.dart';
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({Key? key}) : super(key: key);
@@ -12,11 +12,14 @@ class IntroductionScreen extends StatefulWidget {
 class _IntroductionScreenState extends State<IntroductionScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
+  late AnimationController _swipeController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
+  late Animation<double> _swipeAnimation;
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  double _swipeOffset = 0.0;
 
   final List<Map<String, dynamic>> _pages = [
     {
@@ -52,6 +55,10 @@ class _IntroductionScreenState extends State<IntroductionScreen>
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
+    _swipeController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
@@ -64,6 +71,9 @@ class _IntroductionScreenState extends State<IntroductionScreen>
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
+    _swipeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+    );
     _pageController.addListener(() {
       setState(() {
         _currentPage = _pageController.page?.round() ?? 0;
@@ -75,6 +85,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    _swipeController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -90,6 +101,29 @@ class _IntroductionScreenState extends State<IntroductionScreen>
         context,
         MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
       );
+    }
+  }
+
+  void _onPanUpdate(DragUpdateDetails details) {
+    setState(() {
+      _swipeOffset += details.delta.dy;
+      if (_swipeOffset > 0) _swipeOffset = 0;
+      if (_swipeOffset < -100) _swipeOffset = -100;
+    });
+  }
+
+  void _onPanEnd(DragEndDetails details) {
+    if (_swipeOffset < -50) {
+      // Jika di-swipe lebih dari 50 pixel ke atas, navigasi
+      _swipeController.forward().then((_) {
+        _nextPage();
+      });
+    } else {
+      // Kembali ke posisi semula
+      _swipeController.reverse();
+      setState(() {
+        _swipeOffset = 0.0;
+      });
     }
   }
 
@@ -251,7 +285,6 @@ class _IntroductionScreenState extends State<IntroductionScreen>
               ),
               const SizedBox(height: 20),
 
-              // Description
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: Padding(
@@ -270,44 +303,72 @@ class _IntroductionScreenState extends State<IntroductionScreen>
               ),
               const SizedBox(height: 60),
 
-              SlideTransition(
-                position: _slideAnimation,
-                child: GestureDetector(
-                  onTap: _nextPage,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Start Now',
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E6BB8),
+              // Swipe up area
+              GestureDetector(
+                onPanUpdate: _onPanUpdate,
+                onPanEnd: _onPanEnd,
+                child: AnimatedBuilder(
+                  animation: _swipeAnimation,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, _swipeOffset * (1 - _swipeAnimation.value)),
+                      child: Column(
+                        children: [
+                          // Animated chevron indicators
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            child: Column(
+                              children: [
+                                AnimatedOpacity(
+                                  opacity: _swipeOffset < -20 ? 0.3 : 0.7,
+                                  duration: const Duration(milliseconds: 200),
+                                  child: Icon(
+                                    Icons.keyboard_arrow_up,
+                                    color: Colors.white.withOpacity(0.8),
+                                    size: 28,
+                                  ),
+                                ),
+                                Transform.translate(
+                                  offset: const Offset(0, -8),
+                                  child: AnimatedOpacity(
+                                    opacity: _swipeOffset < -20 ? 0.7 : 1.0,
+                                    duration: const Duration(milliseconds: 200),
+                                    child: Icon(
+                                      Icons.keyboard_arrow_up,
+                                      color: Colors.white,
+                                      size: 32,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.arrow_upward,
-                          color: Color(0xFF1E6BB8),
-                          size: 20,
-                        ),
-                      ],
-                    ),
-                  ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Start Now',
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          AnimatedOpacity(
+                            opacity: _swipeOffset < -30 ? 0.0 : 0.8,
+                            duration: const Duration(milliseconds: 200),
+                            child: Text(
+                              'Swipe up to continue',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
 
