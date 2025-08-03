@@ -37,6 +37,12 @@ class _IntroductionScreenState extends State<IntroductionScreen>
       'description':
           'Pilih peran sebagai Kepala Program Keahlian atau Wali Kelas untuk mengelola tugas sesuai kebutuhan.',
     },
+    {
+      'image': 'assets/backpack.png',
+      'title': 'Learn anything\nAnytime anywhere',
+      'description':
+          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nunc ut tristique luctus, nunc lorem molestie mauris.',
+    },
   ];
 
   @override
@@ -87,10 +93,239 @@ class _IntroductionScreenState extends State<IntroductionScreen>
     }
   }
 
+  Widget _buildRegularPage(int index) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+
+              ScaleTransition(
+                scale: _scaleAnimation,
+                child: Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF0083EE).withOpacity(0.3),
+                        blurRadius: 30,
+                        offset: const Offset(0, 10),
+                      ),
+                      BoxShadow(
+                        color: const Color(0xFF61B8FF).withOpacity(0.2),
+                        blurRadius: 40,
+                        offset: const Offset(0, 15),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    _pages[index]['icon'],
+                    size: 90,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              Text(
+                _pages[index]['title'],
+                style: GoogleFonts.poppins(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1F2937),
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF61B8FF).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xFF61B8FF).withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  _pages[index]['description'],
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF6B7280),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+
+              SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinalPage(int index) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment.center,
+          radius: 1.0,
+          colors: [Color(0xFF4A90E2), Color(0xFF1E6BB8), Color(0xFF0F4A8C)],
+          stops: [0.3, 0.7, 1.0],
+        ),
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+
+              ScaleTransition(
+                scale: _scaleAnimation,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.15),
+                  ),
+                  child: Container(
+                    margin: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.2),
+                    ),
+                    child: Container(
+                      margin: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.25),
+                      ),
+                      child: Center(
+                        child: Image.asset(
+                          'backpack.png',
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Text(
+                  _pages[index]['title'],
+                  style: GoogleFonts.poppins(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    height: 1.2,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Description
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    _pages[index]['description'],
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white.withOpacity(0.8),
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 60),
+
+              SlideTransition(
+                position: _slideAnimation,
+                child: GestureDetector(
+                  onTap: _nextPage,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Start Now',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1E6BB8),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.arrow_upward,
+                          color: Color(0xFF1E6BB8),
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor:
+          _currentPage == _pages.length - 1
+              ? const Color(0xFF1E6BB8)
+              : const Color(0xFFF8FAFC),
       body: SafeArea(
         child: Stack(
           children: [
@@ -101,205 +336,120 @@ class _IntroductionScreenState extends State<IntroductionScreen>
                     controller: _pageController,
                     itemCount: _pages.length,
                     itemBuilder: (context, index) {
-                      return FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: SlideTransition(
-                          position: _slideAnimation,
-                          child: Padding(
-                            padding: const EdgeInsets.all(24.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ScaleTransition(
-                                  scale: _scaleAnimation,
-                                  child: Container(
-                                    width: 150,
-                                    height: 150,
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF61B8FF),
-                                          Color(0xFF0083EE),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(
-                                            0xFF0083EE,
-                                          ).withOpacity(0.3),
-                                          blurRadius: 30,
-                                          offset: const Offset(0, 10),
-                                        ),
-                                        BoxShadow(
-                                          color: const Color(
-                                            0xFF61B8FF,
-                                          ).withOpacity(0.2),
-                                          blurRadius: 50,
-                                          offset: const Offset(0, 20),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Icon(
-                                      _pages[index]['icon'],
-                                      size: 80,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 40),
-                                Text(
-                                  _pages[index]['title'],
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF1F2937),
-                                    height: 1.2,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 16),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF61B8FF,
-                                    ).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(25),
-                                    border: Border.all(
-                                      color: const Color(
-                                        0xFF61B8FF,
-                                      ).withOpacity(0.2),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    _pages[index]['description'],
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400,
-                                      color: const Color(0xFF6B7280),
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
+                      if (index == _pages.length - 1) {
+                        return _buildFinalPage(index);
+                      } else {
+                        return _buildRegularPage(index);
+                      }
                     },
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(_pages.length, (index) {
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            width: _currentPage == index ? 12 : 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color:
-                                  _currentPage == index
-                                      ? const Color(0xFF0083EE)
-                                      : const Color(0xFF9CA3AF),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          );
-                        }),
-                      ),
-                      const SizedBox(height: 24),
-                      GestureDetector(
-                        onTap: _nextPage,
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0083EE).withOpacity(0.3),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
+                if (_currentPage != _pages.length - 1)
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(_pages.length, (index) {
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              width: _currentPage == index ? 12 : 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color:
+                                    _currentPage == index
+                                        ? const Color(0xFF0083EE)
+                                        : const Color(0xFF9CA3AF),
+                                borderRadius: BorderRadius.circular(4),
                               ),
-                            ],
-                          ),
-                          child: Text(
-                            _currentPage == _pages.length - 1
-                                ? 'Mulai Sekarang'
-                                : 'Lanjut',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 24),
+                        GestureDetector(
+                          onTap: _nextPage,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF0083EE,
+                                  ).withOpacity(0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
                             ),
-                            textAlign: TextAlign.center,
+                            child: Text(
+                              'Lanjut',
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
-            Positioned(
-              top: 16,
-              right: 16,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RoleSelectionScreen(),
-                    ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: const Color(0xFF61B8FF).withOpacity(0.2),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF0083EE).withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
+            if (_currentPage != _pages.length - 1)
+              Positioned(
+                top: 16,
+                right: 16,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RoleSelectionScreen(),
                       ),
-                    ],
-                  ),
-                  child: Text(
-                    'Skip',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF0083EE),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFF61B8FF).withOpacity(0.2),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0083EE).withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      'Skip',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF0083EE),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

@@ -8,7 +8,8 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late AnimationController _buttonController;
   late Animation<double> _fadeAnimation;
@@ -30,7 +31,11 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     {'label': 'Username', 'icon': Icons.person_outline, 'key': 'username'},
     {'label': 'Email', 'icon': Icons.email_outlined, 'key': 'email'},
     {'label': 'Nomor HP', 'icon': Icons.phone_outlined, 'key': 'phone'},
-    {'label': 'Menjabat Sejak', 'icon': Icons.calendar_today_outlined, 'key': 'joinDate'},
+    {
+      'label': 'Menjabat Sejak',
+      'icon': Icons.calendar_today_outlined,
+      'key': 'joinDate',
+    },
   ];
 
   @override
@@ -51,7 +56,9 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
+    );
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
@@ -72,9 +79,14 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
       barrierDismissible: false,
       builder: (BuildContext context) {
         return ScaleTransition(
-          scale: CurvedAnimation(parent: _buttonController, curve: Curves.elasticOut),
+          scale: CurvedAnimation(
+            parent: _buttonController,
+            curve: Curves.elasticOut,
+          ),
           child: AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
             elevation: 20,
             backgroundColor: Colors.white,
             title: Column(
@@ -154,11 +166,16 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                           SnackBar(
                             content: Row(
                               children: [
-                                const Icon(Icons.check_circle, color: Colors.white),
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.white,
+                                ),
                                 const SizedBox(width: 12),
                                 Text(
                                   'Berhasil logout',
-                                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
@@ -214,7 +231,6 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
             opacity: _fadeAnimation,
             child: Column(
               children: [
-                // Enhanced Header
                 SlideTransition(
                   position: _slideAnimation,
                   child: Padding(
@@ -252,28 +268,12 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                           ),
                         ),
                         const Spacer(),
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.edit_outlined,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
+                        const SizedBox(width: 44),
                       ],
                     ),
                   ),
                 ),
-                
+
                 Expanded(
                   child: ScaleTransition(
                     scale: _scaleAnimation,
@@ -310,7 +310,9 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                 ),
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
-                                  color: const Color(0xFF007AFF).withOpacity(0.1),
+                                  color: const Color(
+                                    0xFF007AFF,
+                                  ).withOpacity(0.1),
                                   width: 1,
                                 ),
                               ),
@@ -322,15 +324,22 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                         width: 80,
                                         height: 80,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                           gradient: const LinearGradient(
-                                            colors: [Color(0xFF007AFF), Color(0xFF0051D5)],
+                                            colors: [
+                                              Color(0xFF007AFF),
+                                              Color(0xFF0051D5),
+                                            ],
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: const Color(0xFF007AFF).withOpacity(0.3),
+                                              color: const Color(
+                                                0xFF007AFF,
+                                              ).withOpacity(0.3),
                                               blurRadius: 15,
                                               offset: const Offset(0, 5),
                                             ),
@@ -356,13 +365,23 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                           height: 28,
                                           decoration: BoxDecoration(
                                             gradient: const LinearGradient(
-                                              colors: [Color(0xFF10B981), Color(0xFF059669)],
+                                              colors: [
+                                                Color(0xFF10B981),
+                                                Color(0xFF059669),
+                                              ],
                                             ),
-                                            borderRadius: BorderRadius.circular(14),
-                                            border: Border.all(color: Colors.white, width: 3),
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.white,
+                                              width: 3,
+                                            ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: const Color(0xFF10B981).withOpacity(0.4),
+                                                color: const Color(
+                                                  0xFF10B981,
+                                                ).withOpacity(0.4),
                                                 blurRadius: 8,
                                                 offset: const Offset(0, 2),
                                               ),
@@ -378,10 +397,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                     ],
                                   ),
                                   const SizedBox(width: 20),
-                                  // Enhanced Name and Role
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           _profileData['name']!,
@@ -395,17 +414,24 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                         const SizedBox(height: 8),
                                         Container(
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 16, 
+                                            horizontal: 16,
                                             vertical: 8,
                                           ),
                                           decoration: BoxDecoration(
                                             gradient: const LinearGradient(
-                                              colors: [Color(0xFF007AFF), Color(0xFF0051D5)],
+                                              colors: [
+                                                Color(0xFF007AFF),
+                                                Color(0xFF0051D5),
+                                              ],
                                             ),
-                                            borderRadius: BorderRadius.circular(16),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: const Color(0xFF007AFF).withOpacity(0.3),
+                                                color: const Color(
+                                                  0xFF007AFF,
+                                                ).withOpacity(0.3),
                                                 blurRadius: 8,
                                                 offset: const Offset(0, 2),
                                               ),
@@ -427,33 +453,39 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                 ],
                               ),
                             ),
-                            
+
                             const SizedBox(height: 32),
-                            
+
                             Expanded(
                               child: SingleChildScrollView(
                                 physics: const BouncingScrollPhysics(),
                                 child: Column(
-                                  children: _profileFields.asMap().entries.map((entry) {
-                                    int index = entry.key;
-                                    Map<String, dynamic> field = entry.value;
-                                    return AnimatedContainer(
-                                      duration: Duration(milliseconds: 300 + (index * 100)),
-                                      curve: Curves.easeOutBack,
-                                      child: _buildEnhancedProfileField(
-                                        field['label'],
-                                        _profileData[field['key']]!,
-                                        field['icon'],
-                                        index,
-                                      ),
-                                    );
-                                  }).toList(),
+                                  children:
+                                      _profileFields.asMap().entries.map((
+                                        entry,
+                                      ) {
+                                        int index = entry.key;
+                                        Map<String, dynamic> field =
+                                            entry.value;
+                                        return AnimatedContainer(
+                                          duration: Duration(
+                                            milliseconds: 300 + (index * 100),
+                                          ),
+                                          curve: Curves.easeOutBack,
+                                          child: _buildEnhancedProfileField(
+                                            field['label'],
+                                            _profileData[field['key']]!,
+                                            field['icon'],
+                                            index,
+                                          ),
+                                        );
+                                      }).toList(),
                                 ),
                               ),
                             ),
-                            
+
                             const SizedBox(height: 32),
-                            
+
                             GestureDetector(
                               onTapDown: (_) => _buttonController.forward(),
                               onTapUp: (_) => _buttonController.reverse(),
@@ -462,25 +494,34 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                 animation: _buttonController,
                                 builder: (context, child) {
                                   return Transform.scale(
-                                    scale: 1.0 - (_buttonController.value * 0.05),
+                                    scale:
+                                        1.0 - (_buttonController.value * 0.05),
                                     child: Container(
                                       width: double.infinity,
                                       height: 56,
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
-                                            const Color(0xFFFF6B6B).withOpacity(0.1),
-                                            const Color(0xFFFF8E8E).withOpacity(0.05),
+                                            const Color(
+                                              0xFFFF6B6B,
+                                            ).withOpacity(0.1),
+                                            const Color(
+                                              0xFFFF8E8E,
+                                            ).withOpacity(0.05),
                                           ],
                                         ),
                                         borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
-                                          color: const Color(0xFFFF6B6B).withOpacity(0.3),
+                                          color: const Color(
+                                            0xFFFF6B6B,
+                                          ).withOpacity(0.3),
                                           width: 2,
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFFFF6B6B).withOpacity(0.1),
+                                            color: const Color(
+                                              0xFFFF6B6B,
+                                            ).withOpacity(0.1),
                                             blurRadius: 10,
                                             offset: const Offset(0, 4),
                                           ),
@@ -490,17 +531,29 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                         color: Colors.transparent,
                                         child: InkWell(
                                           onTap: _showLogoutDialog,
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
                                           child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 24,
+                                            ),
                                             child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: [
                                                 Container(
-                                                  padding: const EdgeInsets.all(8),
+                                                  padding: const EdgeInsets.all(
+                                                    8,
+                                                  ),
                                                   decoration: BoxDecoration(
-                                                    color: const Color(0xFFFF6B6B).withOpacity(0.2),
-                                                    borderRadius: BorderRadius.circular(10),
+                                                    color: const Color(
+                                                      0xFFFF6B6B,
+                                                    ).withOpacity(0.2),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
                                                   ),
                                                   child: const Icon(
                                                     Icons.logout_rounded,
@@ -514,7 +567,9 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w600,
-                                                    color: const Color(0xFFFF6B6B),
+                                                    color: const Color(
+                                                      0xFFFF6B6B,
+                                                    ),
                                                     letterSpacing: 0.5,
                                                   ),
                                                 ),
@@ -542,7 +597,12 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildEnhancedProfileField(String label, String value, IconData icon, int index) {
+  Widget _buildEnhancedProfileField(
+    String label,
+    String value,
+    IconData icon,
+    int index,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: TweenAnimationBuilder<double>(
@@ -635,8 +695,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
-                        Icons.verified_rounded,
-                        color: Color(0xFF10B981),
+                        Icons.lock_outline,
+                        color: Color(0xFF9CA3AF),
                         size: 16,
                       ),
                     ),
