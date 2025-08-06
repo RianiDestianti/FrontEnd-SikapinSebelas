@@ -13,13 +13,17 @@ class _IntroductionScreenState extends State<IntroductionScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late AnimationController _swipeController;
+  late AnimationController _loginController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<double> _swipeAnimation;
+  late Animation<Offset> _loginSlideAnimation;
+  late Animation<double> _loginFadeAnimation;
   final PageController _pageController = PageController();
   int _currentPage = 0;
   double _swipeOffset = 0.0;
+  bool _showLoginOverlay = false;
 
   final List<Map<String, dynamic>> _pages = [
     {
@@ -59,6 +63,11 @@ class _IntroductionScreenState extends State<IntroductionScreen>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+    _loginController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
@@ -71,9 +80,21 @@ class _IntroductionScreenState extends State<IntroductionScreen>
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
-    _swipeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+    _swipeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
+
+    _loginSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _loginController, curve: Curves.easeOutCubic),
     );
+    _loginFadeAnimation = Tween<double>(begin: 0.0, end: 0.5).animate(
+      CurvedAnimation(parent: _loginController, curve: Curves.easeInOut),
+    );
+
     _pageController.addListener(() {
       setState(() {
         _currentPage = _pageController.page?.round() ?? 0;
@@ -86,6 +107,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
   void dispose() {
     _animationController.dispose();
     _swipeController.dispose();
+    _loginController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -104,6 +126,21 @@ class _IntroductionScreenState extends State<IntroductionScreen>
     }
   }
 
+  void _showLogin() {
+    setState(() {
+      _showLoginOverlay = true;
+    });
+    _loginController.forward();
+  }
+
+  void _hideLogin() {
+    _loginController.reverse().then((_) {
+      setState(() {
+        _showLoginOverlay = false;
+      });
+    });
+  }
+
   void _onPanUpdate(DragUpdateDetails details) {
     setState(() {
       _swipeOffset += details.delta.dy;
@@ -114,17 +151,291 @@ class _IntroductionScreenState extends State<IntroductionScreen>
 
   void _onPanEnd(DragEndDetails details) {
     if (_swipeOffset < -50) {
-      // Jika di-swipe lebih dari 50 pixel ke atas, navigasi
       _swipeController.forward().then((_) {
-        _nextPage();
+        _showLogin();
+        _swipeController.reset();
+        setState(() {
+          _swipeOffset = 0.0;
+        });
       });
     } else {
-      // Kembali ke posisi semula
       _swipeController.reverse();
       setState(() {
         _swipeOffset = 0.0;
       });
     }
+  }
+
+  Widget _buildLoginOverlay() {
+    return AnimatedBuilder(
+      animation: _loginController,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            FadeTransition(
+              opacity: _loginFadeAnimation,
+              child: GestureDetector(
+                onTap: _hideLogin,
+                child: Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+            SlideTransition(
+              position: _loginSlideAnimation,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  width: double.infinity,
+                  height: MediaQuery.of(context).size.height * 0.85,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Handle bar
+                      GestureDetector(
+                        onTap: _hideLogin,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Container(
+                            width: 50,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 20),
+                              Container(
+                                width: double.infinity,
+                                height: 200,
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 80,
+                                        height: 80,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[100],
+                                          borderRadius: BorderRadius.circular(
+                                            15,
+                                          ),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(12.0),
+                                          child: Image.asset(
+                                            'assets/smkn.png',
+                                            fit: BoxFit.contain,
+                                          ),
+                                        ),
+                                      ),
+
+                                      const SizedBox(width: 16),
+
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Selamat Datang Kembali',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xFF1F2937),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'Yuk, masuk dan lanjutkan aktivitasmu di Aplikasi SMK!',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w400,
+                                                color: const Color(0xFF6B7280),
+                                                height: 1.4,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 40),
+
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: Colors.grey[200]!,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    hintText: 'Masukkan username anda',
+                                    hintStyle: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.grey[500],
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.person_outline,
+                                      color: Colors.grey[400],
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: Colors.grey[200]!,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: TextField(
+                                  obscureText: true,
+                                  decoration: InputDecoration(
+                                    hintText: 'Masukkan password anda',
+                                    hintStyle: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.grey[500],
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.lock_outline,
+                                      color: Colors.grey[400],
+                                    ),
+                                    suffixIcon: Icon(
+                                      Icons.visibility_off_outlined,
+                                      color: Colors.grey[400],
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 30),
+
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) =>
+                                              const RoleSelectionScreen(),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF61B8FF),
+                                        Color(0xFF0083EE),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(15),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFF0083EE,
+                                        ).withOpacity(0.3),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Text(
+                                    'Login',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              GestureDetector(
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Fitur lupa password akan segera hadir',
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'Lupa Password?',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF0083EE),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildRegularPage(int index) {
@@ -303,7 +614,6 @@ class _IntroductionScreenState extends State<IntroductionScreen>
               ),
               const SizedBox(height: 60),
 
-              // Swipe up area
               GestureDetector(
                 onPanUpdate: _onPanUpdate,
                 onPanEnd: _onPanEnd,
@@ -311,10 +621,12 @@ class _IntroductionScreenState extends State<IntroductionScreen>
                   animation: _swipeAnimation,
                   builder: (context, child) {
                     return Transform.translate(
-                      offset: Offset(0, _swipeOffset * (1 - _swipeAnimation.value)),
+                      offset: Offset(
+                        0,
+                        _swipeOffset * (1 - _swipeAnimation.value),
+                      ),
                       child: Column(
                         children: [
-                          // Animated chevron indicators
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
                             child: Column(
@@ -511,6 +823,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
                   ),
                 ),
               ),
+            if (_showLoginOverlay) _buildLoginOverlay(),
           ],
         ),
       ),

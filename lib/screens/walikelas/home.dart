@@ -50,8 +50,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _selectedTab = 0;
-  int _apresiasiChartTab = 0; // 0 = Minggu, 1 = Bulan
-  int _pelanggaranChartTab = 0; // 0 = Minggu, 1 = Bulan
+  int _apresiasiChartTab = 0; 
+  int _pelanggaranChartTab = 0; 
   
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;

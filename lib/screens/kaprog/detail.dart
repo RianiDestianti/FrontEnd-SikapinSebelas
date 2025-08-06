@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'beripoint.dart';
-import 'berinote.dart';
 
-class DetailScreen extends StatefulWidget {
+class KaprogDetailScreen extends StatefulWidget {
   final Map<String, dynamic> student;
 
-  const DetailScreen({Key? key, required this.student}) : super(key: key);
+  const KaprogDetailScreen({Key? key, required this.student}) : super(key: key);
 
   @override
-  State<DetailScreen> createState() => _DetailScreenState();
+  State<KaprogDetailScreen> createState() => _KaprogDetailScreenState();
 }
 
-class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMixin {
+class _KaprogDetailScreenState extends State<KaprogDetailScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -53,7 +51,6 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
     },
   ];
 
-  // Histori pemberian poin apresiasi
   final List<Map<String, dynamic>> apresiasiHistory = [
     {
       "type": "Prestasi Akademik",
@@ -371,99 +368,6 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 16),
-                                
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          showPointPopup(context, detailedStudent['name']);
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(vertical: 14),
-                                          decoration: BoxDecoration(
-                                            gradient: const LinearGradient(
-                                              colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-                                            ),
-                                            borderRadius: BorderRadius.circular(16),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: const Color(0xFF0083EE).withOpacity(0.3),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 4),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              const Icon(
-                                                Icons.star_outline,
-                                                color: Colors.white,
-                                                size: 18,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                'Berikan Poin',
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    if (detailedStudent['status'] != 'Aman') ...[
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            showBKNotePopup(context, detailedStudent['name'] ?? 'Nama Siswa');
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(vertical: 14),
-                                            decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
-                                                colors: [Color(0xFFFF6B6D), Color(0xFFEA580C)],
-                                              ),
-                                              borderRadius: BorderRadius.circular(16),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: const Color(0xFFFF6B6D).withOpacity(0.3),
-                                                  blurRadius: 8,
-                                                  offset: const Offset(0, 4),
-                                                ),
-                                              ],
-                                            ),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                const Icon(
-                                                  Icons.note_add_outlined,
-                                                  color: Colors.white,
-                                                  size: 18,
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  'Catatan BK',
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
                               ],
                             ),
                           ),
@@ -473,7 +377,6 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                   ),
                 ),
                 
-                // Biodata Siswa
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: Container(
@@ -544,6 +447,7 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                   ),
                 ),
                 
+                // Content berdasarkan tab yang dipilih
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: _buildTabContent(),
@@ -1039,6 +943,7 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
+                // Apresiasi (green)
                 Align(
                   alignment: Alignment.centerRight,
                   child: Container(

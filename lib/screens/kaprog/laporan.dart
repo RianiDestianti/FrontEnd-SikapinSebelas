@@ -10,14 +10,14 @@ import 'package:file_saver/file_saver.dart';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 
-class LaporanScreen extends StatefulWidget {
-  const LaporanScreen({Key? key}) : super(key: key);
+class LaporanKaprog extends StatefulWidget {
+  const LaporanKaprog({Key? key}) : super(key: key);
 
   @override
-  State<LaporanScreen> createState() => _LaporanScreenState();
+  State<LaporanKaprog> createState() => _LaporanKaprogState();
 }
 
-class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateMixin {
+class _LaporanKaprogState extends State<LaporanKaprog> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   String _selectedFilter = '0-50';
@@ -32,7 +32,6 @@ class _LaporanScreenState extends State<LaporanScreen> with TickerProviderStateM
     'Sanksi': false,
   };
 
-  // FAQ Data Structure for better search functionality
   final Map<String, Map<String, dynamic>> _faqData = {
     'R1': {
       'title': 'Pengembangan Keagamaan',
