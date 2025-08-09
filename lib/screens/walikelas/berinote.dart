@@ -1,119 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:skoring/models/note.dart';
 
-class BKNotePopup extends StatefulWidget {
-  final String studentName;
-
-  const BKNotePopup({Key? key, required this.studentName}) : super(key: key);
-
-  @override
-  State<BKNotePopup> createState() => _BKNotePopupState();
-}
-
-class _BKNotePopupState extends State<BKNotePopup> with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  late AnimationController _slideController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _rotateAnimation;
-
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _classController = TextEditingController();
-  final TextEditingController _dateController = TextEditingController();
-  final TextEditingController _noteController = TextEditingController();
-
-  bool _isSubmitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
-
-    _rotateAnimation = Tween<double>(begin: 0.1, end: 0.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
-
-    _nameController.text = widget.studentName;
-    _dateController.text = DateTime.now().toString().split(' ')[0];
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    _slideController.dispose();
-    _nameController.dispose();
-    _classController.dispose();
-    _dateController.dispose();
-    _noteController.dispose();
-    super.dispose();
-  }
-
-  void _closeDialog() {
-    _animationController.reverse().then((_) {
-      Navigator.of(context).pop();
-    });
-  }
-
-  void _submitNote() async {
-    if (_nameController.text.isEmpty ||
-        _classController.text.isEmpty ||
-        _dateController.text.isEmpty ||
-        _noteController.text.isEmpty) {
-      _showErrorSnackBar('Mohon lengkapi semua field yang diperlukan');
-      return;
+class NoteUtils {
+  static Future<Note?> submitNote({
+    required String studentName,
+    required String className,
+    required String date,
+    required String note,
+    required BuildContext context,
+  }) async {
+    if (studentName.isEmpty || className.isEmpty || date.isEmpty || note.isEmpty) {
+      _showErrorSnackBar(context, 'Mohon lengkapi semua field yang diperlukan');
+      return null;
     }
-
-    setState(() {
-      _isSubmitting = true;
-    });
 
     // Simulate API call
     await Future.delayed(const Duration(milliseconds: 1500));
 
-    Map<String, dynamic> noteData = {
-      'studentName': _nameController.text,
-      'class': _classController.text,
-      'date': _dateController.text,
-      'note': _noteController.text,
-    };
+    final noteData = Note(
+      studentName: studentName,
+      className: className,
+      date: date,
+      note: note,
+    );
 
-    print('BK Note data: $noteData');
+    print('BK Note data: ${noteData.studentName}, ${noteData.className}, ${noteData.date}, ${noteData.note}');
 
-    setState(() {
-      _isSubmitting = false;
-    });
-
-    _closeDialog();
-
-    _showSuccessSnackBar('Catatan BK berhasil ditambahkan untuk ${widget.studentName}');
+    _showSuccessSnackBar(context, 'Catatan BK berhasil ditambahkan untuk $studentName');
+    return noteData;
   }
 
-  void _showErrorSnackBar(String message) {
+  static void _showErrorSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -136,7 +54,7 @@ class _BKNotePopupState extends State<BKNotePopup> with TickerProviderStateMixin
     );
   }
 
-  void _showSuccessSnackBar(String message) {
+  static void _showSuccessSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -158,61 +76,116 @@ class _BKNotePopupState extends State<BKNotePopup> with TickerProviderStateMixin
       ),
     );
   }
+}
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    bool readOnly = false,
-    VoidCallback? onTap,
-    int maxLines = 1,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        readOnly: readOnly,
-        onTap: onTap,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: GoogleFonts.poppins(
-            fontSize: 14,
-            color: const Color(0xFF9CA3AF),
-          ),
-          prefixIcon: Icon(icon, color: const Color(0xFFEF4444), size: 20),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFEF4444), width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        ),
-        style: GoogleFonts.poppins(
-          fontSize: 14,
-          color: const Color(0xFF374151),
-          fontWeight: FontWeight.w500,
-        ),
-      ),
+class BKNotePopup extends StatefulWidget {
+  final String studentName;
+
+  const BKNotePopup({Key? key, required this.studentName}) : super(key: key);
+
+  @override
+  State<BKNotePopup> createState() => _BKNotePopupState();
+}
+
+class _BKNotePopupState extends State<BKNotePopup> with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late AnimationController _slideController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _rotateAnimation;
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _classController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _noteController = TextEditingController();
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAnimations();
+    _nameController.text = widget.studentName;
+    _classController.text = 'XII RPL 2'; // Set default class
+    _dateController.text = DateTime.now().toString().split(' ')[0];
+  }
+
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
     );
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
+    _rotateAnimation = Tween<double>(begin: 0.1, end: 0.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _slideController.dispose();
+    _nameController.dispose();
+    _classController.dispose();
+    _dateController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  void _closeDialog() {
+    _animationController.reverse().then((_) => Navigator.of(context).pop());
+  }
+
+  void _submitNote() async {
+    setState(() => _isSubmitting = true);
+    final note = await NoteUtils.submitNote(
+      studentName: _nameController.text,
+      className: _classController.text,
+      date: _dateController.text,
+      note: _noteController.text,
+      context: context,
+    );
+    setState(() => _isSubmitting = false);
+    if (note != null) {
+      _closeDialog();
+    }
+  }
+
+  Future<void> _pickDate() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(primary: Color(0xFFEF4444)),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (pickedDate != null) {
+      setState(() {
+        _dateController.text = pickedDate.toString().split(' ')[0];
+      });
+    }
   }
 
   @override
@@ -230,321 +203,408 @@ class _BKNotePopupState extends State<BKNotePopup> with TickerProviderStateMixin
                 scale: _scaleAnimation,
                 child: Material(
                   color: Colors.transparent,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 24),
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 30,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFFEF4444),
-                                const Color(0xFFDC2626),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(20),
-                              topRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.psychology_outlined,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Catatan untuk BK',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Catat hal penting untuk konseling',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        color: Colors.white.withOpacity(0.8),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: _closeDialog,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            children: [
-                              _buildTextField(
-                                controller: _nameController,
-                                hint: 'Nama Lengkap',
-                                icon: Icons.person_outline,
-                              ),
-                              const SizedBox(height: 16),
-
-                              _buildTextField(
-                                controller: _classController,
-                                hint: 'Kelas',
-                                icon: Icons.school_outlined,
-                              ),
-                              const SizedBox(height: 16),
-
-                              _buildTextField(
-                                controller: _dateController,
-                                hint: 'Tanggal',
-                                icon: Icons.calendar_today_outlined,
-                                readOnly: true,
-                                onTap: () async {
-                                  final DateTime? pickedDate = await showDatePicker(
-                                    context: context,
-                                    initialDate: DateTime.now(),
-                                    firstDate: DateTime(2020),
-                                    lastDate: DateTime.now(),
-                                    builder: (context, child) {
-                                      return Theme(
-                                        data: Theme.of(context).copyWith(
-                                          colorScheme: const ColorScheme.light(
-                                            primary: Color(0xFFEF4444),
-                                          ),
-                                        ),
-                                        child: child!,
-                                      );
-                                    },
-                                  );
-                                  if (pickedDate != null) {
-                                    setState(() {
-                                      _dateController.text = pickedDate.toString().split(' ')[0];
-                                    });
-                                  }
-                                },
-                              ),
-                              const SizedBox(height: 16),
-
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFFEF4444).withOpacity(0.1),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: TextField(
-                                  controller: _noteController,
-                                  maxLines: 4,
-                                  decoration: InputDecoration(
-                                    hintText: 'Catatan untuk BK (perilaku, kondisi psikologi, dll)',
-                                    hintStyle: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      color: const Color(0xFF9CA3AF),
-                                    ),
-                                    prefixIcon: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      child: const Icon(
-                                        Icons.edit_note,
-                                        color: Color(0xFFEF4444),
-                                        size: 20,
-                                      ),
-                                    ),
-                                    filled: true,
-                                    fillColor: const Color(0xFFFEF2F2),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Color(0xFFFECACA)),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Color(0xFFFECACA)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Color(0xFFEF4444), width: 2),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                  ),
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    color: const Color(0xFF374151),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Info card
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFEF2F2),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: const Color(0xFFFECACA)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.info_outline,
-                                      color: Color(0xFFEF4444),
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        'Catatan ini akan diteruskan ke guru BK untuk tindak lanjut konseling',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
-                                          color: const Color(0xFF991B1B),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 32),
-
-                              // Action buttons
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: _isSubmitting ? null : _closeDialog,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                                        ),
-                                        child: Text(
-                                          'Batal',
-                                          textAlign: TextAlign.center,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF6B7280),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: _isSubmitting ? null : _submitNote,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              const Color(0xFFEF4444),
-                                              const Color(0xFFDC2626),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                          borderRadius: BorderRadius.circular(12),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFFEF4444).withOpacity(0.3),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: _isSubmitting
-                                            ? const SizedBox(
-                                                height: 20,
-                                                width: 20,
-                                                child: CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                                ),
-                                              )
-                                            : Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  const Icon(
-                                                    Icons.send,
-                                                    color: Colors.white,
-                                                    size: 16,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    'Kirim ke BK',
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 14,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: NoteDialogContent(
+                    nameController: _nameController,
+                    classController: _classController,
+                    dateController: _dateController,
+                    noteController: _noteController,
+                    isSubmitting: _isSubmitting,
+                    onClose: _closeDialog,
+                    onSubmit: _submitNote,
+                    onDateTap: _pickDate,
                   ),
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class NoteDialogContent extends StatelessWidget {
+  final TextEditingController nameController;
+  final TextEditingController classController;
+  final TextEditingController dateController;
+  final TextEditingController noteController;
+  final bool isSubmitting;
+  final VoidCallback onClose;
+  final VoidCallback onSubmit;
+  final VoidCallback onDateTap;
+
+  const NoteDialogContent({
+    Key? key,
+    required this.nameController,
+    required this.classController,
+    required this.dateController,
+    required this.noteController,
+    required this.isSubmitting,
+    required this.onClose,
+    required this.onSubmit,
+    required this.onDateTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      constraints: const BoxConstraints(maxWidth: 420),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          HeaderSection(onClose: onClose),
+          FormSection(
+            nameController: nameController,
+            classController: classController,
+            dateController: dateController,
+            noteController: noteController,
+            onDateTap: onDateTap,
+          ),
+          ActionButtons(
+            isSubmitting: isSubmitting,
+            onCancel: onClose,
+            onSubmit: onSubmit,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HeaderSection extends StatelessWidget {
+  final VoidCallback onClose;
+
+  const HeaderSection({Key? key, required this.onClose}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.psychology_outlined, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Catatan untuk BK',
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  'Catat hal penting untuk konseling',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: onClose,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.close, color: Colors.white, size: 20),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FormSection extends StatelessWidget {
+  final TextEditingController nameController;
+  final TextEditingController classController;
+  final TextEditingController dateController;
+  final TextEditingController noteController;
+  final VoidCallback onDateTap;
+
+  const FormSection({
+    Key? key,
+    required this.nameController,
+    required this.classController,
+    required this.dateController,
+    required this.noteController,
+    required this.onDateTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          CustomTextField(
+            controller: nameController,
+            hint: 'Nama Lengkap',
+            icon: Icons.person_outline,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: classController,
+            hint: 'Kelas',
+            icon: Icons.school_outlined,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: dateController,
+            hint: 'Tanggal',
+            icon: Icons.calendar_today_outlined,
+            readOnly: true,
+            onTap: onDateTap,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: noteController,
+            hint: 'Catatan untuk BK (perilaku, kondisi psikologi, dll)',
+            icon: Icons.edit_note,
+            maxLines: 4,
+            fillColor: const Color(0xFFFEF2F2),
+            borderColor: const Color(0xFFFECACA),
+          ),
+          const SizedBox(height: 24),
+          const InfoCard(),
+        ],
+      ),
+    );
+  }
+}
+
+class CustomTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final IconData icon;
+  final bool readOnly;
+  final VoidCallback? onTap;
+  final int maxLines;
+  final Color? fillColor;
+  final Color? borderColor;
+
+  const CustomTextField({
+    Key? key,
+    required this.controller,
+    required this.hint,
+    required this.icon,
+    this.readOnly = false,
+    this.onTap,
+    this.maxLines = 1,
+    this.fillColor,
+    this.borderColor,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: (fillColor == null ? Colors.black : const Color(0xFFEF4444)).withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        readOnly: readOnly,
+        onTap: onTap,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF9CA3AF)),
+          prefixIcon: Container(
+            padding: const EdgeInsets.all(12),
+            child: Icon(icon, color: const Color(0xFFEF4444), size: 20),
+          ),
+          filled: true,
+          fillColor: fillColor ?? Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: borderColor ?? const Color(0xFFE5E7EB)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: borderColor ?? const Color(0xFFE5E7EB)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEF4444), width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+        style: GoogleFonts.poppins(
+          fontSize: 14,
+          color: const Color(0xFF374151),
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+}
+
+class InfoCard extends StatelessWidget {
+  const InfoCard({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFECACA)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: Color(0xFFEF4444), size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Catatan ini akan diteruskan ke guru BK untuk tindak lanjut konseling',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: const Color(0xFF991B1B),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ActionButtons extends StatelessWidget {
+  final bool isSubmitting;
+  final VoidCallback onCancel;
+  final VoidCallback onSubmit;
+
+  const ActionButtons({
+    Key? key,
+    required this.isSubmitting,
+    required this.onCancel,
+    required this.onSubmit,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: isSubmitting ? null : onCancel,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Text(
+                  'Batal',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF6B7280),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: GestureDetector(
+              onTap: isSubmitting ? null : onSubmit,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFEF4444).withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: isSubmitting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.send, color: Colors.white, size: 16),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Kirim ke BK',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

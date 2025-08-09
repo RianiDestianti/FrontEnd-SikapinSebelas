@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:skoring/screens/kaprog/siswa.dart'; 
+import 'package:skoring/screens/kaprog/siswa.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({Key? key}) : super(key: key);
@@ -9,8 +9,7 @@ class RoleSelectionScreen extends StatefulWidget {
   State<RoleSelectionScreen> createState() => _RoleSelectionScreenState();
 }
 
-class _RoleSelectionScreenState extends State<RoleSelectionScreen>
-    with TickerProviderStateMixin {
+class _RoleSelectionScreenState extends State<RoleSelectionScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -54,85 +53,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF0083EE).withOpacity(0.3),
-                          blurRadius: 30,
-                          offset: const Offset(0, 10),
-                        ),
-                        BoxShadow(
-                          color: const Color(0xFF61B8FF).withOpacity(0.2),
-                          blurRadius: 50,
-                          offset: const Offset(0, 20),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.school_outlined,
-                      size: 64,
-                      color: Colors.white,
-                    ),
-                  ),
-
+                  const LogoSection(),
                   const SizedBox(height: 40),
-
-                  Column(
-                    children: [
-                      Text(
-                        'Selamat Datang! 👋',
-                        style: GoogleFonts.poppins(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1F2937),
-                          height: 1.2,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF61B8FF).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(25),
-                          border: Border.all(
-                            color: const Color(0xFF61B8FF).withOpacity(0.2),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          'Pilih peran Anda untuk melanjutkan',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF6B7280),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-                  ),
-
+                  const WelcomeSection(),
                   const SizedBox(height: 48),
-
-                  _buildEnhancedRoleButton(
-                    context: context,
+                  RoleButton(
                     title: 'Kepala Program Keahlian',
-                    subtitle:
-                        'Kelola seluruh program keahlian dan monitoring siswa',
+                    subtitle: 'Kelola seluruh program keahlian dan monitoring siswa',
                     icon: Icons.admin_panel_settings_outlined,
                     gradient: const LinearGradient(
                       colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
@@ -143,17 +70,12 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                       print('Navigating to ProgramSelectionScreen...');
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProgramKeahlianScreen(),
-                        ),
+                        MaterialPageRoute(builder: (context) => const ProgramKeahlianScreen()),
                       );
                     },
                   ),
-
                   const SizedBox(height: 20),
-
-                  _buildEnhancedRoleButton(
-                    context: context,
+                  RoleButton(
                     title: 'Wali Kelas',
                     subtitle: 'Kelola kelas, siswa, dan laporan perkembangan',
                     icon: Icons.class_outlined,
@@ -167,50 +89,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                       Navigator.pushNamed(context, '/walikelas');
                     },
                   ),
-
                   const SizedBox(height: 40),
-
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Aplikasi Manajemen Siswa SMK',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF9CA3AF),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const FooterSection(),
                 ],
               ),
             ),
@@ -219,15 +99,102 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
       ),
     );
   }
+}
 
-  Widget _buildEnhancedRoleButton({
-    required BuildContext context,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Gradient gradient,
-    required VoidCallback onTap,
-  }) {
+class LogoSection extends StatelessWidget {
+  const LogoSection({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0083EE).withOpacity(0.3),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: const Color(0xFF61B8FF).withOpacity(0.2),
+            blurRadius: 50,
+            offset: const Offset(0, 20),
+          ),
+        ],
+      ),
+      child: const Icon(
+        Icons.school_outlined,
+        size: 64,
+        color: Colors.white,
+      ),
+    );
+  }
+}
+
+class WelcomeSection extends StatelessWidget {
+  const WelcomeSection({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          'Selamat Datang! 👋',
+          style: GoogleFonts.poppins(
+            fontSize: 32,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF1F2937),
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF61B8FF).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: const Color(0xFF61B8FF).withOpacity(0.2), width: 1),
+          ),
+          child: Text(
+            'Pilih peran Anda untuk melanjutkan',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF6B7280),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class RoleButton extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Gradient gradient;
+  final VoidCallback onTap;
+
+  const RoleButton({
+    Key? key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.gradient,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -238,55 +205,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 25,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
+            BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 25, offset: const Offset(0, 8)),
+            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 2)),
           ],
         ),
         child: Row(
           children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                gradient: gradient,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: gradient.colors.first.withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  Center(child: Icon(icon, color: Colors.white, size: 32)),
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
+            RoleIcon(icon: icon, gradient: gradient),
             const SizedBox(width: 20),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,33 +241,118 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                 ],
               ),
             ),
-
             const SizedBox(width: 16),
-
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    gradient.colors.first.withOpacity(0.1),
-                    gradient.colors.last.withOpacity(0.1),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: gradient.colors.first.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: gradient.colors.first,
-                size: 18,
-              ),
-            ),
+            RoleArrow(gradient: gradient),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class RoleIcon extends StatelessWidget {
+  final IconData icon;
+  final Gradient gradient;
+
+  const RoleIcon({Key? key, required this.icon, required this.gradient}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 72,
+      height: 72,
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: gradient.colors.first.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5)),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Center(child: Icon(icon, color: Colors.white, size: 32)),
+          Positioned(
+            top: 12,
+            right: 12,
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class RoleArrow extends StatelessWidget {
+  final Gradient gradient;
+
+  const RoleArrow({Key? key, required this.gradient}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            gradient.colors.first.withOpacity(0.1),
+            gradient.colors.last.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: gradient.colors.first.withOpacity(0.2), width: 1),
+      ),
+      child: Icon(
+        Icons.arrow_forward_ios_rounded,
+        color: gradient.colors.first,
+        size: 18,
+      ),
+    );
+  }
+}
+
+class FooterSection extends StatelessWidget {
+  const FooterSection({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(colors: [Color(0xFF61B8FF), Color(0xFF0083EE)]),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Aplikasi Manajemen Siswa SMK',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF9CA3AF),
+            ),
+          ),
+        ],
       ),
     );
   }
