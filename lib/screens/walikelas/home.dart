@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../navigation/walikelas.dart';
-import 'siswa.dart';
-import 'laporan.dart';
-import 'package:skoring/screens/notifikasi.dart';
+import 'student.dart';
+import 'report.dart';
+import 'package:skoring/screens/notification.dart';
 import 'package:skoring/screens/profile.dart';
-import 'package:skoring/screens/grafik.dart';
+import 'package:skoring/screens/chart.dart';
 import 'package:skoring/screens/status.dart';
 
 class WalikelasMainScreen extends StatefulWidget {

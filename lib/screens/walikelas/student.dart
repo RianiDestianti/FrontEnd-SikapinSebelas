@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'detail.dart';
-import 'package:skoring/screens/notifikasi.dart';
+import 'details.dart';
+import 'package:skoring/screens/notification.dart';
 import 'package:skoring/screens/profile.dart';
 
 class SiswaScreen extends StatefulWidget {

@@ -13,7 +13,8 @@ class WalikelasNavigation extends StatefulWidget {
 
   @override
   
-  State<WalikelasNavigation> createState() => _WalikelasNavigationState();
+  State<WalikelasNavigation> createState
+  () => _WalikelasNavigationState();
 }
 
 class _WalikelasNavigationState extends State<WalikelasNavigation> {

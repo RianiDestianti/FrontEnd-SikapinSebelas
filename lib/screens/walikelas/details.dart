@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'beripoint.dart';
-import 'berinote.dart';
+import 'points.dart';
+import 'notes.dart';
 
 class DetailScreen extends StatefulWidget {
   final Map<String, dynamic> student;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:skoring/screens/notifikasi.dart';
+import 'package:skoring/screens/notification.dart';
 import 'package:skoring/screens/profile.dart';
 import 'package:skoring/widgets/exports/excel.dart';
 import 'package:skoring/widgets/exports/pdf.dart';

@@ -1107,7 +1107,6 @@ class ChartPainter extends CustomPainter {
     textPainter.layout();
     textPainter.paint(canvas, const Offset(70, 5));
 
-    // Legend Pelanggaran
     legendPaint.color = const Color(0xFFFF6B6D);
     canvas.drawCircle(const Offset(150, 10), 4, legendPaint);
     textPainter.text = const TextSpan(

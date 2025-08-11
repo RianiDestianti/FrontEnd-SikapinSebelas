@@ -27,7 +27,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> with TickerProv
 
   final List<PageData> _pages = [
     PageData(
-      icon: Icons.school_rounded,
+      image: 'assets/apk.png',
       title: 'Selamat Datang di Aplikasi SMK',
       description: 'Kelola prestasi dan pelanggaran siswa dengan mudah dan efisien.',
     ),
@@ -238,11 +238,13 @@ class RegularPage extends StatelessWidget {
               SizedBox(height: MediaQuery.of(context).size.height * 0.1),
               ScaleTransition(
                 scale: scaleAnimation,
-                child: CircleIcon(
-                  icon: pageData.icon!,
-                  size: 180,
-                  iconSize: 90,
-                ),
+                child: pageData.icon != null
+                    ? CircleIcon(
+                        icon: pageData.icon!,
+                        size: 180,
+                        iconSize: 90,
+                      )
+                    : LayeredImage(image: pageData.image!),
               ),
               const SizedBox(height: 40),
               Text(

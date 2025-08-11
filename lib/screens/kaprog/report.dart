@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:skoring/screens/notifikasi.dart';
+import 'package:skoring/screens/notification.dart';
 import 'package:skoring/screens/profile.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
