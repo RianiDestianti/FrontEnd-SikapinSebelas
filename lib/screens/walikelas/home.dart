@@ -3,10 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../navigation/walikelas.dart';
 import 'student.dart';
 import 'report.dart';
-import 'package:skoring/screens/notification.dart';
+import 'notification.dart';
 import 'package:skoring/screens/profile.dart';
 import 'package:skoring/screens/chart.dart';
-import 'package:skoring/screens/status.dart';
+import 'package:skoring/screens/activity.dart';
+import 'details.dart'; // Import the DetailScreen
 
 class WalikelasMainScreen extends StatefulWidget {
   const WalikelasMainScreen({Key? key}) : super(key: key);
@@ -62,35 +63,87 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final List<Map<String, dynamic>> _siswaTerbaik = [
     {
       'nama': 'Nazwa Xariena',
+      'name': 'Nazwa Xariena', // Add name field for DetailScreen
       'kelas': 'XII RPL 2',
       'poin': 850,
       'prestasi': 'Juara 1 OSN Matematika',
       'avatar': Icons.person,
       'rank': 1,
+      'status': 'Aman',
+      'nis': '2023001',
+      'nisn': '2023001',
+      'ttl': 'Bandung, 15 Mei 2007',
+      'jenkel': 'Perempuan',
+      'alamat': 'Jl. Merdeka No. 123, Cimahi, Jawa Barat',
+      'program_keahlian': 'Rekayasa Perangkat Lunak',
+      'tahun_masuk': '2023',
+      'no_hp': '08123456789',
+      'email': 'nazwa.xariena@smk.sch.id',
+      'nama_ortu': 'Ahmad Sudarjo',
+      'no_hp_ortu': '08129876543',
     },
     {
       'nama': 'Siti Nurhaliza',
+      'name': 'Siti Nurhaliza',
       'kelas': 'XII RPL 2',
       'poin': 820,
       'prestasi': 'Juara 2 Lomba Pidato',
       'avatar': Icons.person,
       'rank': 2,
+      'status': 'Aman',
+      'nis': '2023002',
+      'nisn': '2023002',
+      'ttl': 'Jakarta, 20 April 2007',
+      'jenkel': 'Perempuan',
+      'alamat': 'Jl. Sudirman No. 45, Cimahi, Jawa Barat',
+      'program_keahlian': 'Rekayasa Perangkat Lunak',
+      'tahun_masuk': '2023',
+      'no_hp': '08123456790',
+      'email': 'siti.nurhaliza@smk.sch.id',
+      'nama_ortu': 'Budi Santoso',
+      'no_hp_ortu': '08129876544',
     },
     {
       'nama': 'Budi Santoso',
+      'name': 'Budi Santoso',
       'kelas': 'XII RPL 2',
       'poin': 800,
       'prestasi': 'Ketua OSIS Berprestasi',
       'avatar': Icons.person,
       'rank': 3,
+      'status': 'Aman',
+      'nis': '2023003',
+      'nisn': '2023003',
+      'ttl': 'Surabaya, 10 Januari 2007',
+      'jenkel': 'Laki-laki',
+      'alamat': 'Jl. Pahlawan No. 78, Cimahi, Jawa Barat',
+      'program_keahlian': 'Rekayasa Perangkat Lunak',
+      'tahun_masuk': '2023',
+      'no_hp': '08123456791',
+      'email': 'budi.santoso@smk.sch.id',
+      'nama_ortu': 'Sari Dewi',
+      'no_hp_ortu': '08129876545',
     },
     {
       'nama': 'Maya Sari Dewi',
+      'name': 'Maya Sari Dewi',
       'kelas': 'XII RPL 2',
       'poin': 780,
       'prestasi': 'Juara 1 Olimpiade Fisika',
       'avatar': Icons.person,
       'rank': 4,
+      'status': 'Aman',
+      'nis': '2023004',
+      'nisn': '2023004',
+      'ttl': 'Medan, 25 Maret 2007',
+      'jenkel': 'Perempuan',
+      'alamat': 'Jl. Kemerdekaan No. 90, Cimahi, Jawa Barat',
+      'program_keahlian': 'Rekayasa Perangkat Lunak',
+      'tahun_masuk': '2023',
+      'no_hp': '08123456792',
+      'email': 'maya.dewi@smk.sch.id',
+      'nama_ortu': 'Hendra Wijaya',
+      'no_hp_ortu': '08129876546',
     },
   ];
 
@@ -122,9 +175,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       } else {
         _filteredSiswaTerbaik =
             _siswaTerbaik.where((siswa) {
-              final namaLower = siswa['nama'].toString().toLowerCase();
-              final kelasLower = siswa['kelas'].toString().toLowerCase();
-              final prestasiLower = siswa['prestasi'].toString().toLowerCase();
+              final namaLower = (siswa['nama'] ?? '').toString().toLowerCase();
+              final kelasLower =
+                  (siswa['kelas'] ?? '').toString().toLowerCase();
+              final prestasiLower =
+                  (siswa['prestasi'] ?? '').toString().toLowerCase();
               final searchLower = query.toLowerCase();
               return namaLower.contains(searchLower) ||
                   kelasLower.contains(searchLower) ||
@@ -132,6 +187,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             }).toList();
       }
     });
+  }
+
+  void _navigateToDetailScreen(Map<String, dynamic> siswa) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DetailScreen(student: siswa)),
+    );
   }
 
   @override
@@ -423,114 +485,136 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           false,
                         ),
                         const SizedBox(height: 20),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.06),
-                                blurRadius: 20,
-                                offset: const Offset(0, 5),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ActivityScreen(),
                               ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF61B8FF),
-                                          Color(0xFF0083EE),
+                            );
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.06),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFF61B8FF),
+                                            Color(0xFF0083EE),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.history,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Aktivitas Terkini',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF1F2937),
+                                            ),
+                                          ),
+                                          Text(
+                                            'Update terbaru dari sistem',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              color: const Color(0xFF6B7280),
+                                            ),
+                                          ),
                                         ],
                                       ),
-                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Icon(
-                                      Icons.history,
-                                      color: Colors.white,
-                                      size: 20,
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF8FAFC),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 14,
+                                        color: Color(0xFF9CA3AF),
+                                      ),
                                     ),
+                                  ],
+                                ),
+                                const SizedBox(height: 24),
+                                _buildEnhancedActivityItem(
+                                  Icons.assessment_outlined,
+                                  const LinearGradient(
+                                    colors: [
+                                      Color(0xFF61B8FF),
+                                      Color(0xFF0083EE),
+                                    ],
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Aktivitas Terkini',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color(0xFF1F2937),
-                                          ),
-                                        ),
-                                        Text(
-                                          'Update terbaru dari sistem',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            color: const Color(0xFF6B7280),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  'Laporan Bulanan',
+                                  'Laporan evaluasi siswa telah selesai dibuat',
+                                  '10.30',
+                                  'SELESAI',
+                                  const Color(0xFF10B981),
+                                ),
+                                const SizedBox(height: 16),
+                                _buildEnhancedActivityItem(
+                                  Icons.emoji_events_outlined,
+                                  const LinearGradient(
+                                    colors: [
+                                      Color(0xFF10B981),
+                                      Color(0xFF34D399),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 24),
-                              _buildEnhancedActivityItem(
-                                Icons.assessment_outlined,
-                                const LinearGradient(
-                                  colors: [
-                                    Color(0xFF61B8FF),
-                                    Color(0xFF0083EE),
-                                  ],
+                                  'Poin Apresiasi',
+                                  'Poin apresiasi berhasil ditambahkan kepada 3 siswa berprestasi',
+                                  '08.30',
+                                  'BARU',
+                                  const Color(0xFF10B981),
                                 ),
-                                'Laporan Bulanan',
-                                'Laporan evaluasi siswa telah selesai dibuat',
-                                '10.30',
-                                'SELESAI',
-                                const Color(0xFF10B981),
-                              ),
-                              const SizedBox(height: 16),
-                              _buildEnhancedActivityItem(
-                                Icons.emoji_events_outlined,
-                                const LinearGradient(
-                                  colors: [
-                                    Color(0xFF10B981),
-                                    Color(0xFF34D399),
-                                  ],
+                                const SizedBox(height: 16),
+                                _buildEnhancedActivityItem(
+                                  Icons.report_problem_outlined,
+                                  const LinearGradient(
+                                    colors: [
+                                      Color(0xFFFF6B6D),
+                                      Color(0xFFFF8E8F),
+                                    ],
+                                  ),
+                                  'Pelanggaran',
+                                  'Terdapat 3 siswa dengan pelanggaran ringan',
+                                  '06.30',
+                                  'PERLU TINDAKAN',
+                                  const Color(0xFFEA580C),
                                 ),
-                                'Poin Apresiasi',
-                                'Poin apresiasi berhasil ditambahkan kepada 3 siswa berprestasi',
-                                '08.30',
-                                'BARU',
-                                const Color(0xFF10B981),
-                              ),
-                              const SizedBox(height: 16),
-                              _buildEnhancedActivityItem(
-                                Icons.report_problem_outlined,
-                                const LinearGradient(
-                                  colors: [
-                                    Color(0xFFFF6B6D),
-                                    Color(0xFFFF8E8F),
-                                  ],
-                                ),
-                                'Pelanggaran',
-                                'Terdapat 3 siswa dengan pelanggaran ringan',
-                                '06.30',
-                                'PERLU TINDAKAN',
-                                const Color(0xFFEA580C),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -602,7 +686,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
                       Text(
-                        'Top 5 siswa dengan poin tertinggi',
+                        'Top 4 siswa dengan poin tertinggi',
                         style: GoogleFonts.poppins(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 12,
@@ -650,176 +734,174 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildSiswaTerbaikItem(Map<String, dynamic> siswa) {
-    Color rankColor = _getRankColor(siswa['rank']);
-    IconData rankIcon = _getRankIcon(siswa['rank']);
+    Color rankColor = _getRankColor(siswa['rank'] ?? 1);
+    IconData rankIcon = _getRankIcon(siswa['rank'] ?? 1);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: rankColor.withOpacity(0.2), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: rankColor.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors:
-                    siswa['rank'] <= 3
-                        ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
-                        : [const Color(0xFF61B8FF), const Color(0xFF0083EE)],
-              ),
-              borderRadius: BorderRadius.circular(25),
-              boxShadow: [
-                BoxShadow(
-                  color: rankColor.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () => _navigateToDetailScreen(siswa),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: rankColor.withOpacity(0.2), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: rankColor.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(Icons.person, color: Colors.white, size: 24),
-                if (siswa['rank'] <= 3)
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: rankColor,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: Icon(rankIcon, color: Colors.white, size: 10),
-                    ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors:
+                      (siswa['rank'] ?? 1) <= 3
+                          ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
+                          : [const Color(0xFF61B8FF), const Color(0xFF0083EE)],
+                ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: rankColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: rankColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: rankColor.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        '#${siswa['rank']}',
-                        style: GoogleFonts.poppins(
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(Icons.person, color: Colors.white, size: 24),
+                  if ((siswa['rank'] ?? 1) <= 3)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
                           color: rankColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white, width: 2),
                         ),
+                        child: Icon(rankIcon, color: Colors.white, size: 10),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => StatusScreen(siswaData: siswa),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: rankColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: rankColor.withOpacity(0.3),
+                            width: 1,
                           ),
-                        );
-                      },
-                      child: Text(
-                        siswa['nama'],
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                          color: const Color(0xFF1F2937),
+                        ),
+                        child: Text(
+                          '#${siswa['rank'] ?? 1}',
+                          style: GoogleFonts.poppins(
+                            color: rankColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          siswa['nama'] ?? 'Nama Siswa',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: const Color(0xFF1F2937),
+                          ),
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0083EE).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0083EE).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          siswa['kelas'] ?? 'Kelas',
+                          style: GoogleFonts.poppins(
+                            color: const Color(0xFF0083EE),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                      child: Text(
-                        siswa['kelas'],
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.star,
+                        color: Color(0xFFFFD700),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${siswa['poin'] ?? 0} poin',
                         style: GoogleFonts.poppins(
-                          color: const Color(0xFF0083EE),
-                          fontSize: 10,
+                          color: const Color(0xFF6B7280),
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(Icons.star, color: const Color(0xFFFFD700), size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${siswa['poin']} poin',
-                      style: GoogleFonts.poppins(
-                        color: const Color(0xFF6B7280),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  siswa['prestasi'],
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF6B7280),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    fontStyle: FontStyle.italic,
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    siswa['prestasi'] ?? 'Prestasi',
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFF6B7280),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: rankColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: rankColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.trending_up, color: rankColor, size: 20),
             ),
-            child: Icon(Icons.trending_up, color: rankColor, size: 20),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1091,8 +1173,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildBarChart(List<Map<String, dynamic>> data, Gradient gradient) {
     double maxValue = data
-        .map((e) => e['value'] as double)
+        .map((e) => (e['value'] as double?) ?? 0.0)
         .reduce((a, b) => a > b ? a : b);
+
     return Container(
       height: 160,
       child: Column(
@@ -1157,8 +1240,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children:
                         data.map((item) {
-                          double value = item['value'];
-                          double height = (value / maxValue) * 120;
+                          double value = (item['value'] as double?) ?? 0.0;
+                          double height =
+                              maxValue > 0 ? (value / maxValue) * 120 : 0;
                           return Container(
                             width: 24,
                             height: height,
@@ -1190,7 +1274,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   children:
                       data.map((item) {
                         return Text(
-                          item['label'],
+                          (item['label'] as String?) ?? '',
                           style: GoogleFonts.poppins(
                             fontSize: 11,
                             color: const Color(0xFF6B7280),
@@ -1216,95 +1300,106 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     String badge,
     Color badgeColor,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: gradient,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ActivityScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: gradient,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: const Color(0xFF1F2937),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFF6B7280),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      height: 1.4,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  title,
+                  time,
                   style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                    color: const Color(0xFF1F2937),
+                    color: const Color(0xFF9CA3AF),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF6B7280),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    height: 1.4,
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  decoration: BoxDecoration(
+                    color: badgeColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: badgeColor.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    badge,
+                    style: GoogleFonts.poppins(
+                      color: badgeColor,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                time,
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF9CA3AF),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: badgeColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: badgeColor.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  badge,
-                  style: GoogleFonts.poppins(
-                    color: badgeColor,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

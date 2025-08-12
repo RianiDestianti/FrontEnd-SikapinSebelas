@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'details.dart';
-import 'package:skoring/screens/notification.dart';
+import 'package:skoring/screens/walikelas/notification.dart';
 import 'package:skoring/screens/profile.dart';
 
 class SiswaScreen extends StatefulWidget {
@@ -515,17 +515,23 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  width: 85, // Increased width untuk memberikan ruang lebih
+                  height: 28, // Increased height untuk proporsi yang lebih baik
                   decoration: BoxDecoration(
                     color: _getStatusColor(student['status']).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    student['status'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: _getStatusColor(student['status']),
+                  child: Center( // Center text di dalam container
+                    child: Text(
+                      student['status'],
+                      style: GoogleFonts.poppins(
+                        fontSize: 11, // Slightly larger font
+                        fontWeight: FontWeight.w700,
+                        color: _getStatusColor(student['status']),
+                      ),
+                      textAlign: TextAlign.center, // Text align center
+                      maxLines: 1, // Pastikan hanya 1 baris
+                      overflow: TextOverflow.ellipsis, // Handle overflow
                     ),
                   ),
                 ),

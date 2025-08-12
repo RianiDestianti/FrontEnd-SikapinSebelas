@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'points.dart';
 import 'notes.dart';
+import '../history.dart'; // Added import for HistoryScreen
 
 class DetailScreen extends StatefulWidget {
   final Map<String, dynamic> student;
@@ -53,7 +54,6 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
     },
   ];
 
-  // Histori pemberian poin apresiasi
   final List<Map<String, dynamic>> apresiasiHistory = [
     {
       "type": "Prestasi Akademik",
@@ -97,7 +97,6 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
     },
   ];
 
-  // Histori akumulasi poin
   final List<Map<String, dynamic>> akumulasiHistory = [
     {
       "periode": "Minggu ke-4 Juli 2025",
@@ -503,7 +502,7 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                         ),
                         const SizedBox(height: 16),
                         
-                        _buildBiodataRow('NIS/NISN', detailedStudent['nisn'], Icons.badge),
+                        _buildBiodataRow('NIS/NISN', detailedStudent['nis'], Icons.badge),
                         _buildBiodataRow('Tempat, Tanggal Lahir', detailedStudent['ttl'], Icons.cake),
                         _buildBiodataRow('Jenis Kelamin', detailedStudent['jenkel'], Icons.person),
                         _buildBiodataRow('Alamat', detailedStudent['alamat'], Icons.home),
@@ -709,124 +708,134 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
   }
 
   Widget _buildHistoryCard(Map<String, dynamic> item, {required bool isPelanggaran}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: item['color'].withOpacity(0.2),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HistoryScreen(student: widget.student),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: item['color'].withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  item['icon'],
-                  color: item['color'],
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['type'],
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1F2937),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item['description'],
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              Text(
-                '${item['points'] > 0 ? '+' : ''}${item['points']}',
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: item['color'],
-                ),
-              ),
-            ],
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: item['color'].withOpacity(0.2),
+            width: 2,
           ),
-          const SizedBox(height: 12),
-          
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
-            child: Column(
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 16, color: const Color(0xFF6B7280)),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${item['date']} • ${item['time']}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: item['color'].withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    item['icon'],
+                    color: item['color'],
+                    size: 24,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.person, size: 16, color: const Color(0xFF6B7280)),
-                    const SizedBox(width: 8),
-                    Text(
-                      isPelanggaran ? 'Pelapor: ${item['pelapor']}' : 'Pemberi: ${item['pemberi']}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF6B7280),
+                const SizedBox(width: 16),
+                
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item['type'],
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1F2937),
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        item['description'],
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                Text(
+                  '${item['points'] > 0 ? '+' : ''}${item['points']}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: item['color'],
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 16, color: const Color(0xFF6B7280)),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${item['date']} • ${item['time']}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.person, size: 16, color: const Color(0xFF6B7280)),
+                      const SizedBox(width: 8),
+                      Text(
+                        isPelanggaran ? 'Pelapor: ${item['pelapor']}' : 'Pemberi: ${item['pemberi']}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
