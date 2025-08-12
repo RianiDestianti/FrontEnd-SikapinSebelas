@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/models/profile.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late AnimationController _buttonController;
   late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _scaleAnimation;
 
   final Profile _profile = Profile(
     name: 'Bagas Setiawan',
@@ -28,37 +28,40 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
 
   final List<ProfileField> _profileFields = [
     ProfileField(label: 'NIP', icon: Icons.badge_outlined, key: 'nip'),
-    ProfileField(label: 'Username', icon: Icons.person_outline, key: 'username'),
+    ProfileField(
+      label: 'Username',
+      icon: Icons.person_outline,
+      key: 'username',
+    ),
     ProfileField(label: 'Email', icon: Icons.email_outlined, key: 'email'),
     ProfileField(label: 'Nomor HP', icon: Icons.phone_outlined, key: 'phone'),
-    ProfileField(label: 'Menjabat Sejak', icon: Icons.calendar_today_outlined, key: 'joinDate'),
+    ProfileField(
+      label: 'Menjabat Sejak',
+      icon: Icons.calendar_today_outlined,
+      key: 'joinDate',
+    ),
   ];
 
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     _buttonController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
     _animationController.forward();
   }
 
@@ -73,7 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => LogoutDialog(buttonController: _buttonController),
+      builder: (BuildContext context) => const LogoutDialog(),
     );
   }
 
@@ -89,20 +92,19 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           ),
         ),
         child: SafeArea(
+          top: true,
+          bottom: false,
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: Column(
               children: [
                 HeaderSection(onBack: () => Navigator.pop(context)),
                 Expanded(
-                  child: ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: ProfileContentSection(
-                      profile: _profile,
-                      profileFields: _profileFields,
-                      onLogoutTap: _showLogoutDialog,
-                      buttonController: _buttonController,
-                    ),
+                  child: ProfileContentSection(
+                    profile: _profile,
+                    profileFields: _profileFields,
+                    onLogoutTap: _showLogoutDialog,
+                    buttonController: _buttonController,
                   ),
                 ),
               ],
@@ -117,54 +119,52 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
 class HeaderSection extends StatelessWidget {
   final VoidCallback onBack;
 
-  const HeaderSection({Key? key, required this.onBack}) : super(key: key);
+  const HeaderSection({super.key, required this.onBack});
 
   @override
   Widget build(BuildContext context) {
-    return SlideTransition(
-      position: Tween<Offset>(
-        begin: const Offset(0, 0.3),
-        end: Offset.zero,
-      ).animate(
-        CurvedAnimation(
-          parent: AnimationController(
-            duration: const Duration(milliseconds: 1200),
-            vsync: Navigator.of(context),
-          )..forward(),
-          curve: Curves.easeOutCubic,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-        child: Row(
-          children: [
-            GestureDetector(
-              onTap: onBack,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = screenWidth * 0.05;
+    final iconSize = screenWidth * 0.11;
+    final fontSize = screenWidth * 0.05;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(padding, 16, padding, 32),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: onBack,
+            child: Container(
+              width: iconSize,
+              height: iconSize,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(iconSize * 0.36),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1,
                 ),
-                child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
               ),
-            ),
-            const Spacer(),
-            Text(
-              'Profil Saya',
-              style: GoogleFonts.poppins(
+              child: Icon(
+                Icons.arrow_back_ios_new_rounded,
                 color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
+                size: iconSize * 0.45,
               ),
             ),
-            const Spacer(),
-            const SizedBox(width: 44),
-          ],
-        ),
+          ),
+          const Spacer(),
+          Text(
+            'Profil Saya',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: fontSize,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const Spacer(),
+          SizedBox(width: iconSize),
+        ],
       ),
     );
   }
@@ -177,46 +177,59 @@ class ProfileContentSection extends StatelessWidget {
   final AnimationController buttonController;
 
   const ProfileContentSection({
-    Key? key,
+    super.key,
     required this.profile,
     required this.profileFields,
     required this.onLogoutTap,
     required this.buttonController,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = screenWidth * 0.07;
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))],
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 20,
+            offset: Offset(0, -5),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(28),
+        padding: EdgeInsets.all(padding),
         child: Column(
           children: [
             ProfileHeader(profile: profile),
-            const SizedBox(height: 32),
+            SizedBox(height: padding * 0.8),
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(
-                  children: profileFields.asMap().entries.map((entry) {
-                    int index = entry.key;
-                    ProfileField field = entry.value;
-                    return ProfileFieldCard(
-                      label: field.label,
-                      value: _getFieldValue(field.key, profile),
-                      icon: field.icon,
-                      index: index,
-                    );
-                  }).toList(),
+                  children:
+                      profileFields.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        ProfileField field = entry.value;
+                        return ProfileFieldCard(
+                          label: field.label,
+                          value: _getFieldValue(field.key, profile),
+                          icon: field.icon,
+                          index: index,
+                        );
+                      }).toList(),
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: padding * 0.8),
             LogoutButton(
               onTap: onLogoutTap,
               buttonController: buttonController,
@@ -248,42 +261,60 @@ class ProfileContentSection extends StatelessWidget {
 class ProfileHeader extends StatelessWidget {
   final Profile profile;
 
-  const ProfileHeader({Key? key, required this.profile}) : super(key: key);
+  const ProfileHeader({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final avatarSize = screenWidth * 0.2;
+    final fontSize = screenWidth * 0.055;
+    final roleFontSize = screenWidth * 0.032;
+    final padding = screenWidth * 0.06;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [const Color(0xFF007AFF).withOpacity(0.05), const Color(0xFF007AFF).withOpacity(0.02)],
+          colors: [
+            const Color(0xFF007AFF).withOpacity(0.05),
+            const Color(0xFF007AFF).withOpacity(0.02),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF007AFF).withOpacity(0.1), width: 1),
+        borderRadius: BorderRadius.circular(padding * 0.75),
+        border: Border.all(
+          color: const Color(0xFF007AFF).withOpacity(0.1),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
           Stack(
             children: [
               Container(
-                width: 80,
-                height: 80,
+                width: avatarSize,
+                height: avatarSize,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(avatarSize * 0.25),
                   gradient: const LinearGradient(
                     colors: [Color(0xFF007AFF), Color(0xFF0051D5)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  boxShadow: [BoxShadow(color: const Color(0xFF007AFF).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF007AFF).withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
                 ),
                 child: Center(
                   child: Text(
                     'BS',
                     style: GoogleFonts.poppins(
-                      fontSize: 28,
+                      fontSize: avatarSize * 0.35,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
                       letterSpacing: 1,
@@ -295,20 +326,32 @@ class ProfileHeader extends StatelessWidget {
                 bottom: -2,
                 right: -2,
                 child: Container(
-                  width: 28,
-                  height: 28,
+                  width: avatarSize * 0.35,
+                  height: avatarSize * 0.35,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)]),
-                    borderRadius: BorderRadius.circular(14),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF10B981), Color(0xFF059669)],
+                    ),
+                    borderRadius: BorderRadius.circular(avatarSize * 0.175),
                     border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [BoxShadow(color: const Color(0xFF10B981).withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 2))],
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withOpacity(0.4),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  child: const Icon(Icons.check_rounded, color: Colors.white, size: 16),
+                  child: Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: avatarSize * 0.2,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 20),
+          SizedBox(width: padding * 0.5),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,24 +359,35 @@ class ProfileHeader extends StatelessWidget {
                 Text(
                   profile.name,
                   style: GoogleFonts.poppins(
-                    fontSize: 22,
+                    fontSize: fontSize,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1F2937),
                     letterSpacing: 0.3,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: padding * 0.2),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: padding * 0.4,
+                    vertical: padding * 0.2,
+                  ),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFF007AFF), Color(0xFF0051D5)]),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [BoxShadow(color: const Color(0xFF007AFF).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))],
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF007AFF), Color(0xFF0051D5)],
+                    ),
+                    borderRadius: BorderRadius.circular(padding * 0.4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF007AFF).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Text(
                     profile.role,
                     style: GoogleFonts.poppins(
-                      fontSize: 13,
+                      fontSize: roleFontSize,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                       letterSpacing: 0.5,
@@ -356,89 +410,117 @@ class ProfileFieldCard extends StatelessWidget {
   final int index;
 
   const ProfileFieldCard({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     required this.icon,
     required this.index,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = screenWidth * 0.05;
+    final iconSize = screenWidth * 0.12;
+    final fontSize = screenWidth * 0.04;
+    final valueFontSize = screenWidth * 0.045;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: padding * 0.4),
       child: TweenAnimationBuilder<double>(
-        duration: Duration(milliseconds: 600 + (index * 200)),
+        duration: Duration(milliseconds: 600 + (index * 100)),
         tween: Tween(begin: 0.0, end: 1.0),
-        curve: Curves.easeOutCubic,
+        curve: Curves.easeOut,
         builder: (context, animationValue, child) {
-          return Transform.translate(
-            offset: Offset(0, 20 * (1 - animationValue)),
-            child: Opacity(
-              opacity: animationValue,
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFF007AFF).withOpacity(0.08), width: 1),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 2)),
-                    BoxShadow(color: const Color(0xFF007AFF).withOpacity(0.02), blurRadius: 20, offset: const Offset(0, 4)),
-                  ],
+          return Opacity(
+            opacity: animationValue,
+            child: Container(
+              padding: EdgeInsets.all(padding),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(padding * 0.9),
+                border: Border.all(
+                  color: const Color(0xFF007AFF).withOpacity(0.08),
+                  width: 1,
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [const Color(0xFF007AFF).withOpacity(0.1), const Color(0xFF007AFF).withOpacity(0.05)],
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFF007AFF).withOpacity(0.1), width: 1),
-                      ),
-                      child: Icon(icon, color: const Color(0xFF007AFF), size: 22),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            label,
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF9CA3AF),
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            value,
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1F2937),
-                              letterSpacing: 0.2,
-                            ),
-                          ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF007AFF).withOpacity(0.02),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: iconSize,
+                    height: iconSize,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF007AFF).withOpacity(0.1),
+                          const Color(0xFF007AFF).withOpacity(0.05),
                         ],
                       ),
-                    ),
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(iconSize * 0.3),
+                      border: Border.all(
+                        color: const Color(0xFF007AFF).withOpacity(0.1),
+                        width: 1,
                       ),
-                      child: const Icon(Icons.lock_outline, color: Color(0xFF9CA3AF), size: 16),
                     ),
-                  ],
-                ),
+                    child: Icon(
+                      icon,
+                      color: const Color(0xFF007AFF),
+                      size: iconSize * 0.46,
+                    ),
+                  ),
+                  SizedBox(width: padding * 0.4),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: GoogleFonts.poppins(
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF9CA3AF),
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        SizedBox(height: padding * 0.15),
+                        Text(
+                          value,
+                          style: GoogleFonts.poppins(
+                            fontSize: valueFontSize,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1F2937),
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: iconSize * 0.67,
+                    height: iconSize * 0.67,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(iconSize * 0.2),
+                    ),
+                    child: Icon(
+                      Icons.lock_outline,
+                      color: const Color(0xFF9CA3AF),
+                      size: iconSize * 0.33,
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -453,13 +535,19 @@ class LogoutButton extends StatelessWidget {
   final AnimationController buttonController;
 
   const LogoutButton({
-    Key? key,
+    super.key,
     required this.onTap,
     required this.buttonController,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final buttonHeight = screenWidth * 0.14;
+    final padding = screenWidth * 0.06;
+    final fontSize = screenWidth * 0.04;
+    final iconSize = screenWidth * 0.05;
+
     return GestureDetector(
       onTapDown: (_) => buttonController.forward(),
       onTapUp: (_) => buttonController.reverse(),
@@ -471,38 +559,54 @@ class LogoutButton extends StatelessWidget {
             scale: 1.0 - (buttonController.value * 0.05),
             child: Container(
               width: double.infinity,
-              height: 56,
+              height: buttonHeight,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [const Color(0xFFFF6B6B).withOpacity(0.1), const Color(0xFFFF8E8E).withOpacity(0.05)],
+                  colors: [
+                    const Color(0xFFFF6B6B).withOpacity(0.1),
+                    const Color(0xFFFF8E8E).withOpacity(0.05),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFFF6B6B).withOpacity(0.3), width: 2),
-                boxShadow: [BoxShadow(color: const Color(0xFFFF6B6B).withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
+                borderRadius: BorderRadius.circular(padding * 0.5),
+                border: Border.all(
+                  color: const Color(0xFFFF6B6B).withOpacity(0.3),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF6B6B).withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: onTap,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(padding * 0.5),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: EdgeInsets.symmetric(horizontal: padding),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: EdgeInsets.all(padding * 0.2),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFF6B6B).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(padding * 0.25),
                           ),
-                          child: const Icon(Icons.logout_rounded, color: Color(0xFFFF6B6B), size: 20),
+                          child: Icon(
+                            Icons.logout_rounded,
+                            color: const Color(0xFFFF6B6B),
+                            size: iconSize,
+                          ),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: padding * 0.3),
                         Text(
                           'Logout',
                           style: GoogleFonts.poppins(
-                            fontSize: 16,
+                            fontSize: fontSize,
                             fontWeight: FontWeight.w600,
                             color: const Color(0xFFFF6B6B),
                             letterSpacing: 0.5,
@@ -522,97 +626,138 @@ class LogoutButton extends StatelessWidget {
 }
 
 class LogoutDialog extends StatelessWidget {
-  final AnimationController buttonController;
-
-  const LogoutDialog({Key? key, required this.buttonController}) : super(key: key);
+  const LogoutDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: CurvedAnimation(parent: buttonController, curve: Curves.elasticOut),
-      child: AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 20,
-        backgroundColor: Colors.white,
-        title: Column(
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [BoxShadow(color: const Color(0xFFFF6B6B).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))],
+    final screenWidth = MediaQuery.of(context).size.width;
+    final fontSize = screenWidth * 0.05;
+    final iconSize = screenWidth * 0.15;
+    final padding = screenWidth * 0.05;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(padding * 1.2),
+      ),
+      elevation: 20,
+      backgroundColor: Colors.white,
+      title: Column(
+        children: [
+          Container(
+            width: iconSize,
+            height: iconSize,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: const Icon(Icons.logout_rounded, color: Colors.white, size: 28),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Konfirmasi Logout',
-              style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937)),
-            ),
-          ],
-        ),
-        content: Text(
-          'Apakah Anda yakin ingin keluar dari aplikasi?',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF6B7280), height: 1.5),
-        ),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: Text(
-                    'Batal',
-                    style: GoogleFonts.poppins(color: const Color(0xFF6B7280), fontWeight: FontWeight.w600, fontSize: 16),
-                  ),
+              borderRadius: BorderRadius.circular(iconSize * 0.5),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF6B6B).withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: Offset(0, 5),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Row(
-                          children: [
-                            const Icon(Icons.check_circle, color: Colors.white),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Berhasil logout',
-                              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                        backgroundColor: const Color(0xFF10B981),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF6B6B),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: Text(
-                    'Logout',
-                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
+            child: Icon(
+              Icons.logout_rounded,
+              color: Colors.white,
+              size: iconSize * 0.47,
+            ),
+          ),
+          SizedBox(height: padding * 0.4),
+          Text(
+            'Konfirmasi Logout',
+            style: GoogleFonts.poppins(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1F2937),
+            ),
           ),
         ],
       ),
+      content: Text(
+        'Apakah Anda yakin ingin keluar dari aplikasi?',
+        textAlign: TextAlign.center,
+        style: GoogleFonts.poppins(
+          fontSize: fontSize * 0.8,
+          color: const Color(0xFF6B7280),
+          height: 1.5,
+        ),
+      ),
+      actions: [
+        Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: padding * 0.8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(padding * 0.6),
+                  ),
+                ),
+                child: Text(
+                  'Batal',
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF6B7280),
+                    fontWeight: FontWeight.w600,
+                    fontSize: fontSize * 0.9,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: padding * 0.3),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.check_circle, color: Colors.white),
+                          SizedBox(width: padding * 0.3),
+                          Text(
+                            'Berhasil logout',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: fontSize * 0.9,
+                            ),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: const Color(0xFF10B981),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(padding * 0.6),
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF6B6B),
+                  padding: EdgeInsets.symmetric(vertical: padding * 0.8),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(padding * 0.6),
+                  ),
+                ),
+                child: Text(
+                  'Logout',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: fontSize * 0.9,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

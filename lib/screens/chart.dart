@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+class ChartDataItem {
+  final double value;
+  final String label;
+  final String detail;
+
+  ChartDataItem({
+    required this.value,
+    required this.label,
+    required this.detail,
+  });
+}
 
 class GrafikScreen extends StatefulWidget {
   final String chartType;
   final String title;
   final String subtitle;
-  
+
   const GrafikScreen({
     Key? key,
     required this.chartType,
@@ -18,60 +31,58 @@ class GrafikScreen extends StatefulWidget {
 }
 
 class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMixin {
-  int _selectedPeriod = 0; // 0: Minggu, 1: Bulan, 2: Tahun
-  int _selectedChartType = 0; // 0: Bar, 1: Line, 2: Pie
-  
+  int _selectedPeriod = 0;
+  int _selectedChartType = 0;
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // Data untuk grafik apresiasi
-  final Map<String, List<Map<String, dynamic>>> _apresiasiData = {
+  final Map<String, List<ChartDataItem>> _apresiasiData = {
     'minggu': [
-      {'value': 80.0, 'label': 'Sen', 'detail': 'Kebersihan: 30, Kedisiplinan: 25, Prestasi: 25'},
-      {'value': 120.0, 'label': 'Sel', 'detail': 'Kebersihan: 40, Kedisiplinan: 35, Prestasi: 45'},
-      {'value': 90.0, 'label': 'Rab', 'detail': 'Kebersihan: 35, Kedisiplinan: 30, Prestasi: 25'},
-      {'value': 40.0, 'label': 'Kam', 'detail': 'Kebersihan: 15, Kedisiplinan: 10, Prestasi: 15'},
-      {'value': 100.0, 'label': 'Jum', 'detail': 'Kebersihan: 35, Kedisiplinan: 30, Prestasi: 35'},
-      {'value': 75.0, 'label': 'Sab', 'detail': 'Kebersihan: 25, Kedisiplinan: 25, Prestasi: 25'},
-      {'value': 85.0, 'label': 'Min', 'detail': 'Kebersihan: 30, Kedisiplinan: 25, Prestasi: 30'},
+      ChartDataItem(value: 80.0, label: 'Sen', detail: 'Kebersihan: 30, Kedisiplinan: 25, Prestasi: 25'),
+      ChartDataItem(value: 120.0, label: 'Sel', detail: 'Kebersihan: 40, Kedisiplinan: 35, Prestasi: 45'),
+      ChartDataItem(value: 90.0, label: 'Rab', detail: 'Kebersihan: 35, Kedisiplinan: 30, Prestasi: 25'),
+      ChartDataItem(value: 40.0, label: 'Kam', detail: 'Kebersihan: 15, Kedisiplinan: 10, Prestasi: 15'),
+      ChartDataItem(value: 100.0, label: 'Jum', detail: 'Kebersihan: 35, Kedisiplinan: 30, Prestasi: 35'),
+      ChartDataItem(value: 75.0, label: 'Sab', detail: 'Kebersihan: 25, Kedisiplinan: 25, Prestasi: 25'),
+      ChartDataItem(value: 85.0, label: 'Min', detail: 'Kebersihan: 30, Kedisiplinan: 25, Prestasi: 30'),
     ],
     'bulan': [
-      {'value': 320.0, 'label': 'Jan', 'detail': 'Total siswa: 85, Rata-rata: 3.8 poin'},
-      {'value': 480.0, 'label': 'Feb', 'detail': 'Total siswa: 85, Rata-rata: 5.6 poin'},
-      {'value': 360.0, 'label': 'Mar', 'detail': 'Total siswa: 85, Rata-rata: 4.2 poin'},
-      {'value': 160.0, 'label': 'Apr', 'detail': 'Total siswa: 85, Rata-rata: 1.9 poin'},
-      {'value': 400.0, 'label': 'May', 'detail': 'Total siswa: 85, Rata-rata: 4.7 poin'},
+      ChartDataItem(value: 320.0, label: 'Jan', detail: 'Total siswa: 85, Rata-rata: 3.8 poin'),
+      ChartDataItem(value: 480.0, label: 'Feb', detail: 'Total siswa: 85, Rata-rata: 5.6 poin'),
+      ChartDataItem(value: 360.0, label: 'Mar', detail: 'Total siswa: 85, Rata-rata: 4.2 poin'),
+      ChartDataItem(value: 160.0, label: 'Apr', detail: 'Total siswa: 85, Rata-rata: 1.9 poin'),
+      ChartDataItem(value: 400.0, label: 'May', detail: 'Total siswa: 85, Rata-rata: 4.7 poin'),
     ],
     'tahun': [
-      {'value': 1800.0, 'label': '2022', 'detail': 'Total: 1800 poin, Siswa aktif: 80'},
-      {'value': 2400.0, 'label': '2023', 'detail': 'Total: 2400 poin, Siswa aktif: 85'},
-      {'value': 1920.0, 'label': '2024', 'detail': 'Total: 1920 poin, Siswa aktif: 85'},
+      ChartDataItem(value: 1800.0, label: '2022', detail: 'Total: 1800 poin, Siswa aktif: 80'),
+      ChartDataItem(value: 2400.0, label: '2023', detail: 'Total: 2400 poin, Siswa aktif: 85'),
+      ChartDataItem(value: 1920.0, label: '2024', detail: 'Total: 1920 poin, Siswa aktif: 85'),
     ],
   };
 
-  // Data untuk grafik pelanggaran
-  final Map<String, List<Map<String, dynamic>>> _pelanggaranData = {
+  final Map<String, List<ChartDataItem>> _pelanggaranData = {
     'minggu': [
-      {'value': 60.0, 'label': 'Sen', 'detail': 'Terlambat: 25, Seragam: 20, Lainnya: 15'},
-      {'value': 25.0, 'label': 'Sel', 'detail': 'Terlambat: 10, Seragam: 8, Lainnya: 7'},
-      {'value': 15.0, 'label': 'Rab', 'detail': 'Terlambat: 8, Seragam: 4, Lainnya: 3'},
-      {'value': 10.0, 'label': 'Kam', 'detail': 'Terlambat: 5, Seragam: 3, Lainnya: 2'},
-      {'value': 20.0, 'label': 'Jum', 'detail': 'Terlambat: 12, Seragam: 5, Lainnya: 3'},
-      {'value': 18.0, 'label': 'Sab', 'detail': 'Terlambat: 10, Seragam: 5, Lainnya: 3'},
-      {'value': 12.0, 'label': 'Min', 'detail': 'Terlambat: 8, Seragam: 2, Lainnya: 2'},
+      ChartDataItem(value: 60.0, label: 'Sen', detail: 'Terlambat: 25, Seragam: 20, Lainnya: 15'),
+      ChartDataItem(value: 25.0, label: 'Sel', detail: 'Terlambat: 10, Seragam: 8, Lainnya: 7'),
+      ChartDataItem(value: 15.0, label: 'Rab', detail: 'Terlambat: 8, Seragam: 4, Lainnya: 3'),
+      ChartDataItem(value: 10.0, label: 'Kam', detail: 'Terlambat: 5, Seragam: 3, Lainnya: 2'),
+      ChartDataItem(value: 20.0, label: 'Jum', detail: 'Terlambat: 12, Seragam: 5, Lainnya: 3'),
+      ChartDataItem(value: 18.0, label: 'Sab', detail: 'Terlambat: 10, Seragam: 5, Lainnya: 3'),
+      ChartDataItem(value: 12.0, label: 'Min', detail: 'Terlambat: 8, Seragam: 2, Lainnya: 2'),
     ],
     'bulan': [
-      {'value': 240.0, 'label': 'Jan', 'detail': 'Total kasus: 48, Rata-rata: 2.8 per siswa'},
-      {'value': 100.0, 'label': 'Feb', 'detail': 'Total kasus: 20, Rata-rata: 1.2 per siswa'},
-      {'value': 60.0, 'label': 'Mar', 'detail': 'Total kasus: 12, Rata-rata: 0.7 per siswa'},
-      {'value': 40.0, 'label': 'Apr', 'detail': 'Total kasus: 8, Rata-rata: 0.5 per siswa'},
-      {'value': 80.0, 'label': 'May', 'detail': 'Total kasus: 16, Rata-rata: 0.9 per siswa'},
+      ChartDataItem(value: 240.0, label: 'Jan', detail: 'Total kasus: 48, Rata-rata: 2.8 per siswa'),
+      ChartDataItem(value: 100.0, label: 'Feb', detail: 'Total kasus: 20, Rata-rata: 1.2 per siswa'),
+      ChartDataItem(value: 60.0, label: 'Mar', detail: 'Total kasus: 12, Rata-rata: 0.7 per siswa'),
+      ChartDataItem(value: 40.0, label: 'Apr', detail: 'Total kasus: 8, Rata-rata: 0.5 per siswa'),
+      ChartDataItem(value: 80.0, label: 'May', detail: 'Total kasus: 16, Rata-rata: 0.9 per siswa'),
     ],
     'tahun': [
-      {'value': 960.0, 'label': '2022', 'detail': 'Total: 960 kasus, Siswa terlibat: 65'},
-      {'value': 720.0, 'label': '2023', 'detail': 'Total: 720 kasus, Siswa terlibat: 58'},
-      {'value': 520.0, 'label': '2024', 'detail': 'Total: 520 kasus, Siswa terlibat: 45'},
+      ChartDataItem(value: 960.0, label: '2022', detail: 'Total: 960 kasus, Siswa terlibat: 65'),
+      ChartDataItem(value: 720.0, label: '2023', detail: 'Total: 720 kasus, Siswa terlibat: 58'),
+      ChartDataItem(value: 520.0, label: '2024', detail: 'Total: 520 kasus, Siswa terlibat: 45'),
     ],
   };
 
@@ -97,10 +108,10 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
     super.dispose();
   }
 
-  List<Map<String, dynamic>> _getCurrentData() {
+  List<ChartDataItem> _getCurrentData() {
     String period = ['minggu', 'bulan', 'tahun'][_selectedPeriod];
-    return widget.chartType == 'apresiasi' 
-        ? _apresiasiData[period]! 
+    return widget.chartType == 'apresiasi'
+        ? _apresiasiData[period]!
         : _pelanggaranData[period]!;
   }
 
@@ -110,39 +121,53 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: Column(
-              children: [
-                _buildAppBar(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            double maxWidth = constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
+            return Center(
+              child: SizedBox(
+                width: maxWidth,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
                     child: Column(
                       children: [
-                        _buildStatisticsCards(),
-                        const SizedBox(height: 20),
-                        _buildPeriodSelector(),
-                        const SizedBox(height: 20),
-                        _buildChartTypeSelector(),
-                        const SizedBox(height: 20),
-                        _buildMainChart(),
-                        const SizedBox(height: 20),
-                        _buildDetailedAnalysis(),
-                        const SizedBox(height: 20),
-                        _buildTrendAnalysis(),
+                        _buildAppBar(),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              children: [
+                                _buildStatisticsCards(),
+                                const SizedBox(height: 20),
+                                _buildPeriodSelector(),
+                                const SizedBox(height: 20),
+                                _buildChartTypeSelector(),
+                                const SizedBox(height: 20),
+                                _buildMainChart(),
+                                const SizedBox(height: 20),
+                                _buildDetailedAnalysis(),
+                                const SizedBox(height: 20),
+                                _buildTrendAnalysis(),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -152,7 +177,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: widget.chartType == 'apresiasi' 
+          colors: widget.chartType == 'apresiasi'
               ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
               : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
           begin: Alignment.topLeft,
@@ -167,7 +192,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+        padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 20, 20, 30),
         child: Column(
           children: [
             Row(
@@ -233,11 +258,11 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
   }
 
   Widget _buildStatisticsCards() {
-    List<Map<String, dynamic>> data = _getCurrentData();
-    double total = data.fold(0.0, (sum, item) => sum + item['value']);
+    List<ChartDataItem> data = _getCurrentData();
+    double total = data.fold(0.0, (sum, item) => sum + item.value);
     double average = total / data.length;
-    double max = data.map((e) => e['value'] as double).reduce((a, b) => a > b ? a : b);
-    
+    double max = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+
     return Row(
       children: [
         Expanded(child: _buildStatCard('Total', total.toInt().toString(), Icons.analytics_outlined, const Color(0xFF0083EE))),
@@ -315,7 +340,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
           int index = entry.key;
           String period = entry.value;
           bool isActive = _selectedPeriod == index;
-          
+
           return Expanded(
             child: GestureDetector(
               onTap: () => setState(() => _selectedPeriod = index),
@@ -324,7 +349,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   gradient: isActive ? LinearGradient(
-                    colors: widget.chartType == 'apresiasi' 
+                    colors: widget.chartType == 'apresiasi'
                         ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
                         : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
                   ) : null,
@@ -370,7 +395,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
           int index = entry.key;
           Map<String, dynamic> chartType = entry.value;
           bool isActive = _selectedChartType == index;
-          
+
           return Expanded(
             child: GestureDetector(
               onTap: () => setState(() => _selectedChartType = index),
@@ -441,7 +466,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: widget.chartType == 'apresiasi' 
+                    colors: widget.chartType == 'apresiasi'
                         ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
                         : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
                   ),
@@ -468,9 +493,9 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
   }
 
   Widget _buildBarChart() {
-    List<Map<String, dynamic>> data = _getCurrentData();
-    double maxValue = data.map((e) => e['value'] as double).reduce((a, b) => a > b ? a : b);
-    
+    List<ChartDataItem> data = _getCurrentData();
+    double maxValue = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+
     return Container(
       height: 200,
       child: Column(
@@ -499,14 +524,14 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: data.map((item) {
-                      double value = item['value'];
+                      double value = item.value;
                       double height = (value / maxValue) * 150;
                       return Container(
                         width: 32,
                         height: height,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: widget.chartType == 'apresiasi' 
+                            colors: widget.chartType == 'apresiasi'
                                 ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
                                 : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
                           ),
@@ -528,7 +553,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: data.map((item) {
                     return Text(
-                      item['label'],
+                      item.label,
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: const Color(0xFF6B7280),
@@ -546,9 +571,9 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
   }
 
   Widget _buildLineChart() {
-    List<Map<String, dynamic>> data = _getCurrentData();
-    double maxValue = data.map((e) => e['value'] as double).reduce((a, b) => a > b ? a : b);
-    
+    List<ChartDataItem> data = _getCurrentData();
+    double maxValue = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+
     return Container(
       height: 200,
       child: Column(
@@ -560,7 +585,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                 data: data,
                 maxValue: maxValue,
                 gradient: LinearGradient(
-                  colors: widget.chartType == 'apresiasi' 
+                  colors: widget.chartType == 'apresiasi'
                       ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
                       : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
                 ),
@@ -572,7 +597,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: data.map((item) {
               return Text(
-                item['label'],
+                item.label,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   color: const Color(0xFF6B7280),
@@ -587,9 +612,9 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
   }
 
   Widget _buildPieChart() {
-    List<Map<String, dynamic>> data = _getCurrentData();
-    double total = data.fold(0.0, (sum, item) => sum + item['value']);
-    
+    List<ChartDataItem> data = _getCurrentData();
+    double total = data.fold(0.0, (sum, item) => sum + item.value);
+
     return Container(
       height: 250,
       child: Row(
@@ -601,7 +626,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
               painter: PieChartPainter(
                 data: data,
                 total: total,
-                colors: widget.chartType == 'apresiasi' 
+                colors: widget.chartType == 'apresiasi'
                     ? [const Color(0xFF61B8FF), const Color(0xFF0083EE), const Color(0xFF3B82F6), const Color(0xFF1E40AF), const Color(0xFF1E3A8A)]
                     : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F), const Color(0xFFEF4444), const Color(0xFFDC2626), const Color(0xFFB91C1C)],
               ),
@@ -613,12 +638,12 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
               crossAxisAlignment: CrossAxisAlignment.start,
               children: data.asMap().entries.map((entry) {
                 int index = entry.key;
-                Map<String, dynamic> item = entry.value;
-                double percentage = (item['value'] / total) * 100;
-                Color color = widget.chartType == 'apresiasi' 
+                ChartDataItem item = entry.value;
+                double percentage = (item.value / total) * 100;
+                Color color = widget.chartType == 'apresiasi'
                     ? [const Color(0xFF61B8FF), const Color(0xFF0083EE), const Color(0xFF3B82F6), const Color(0xFF1E40AF), const Color(0xFF1E3A8A)][index % 5]
                     : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F), const Color(0xFFEF4444), const Color(0xFFDC2626), const Color(0xFFB91C1C)][index % 5];
-                
+
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
@@ -637,7 +662,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              item['label'],
+                              item.label,
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -666,8 +691,8 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
   }
 
   Widget _buildDetailedAnalysis() {
-    List<Map<String, dynamic>> data = _getCurrentData();
-    
+    List<ChartDataItem> data = _getCurrentData();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -690,7 +715,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: widget.chartType == 'apresiasi' 
+                    colors: widget.chartType == 'apresiasi'
                         ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
                         : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
                   ),
@@ -716,7 +741,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
     );
   }
 
-  Widget _buildDetailItem(Map<String, dynamic> item) {
+  Widget _buildDetailItem(ChartDataItem item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -732,7 +757,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                item['label'],
+                item.label,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -743,14 +768,14 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: widget.chartType == 'apresiasi' 
+                    colors: widget.chartType == 'apresiasi'
                         ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
                         : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '${item['value'].toInt()}',
+                  '${item.value.toInt()}',
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 12,
@@ -762,7 +787,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
           ),
           const SizedBox(height: 8),
           Text(
-            item['detail'],
+            item.detail,
             style: GoogleFonts.poppins(
               fontSize: 12,
               color: const Color(0xFF6B7280),
@@ -775,21 +800,20 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
   }
 
   Widget _buildTrendAnalysis() {
-    List<Map<String, dynamic>> data = _getCurrentData();
-    double total = data.fold(0.0, (sum, item) => sum + item['value']);
+    List<ChartDataItem> data = _getCurrentData();
+    double total = data.fold(0.0, (sum, item) => sum + item.value);
     double average = total / data.length;
-    
-    // Calculate trend (simplified)
-    bool isIncreasing = data.length > 1 && data.last['value'] > data.first['value'];
-    double changePercentage = data.length > 1 
-        ? ((data.last['value'] - data.first['value']) / data.first['value'] * 100).abs()
+
+    bool isIncreasing = data.length > 1 && data.last.value > data.first.value;
+    double changePercentage = data.length > 1
+        ? ((data.last.value - data.first.value) / data.first.value * 100).abs()
         : 0;
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: widget.chartType == 'apresiasi' 
+          colors: widget.chartType == 'apresiasi'
               ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
               : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
           begin: Alignment.topLeft,
@@ -871,8 +895,8 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  widget.chartType == 'apresiasi' 
-                      ? isIncreasing 
+                  widget.chartType == 'apresiasi'
+                      ? isIncreasing
                           ? 'Tren positif! Pertahankan program apresiasi yang sedang berjalan dan tingkatkan variasi reward untuk memotivasi siswa.'
                           : 'Perlu peningkatan program apresiasi. Pertimbangkan untuk menambah kegiatan motivasi dan sistem reward yang lebih menarik.'
                       : isIncreasing
@@ -927,9 +951,8 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
   }
 }
 
-// Custom Painter untuk Line Chart
 class LineChartPainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
+  final List<ChartDataItem> data;
   final double maxValue;
   final Gradient gradient;
 
@@ -954,7 +977,7 @@ class LineChartPainter extends CustomPainter {
 
     for (int i = 0; i < data.length; i++) {
       double x = (i / (data.length - 1)) * size.width;
-      double y = size.height - (data[i]['value'] / maxValue) * size.height;
+      double y = size.height - (data[i].value / maxValue) * size.height;
 
       if (i == 0) {
         path.moveTo(x, y);
@@ -962,13 +985,11 @@ class LineChartPainter extends CustomPainter {
         path.lineTo(x, y);
       }
 
-      // Draw points
       canvas.drawCircle(Offset(x, y), 4, pointPaint);
-      
-      // Draw point border
+
       canvas.drawCircle(
-        Offset(x, y), 
-        4, 
+        Offset(x, y),
+        4,
         Paint()
           ..color = Colors.white
           ..style = PaintingStyle.stroke
@@ -983,9 +1004,8 @@ class LineChartPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// Custom Painter untuk Pie Chart
 class PieChartPainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
+  final List<ChartDataItem> data;
   final double total;
   final List<Color> colors;
 
@@ -999,11 +1019,11 @@ class PieChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 * 0.8;
-    double startAngle = -90 * (3.14159 / 180); // Start from top
+    double startAngle = -90 * (3.14159 / 180);
 
     for (int i = 0; i < data.length; i++) {
-      double sweepAngle = (data[i]['value'] / total) * 2 * 3.14159;
-      
+      double sweepAngle = (data[i].value / total) * 2 * 3.14159;
+
       final paint = Paint()
         ..color = colors[i % colors.length]
         ..style = PaintingStyle.fill;
@@ -1016,7 +1036,6 @@ class PieChartPainter extends CustomPainter {
         paint,
       );
 
-      // Draw border
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
         startAngle,
@@ -1031,7 +1050,6 @@ class PieChartPainter extends CustomPainter {
       startAngle += sweepAngle;
     }
 
-    // Draw center circle for donut effect
     canvas.drawCircle(
       center,
       radius * 0.4,

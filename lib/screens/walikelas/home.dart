@@ -7,7 +7,7 @@ import 'notification.dart';
 import 'package:skoring/screens/profile.dart';
 import 'package:skoring/screens/chart.dart';
 import 'package:skoring/screens/activity.dart';
-import 'details.dart'; // Import the DetailScreen
+import 'detail.dart'; // Import the DetailScreen
 
 class WalikelasMainScreen extends StatefulWidget {
   const WalikelasMainScreen({Key? key}) : super(key: key);

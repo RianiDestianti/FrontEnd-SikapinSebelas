@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:skoring/models/navigationitem.dart';
+import 'package:skoring/models/navigation.dart';
 
 class KaprogNavigation extends StatefulWidget {
   final int currentIndex;

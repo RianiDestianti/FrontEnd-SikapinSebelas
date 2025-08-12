@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/navigation/kaprog.dart';
 import 'package:skoring/screens/kaprog/home.dart';
 import 'package:skoring/screens/profile.dart';
-import 'package:skoring/screens/kaprog/details.dart';
+import 'package:skoring/screens/kaprog/detail.dart';
 
 class ProgramKeahlianScreen extends StatefulWidget {
   const ProgramKeahlianScreen({Key? key}) : super(key: key);

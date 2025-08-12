@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:skoring/models/navigationitem.dart';
+import 'package:skoring/models/navigation.dart';
 
 class WalikelasNavigation extends StatefulWidget {
   final int currentIndex;

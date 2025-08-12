@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/screens/kaprog/student.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
-  const RoleSelectionScreen({Key? key}) : super(key: key);
+  const RoleSelectionScreen({super.key});
 
   @override
   State<RoleSelectionScreen> createState() => _RoleSelectionScreenState();
@@ -12,23 +13,20 @@ class RoleSelectionScreen extends StatefulWidget {
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
     );
     _animationController.forward();
   }
@@ -41,22 +39,32 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with TickerPr
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = screenWidth * 0.06;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFF8FAFC), Color(0xFFE2E8F0)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          top: true,
+          bottom: false,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(padding),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const LogoSection(),
-                  const SizedBox(height: 40),
-                  const WelcomeSection(),
-                  const SizedBox(height: 48),
+                  LogoSection(),
+                  SizedBox(height: padding * 2),
+                  WelcomeSection(),
+                  SizedBox(height: padding * 2.4),
                   RoleButton(
                     title: 'Kepala Program Keahlian',
                     subtitle: 'Kelola seluruh program keahlian dan monitoring siswa',
@@ -67,14 +75,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with TickerPr
                       end: Alignment.bottomRight,
                     ),
                     onTap: () {
-                      print('Navigating to ProgramSelectionScreen...');
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const ProgramKeahlianScreen()),
                       );
                     },
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: padding),
                   RoleButton(
                     title: 'Wali Kelas',
                     subtitle: 'Kelola kelas, siswa, dan laporan perkembangan',
@@ -85,12 +92,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with TickerPr
                       end: Alignment.bottomRight,
                     ),
                     onTap: () {
-                      print('Navigating to Walikelas...');
                       Navigator.pushNamed(context, '/walikelas');
                     },
                   ),
-                  const SizedBox(height: 40),
-                  const FooterSection(),
+                  SizedBox(height: padding * 2),
+                  FooterSection(),
                 ],
               ),
             ),
@@ -102,13 +108,16 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with TickerPr
 }
 
 class LogoSection extends StatelessWidget {
-  const LogoSection({Key? key}) : super(key: key);
+  const LogoSection({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final logoSize = screenWidth * 0.3;
+
     return Container(
-      width: 120,
-      height: 120,
+      width: logoSize,
+      height: logoSize,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
@@ -122,16 +131,11 @@ class LogoSection extends StatelessWidget {
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
-          BoxShadow(
-            color: const Color(0xFF61B8FF).withOpacity(0.2),
-            blurRadius: 50,
-            offset: const Offset(0, 20),
-          ),
         ],
       ),
-      child: const Icon(
+      child: Icon(
         Icons.school_outlined,
-        size: 64,
+        size: logoSize * 0.53,
         color: Colors.white,
       ),
     );
@@ -139,33 +143,37 @@ class LogoSection extends StatelessWidget {
 }
 
 class WelcomeSection extends StatelessWidget {
-  const WelcomeSection({Key? key}) : super(key: key);
+  const WelcomeSection({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final fontSize = screenWidth * 0.08;
+    final padding = screenWidth * 0.05;
+
     return Column(
       children: [
         Text(
           'Selamat Datang! 👋',
           style: GoogleFonts.poppins(
-            fontSize: 32,
+            fontSize: fontSize,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF1F2937),
             height: 1.2,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: padding * 0.6),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.6),
           decoration: BoxDecoration(
             color: const Color(0xFF61B8FF).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(25),
+            borderRadius: BorderRadius.circular(padding * 1.25),
             border: Border.all(color: const Color(0xFF61B8FF).withOpacity(0.2), width: 1),
           ),
           child: Text(
             'Pilih peran Anda untuk melanjutkan',
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: fontSize * 0.5,
               fontWeight: FontWeight.w500,
               color: const Color(0xFF6B7280),
             ),
@@ -185,25 +193,29 @@ class RoleButton extends StatelessWidget {
   final VoidCallback onTap;
 
   const RoleButton({
-    Key? key,
+    super.key,
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.gradient,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = screenWidth * 0.06;
+    final fontSize = screenWidth * 0.045;
+    final subtitleFontSize = screenWidth * 0.035;
+
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+      child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(padding),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(padding * 1.2),
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 25, offset: const Offset(0, 8)),
             BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 2)),
@@ -212,7 +224,7 @@ class RoleButton extends StatelessWidget {
         child: Row(
           children: [
             RoleIcon(icon: icon, gradient: gradient),
-            const SizedBox(width: 20),
+            SizedBox(width: padding * 0.5),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,17 +232,17 @@ class RoleButton extends StatelessWidget {
                   Text(
                     title,
                     style: GoogleFonts.poppins(
-                      fontSize: 18,
+                      fontSize: fontSize,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF1F2937),
                       height: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: padding * 0.2),
                   Text(
                     subtitle,
                     style: GoogleFonts.poppins(
-                      fontSize: 14,
+                      fontSize: subtitleFontSize,
                       fontWeight: FontWeight.w400,
                       color: const Color(0xFF6B7280),
                       height: 1.4,
@@ -241,7 +253,7 @@ class RoleButton extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: padding * 0.4),
             RoleArrow(gradient: gradient),
           ],
         ),
@@ -254,32 +266,35 @@ class RoleIcon extends StatelessWidget {
   final IconData icon;
   final Gradient gradient;
 
-  const RoleIcon({Key? key, required this.icon, required this.gradient}) : super(key: key);
+  const RoleIcon({super.key, required this.icon, required this.gradient});
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final iconSize = screenWidth * 0.18;
+
     return Container(
-      width: 72,
-      height: 72,
+      width: iconSize,
+      height: iconSize,
       decoration: BoxDecoration(
         gradient: gradient,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(iconSize * 0.28),
         boxShadow: [
           BoxShadow(color: gradient.colors.first.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5)),
         ],
       ),
       child: Stack(
         children: [
-          Center(child: Icon(icon, color: Colors.white, size: 32)),
+          Center(child: Icon(icon, color: Colors.white, size: iconSize * 0.44)),
           Positioned(
-            top: 12,
-            right: 12,
+            top: iconSize * 0.17,
+            right: iconSize * 0.17,
             child: Container(
-              width: 12,
-              height: 12,
+              width: iconSize * 0.17,
+              height: iconSize * 0.17,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(iconSize * 0.085),
               ),
             ),
           ),
@@ -292,13 +307,16 @@ class RoleIcon extends StatelessWidget {
 class RoleArrow extends StatelessWidget {
   final Gradient gradient;
 
-  const RoleArrow({Key? key, required this.gradient}) : super(key: key);
+  const RoleArrow({super.key, required this.gradient});
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final arrowSize = screenWidth * 0.11;
+
     return Container(
-      width: 44,
-      height: 44,
+      width: arrowSize,
+      height: arrowSize,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -306,28 +324,32 @@ class RoleArrow extends StatelessWidget {
             gradient.colors.last.withOpacity(0.1),
           ],
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(arrowSize * 0.32),
         border: Border.all(color: gradient.colors.first.withOpacity(0.2), width: 1),
       ),
       child: Icon(
         Icons.arrow_forward_ios_rounded,
         color: gradient.colors.first,
-        size: 18,
+        size: arrowSize * 0.41,
       ),
     );
   }
 }
 
 class FooterSection extends StatelessWidget {
-  const FooterSection({Key? key}) : super(key: key);
+  const FooterSection({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = screenWidth * 0.04;
+    final fontSize = screenWidth * 0.03;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.5),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(padding * 1.25),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
         ],
@@ -336,18 +358,18 @@ class FooterSection extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 8,
-            height: 8,
+            width: padding * 0.5,
+            height: padding * 0.5,
             decoration: const BoxDecoration(
               gradient: LinearGradient(colors: [Color(0xFF61B8FF), Color(0xFF0083EE)]),
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: padding * 0.5),
           Text(
             'Aplikasi Manajemen Siswa SMK',
             style: GoogleFonts.poppins(
-              fontSize: 12,
+              fontSize: fontSize,
               fontWeight: FontWeight.w500,
               color: const Color(0xFF9CA3AF),
             ),

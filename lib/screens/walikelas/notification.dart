@@ -8,7 +8,8 @@ class NotifikasiScreen extends StatefulWidget {
   State<NotifikasiScreen> createState() => _NotifikasiScreenState();
 }
 
-class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProviderStateMixin {
+class _NotifikasiScreenState extends State<NotifikasiScreen>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   String _selectedFilter = 'Semua';
@@ -18,61 +19,66 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
       'id': '1',
       'title': 'Bos Warning 3/3',
       'subtitle': 'Pelanggaran berulang dideteksi',
-      'message': 'Ahmad Lutfi Khairul telah melakukan pelanggaran berulang sebanyak 3 kali. Segera lakukan tindakan.',
+      'message':
+          'Ahmad Lutfi Khairul telah melakukan pelanggaran berulang sebanyak 3 kali. Segera lakukan tindakan.',
       'time': '2 menit yang lalu',
       'type': 'warning',
       'isRead': false,
       'priority': 'high',
       'student': 'Ahmad Lutfi Khairul',
-      'action': 'Pelanggaran Berulang'
+      'action': 'Pelanggaran Berulang',
     },
     {
       'id': '2',
       'title': 'Bos Ext 5/5',
       'subtitle': 'Prestasi luar biasa dicapai',
-      'message': 'Eka Putri telah mencapai 5 prestasi ekstrakurikuler. Berikan apresiasi khusus!',
+      'message':
+          'Eka Putri telah mencapai 5 prestasi ekstrakurikuler. Berikan apresiasi khusus!',
       'time': '15 menit yang lalu',
       'type': 'achievement',
       'isRead': false,
       'priority': 'medium',
       'student': 'Eka Putri',
-      'action': 'Prestasi Ekstrakurikuler'
+      'action': 'Prestasi Ekstrakurikuler',
     },
     {
       'id': '3',
       'title': 'Laporan Mingguan',
       'subtitle': 'Ringkasan penilaian siswa',
-      'message': 'Laporan penilaian siswa minggu ini telah tersedia. Total 8 siswa dengan peningkatan positif.',
+      'message':
+          'Laporan penilaian siswa minggu ini telah tersedia. Total 8 siswa dengan peningkatan positif.',
       'time': '1 jam yang lalu',
       'type': 'report',
       'isRead': true,
       'priority': 'low',
       'student': 'Sistem',
-      'action': 'Laporan Mingguan'
+      'action': 'Laporan Mingguan',
     },
     {
       'id': '4',
       'title': 'Apresiasi Baru',
       'subtitle': 'Siswa mendapat apresiasi',
-      'message': 'Budi Santoso mendapat apresiasi atas partisipasi aktif dalam kegiatan kelas.',
+      'message':
+          'Budi Santoso mendapat apresiasi atas partisipasi aktif dalam kegiatan kelas.',
       'time': '2 jam yang lalu',
       'type': 'appreciation',
       'isRead': true,
       'priority': 'medium',
       'student': 'Budi Santoso',
-      'action': 'Apresiasi Kelas'
+      'action': 'Apresiasi Kelas',
     },
     {
       'id': '5',
       'title': 'Peringatan Sistem',
       'subtitle': 'Update aplikasi tersedia',
-      'message': 'Versi baru aplikasi telah tersedia dengan fitur-fitur menarik. Silakan update untuk pengalaman terbaik.',
+      'message':
+          'Versi baru aplikasi telah tersedia dengan fitur-fitur menarik. Silakan update untuk pengalaman terbaik.',
       'time': '1 hari yang lalu',
       'type': 'system',
       'isRead': true,
       'priority': 'low',
       'student': 'Sistem',
-      'action': 'Update Aplikasi'
+      'action': 'Update Aplikasi',
     },
   ];
 
@@ -146,7 +152,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
 
   void _markAsRead(String notificationId) {
     setState(() {
-      final index = _notificationsData.indexWhere((notif) => notif['id'] == notificationId);
+      final index = _notificationsData.indexWhere(
+        (notif) => notif['id'] == notificationId,
+      );
       if (index != -1) {
         _notificationsData[index]['isRead'] = true;
       }
@@ -198,7 +206,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: _selectedFilter == filter ? const Color(0xFF0083EE) : const Color(0xFF1F2937),
+                      color:
+                          _selectedFilter == filter
+                              ? const Color(0xFF0083EE)
+                              : const Color(0xFF1F2937),
                     ),
                   ),
                   leading: Radio<String>(
@@ -282,7 +293,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                             GestureDetector(
                               onTap: _markAllAsRead,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(20),
@@ -311,7 +325,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                         ],
                       ),
                       const SizedBox(height: 24),
-                      
+
                       Row(
                         children: [
                           Container(
@@ -356,7 +370,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                   ),
                 ),
               ),
-              
+
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -376,11 +390,16 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                           GestureDetector(
                             onTap: _showFilterBottomSheet,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                                border: Border.all(
+                                  color: const Color(0xFFE5E7EB),
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.05),
@@ -419,16 +438,20 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                         ],
                       ),
                       const SizedBox(height: 16),
-                      
+
                       Expanded(
-                        child: _filteredNotifications.isEmpty
-                            ? _buildEmptyState()
-                            : ListView.builder(
-                                itemCount: _filteredNotifications.length,
-                                itemBuilder: (context, index) {
-                                  return _buildNotificationCard(_filteredNotifications[index], index);
-                                },
-                              ),
+                        child:
+                            _filteredNotifications.isEmpty
+                                ? _buildEmptyState()
+                                : ListView.builder(
+                                  itemCount: _filteredNotifications.length,
+                                  itemBuilder: (context, index) {
+                                    return _buildNotificationCard(
+                                      _filteredNotifications[index],
+                                      index,
+                                    );
+                                  },
+                                ),
                       ),
                     ],
                   ),
@@ -471,10 +494,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
           const SizedBox(height: 8),
           Text(
             'Semua notifikasi akan muncul di sini',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
+            style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[500]),
           ),
         ],
       ),
@@ -485,7 +505,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
     final isRead = notification['isRead'];
     final type = notification['type'];
     final priority = notification['priority'];
-    
+
     return GestureDetector(
       onTap: () {
         if (!isRead) {
@@ -499,7 +519,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isRead ? const Color(0xFFE5E7EB) : _getTypeColor(type).withOpacity(0.3),
+            color:
+                isRead
+                    ? const Color(0xFFE5E7EB)
+                    : _getTypeColor(type).withOpacity(0.3),
             width: isRead ? 1 : 2,
           ),
           boxShadow: [
@@ -530,7 +553,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                 ),
               ),
               const SizedBox(width: 16),
-              
+
               // Content
               Expanded(
                 child: Column(
@@ -560,7 +583,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                         if (priority == 'high')
                           Container(
                             margin: const EdgeInsets.only(left: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFFF6B6D),
                               borderRadius: BorderRadius.circular(8),
@@ -646,7 +672,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: _getTypeColor(notification['type']).withOpacity(0.1),
+                      color: _getTypeColor(
+                        notification['type'],
+                      ).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Icon(
@@ -685,7 +713,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
@@ -695,10 +723,14 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: _getTypeColor(notification['type']).withOpacity(0.05),
+                          color: _getTypeColor(
+                            notification['type'],
+                          ).withOpacity(0.05),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: _getTypeColor(notification['type']).withOpacity(0.2),
+                            color: _getTypeColor(
+                              notification['type'],
+                            ).withOpacity(0.2),
                           ),
                         ),
                         child: Column(
@@ -726,7 +758,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                         ),
                       ),
                       const SizedBox(height: 20),
-                      
+
                       // Info Cards
                       Row(
                         children: [
@@ -736,7 +768,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                                border: Border.all(
+                                  color: const Color(0xFFE5E7EB),
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -769,7 +803,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                                border: Border.all(
+                                  color: const Color(0xFFE5E7EB),
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -801,8 +837,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                   ),
                 ),
               ),
-              
-              if (notification['type'] == 'warning' || notification['type'] == 'achievement')
+
+              if (notification['type'] == 'warning' ||
+                  notification['type'] == 'achievement')
                 Column(
                   children: [
                     const SizedBox(height: 20),
@@ -814,14 +851,21 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Menuju halaman detail ${notification['student']}'),
+                                  content: Text(
+                                    'Menuju halaman detail ${notification['student']}',
+                                  ),
                                   backgroundColor: const Color(0xFF0083EE),
                                   behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.person_rounded, color: Colors.white),
+                            icon: const Icon(
+                              Icons.person_rounded,
+                              color: Colors.white,
+                            ),
                             label: Text(
                               'Lihat Siswa',
                               style: GoogleFonts.poppins(
@@ -846,14 +890,23 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Menuju halaman aksi untuk ${notification['student']}'),
-                                  backgroundColor: _getTypeColor(notification['type']),
+                                  content: Text(
+                                    'Menuju halaman aksi untuk ${notification['student']}',
+                                  ),
+                                  backgroundColor: _getTypeColor(
+                                    notification['type'],
+                                  ),
                                   behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                 ),
                               );
                             },
-                            icon: Icon(_getTypeIcon(notification['type']), color: Colors.white),
+                            icon: Icon(
+                              _getTypeIcon(notification['type']),
+                              color: Colors.white,
+                            ),
                             label: Text(
                               'Ambil Aksi',
                               style: GoogleFonts.poppins(
@@ -863,7 +916,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> with TickerProvider
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _getTypeColor(notification['type']),
+                              backgroundColor: _getTypeColor(
+                                notification['type'],
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),

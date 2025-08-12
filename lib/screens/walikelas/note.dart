@@ -1,40 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:skoring/models/point.dart';
+import 'package:skoring/models/note.dart';
 
-class PointUtils {
-  static Future<Point?> submitPoint({
-    required String type,
+class NoteUtils {
+  static Future<Note?> submitNote({
     required String studentName,
     required String className,
     required String date,
-    required String description,
+    required String note,
     required BuildContext context,
   }) async {
-    if (studentName.isEmpty || className.isEmpty || date.isEmpty) {
+    if (studentName.isEmpty ||
+        className.isEmpty ||
+        date.isEmpty ||
+        note.isEmpty) {
       _showErrorSnackBar(context, 'Mohon lengkapi semua field yang diperlukan');
       return null;
     }
 
+    // Simulate API call
     await Future.delayed(const Duration(milliseconds: 1500));
 
-    final pointData = Point(
-      type: type,
+    final noteData = Note(
       studentName: studentName,
       className: className,
       date: date,
-      description: description,
+      note: note,
     );
 
     print(
-      'Point data: ${pointData.type}, ${pointData.studentName}, ${pointData.className}, ${pointData.date}, ${pointData.description}',
+      'BK Note data: ${noteData.studentName}, ${noteData.className}, ${noteData.date}, ${noteData.note}',
     );
 
     _showSuccessSnackBar(
       context,
-      'Poin berhasil ditambahkan untuk $studentName',
+      'Catatan BK berhasil ditambahkan untuk $studentName',
     );
-    return pointData;
+    return noteData;
   }
 
   static void _showErrorSnackBar(BuildContext context, String message) {
@@ -94,16 +96,17 @@ class PointUtils {
   }
 }
 
-class PointPopup extends StatefulWidget {
+class BKNotePopup extends StatefulWidget {
   final String studentName;
 
-  const PointPopup({Key? key, required this.studentName}) : super(key: key);
+  const BKNotePopup({Key? key, required this.studentName}) : super(key: key);
 
   @override
-  State<PointPopup> createState() => _PointPopupState();
+  State<BKNotePopup> createState() => _BKNotePopupState();
 }
 
-class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
+class _BKNotePopupState extends State<BKNotePopup>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late AnimationController _slideController;
   late Animation<double> _scaleAnimation;
@@ -114,8 +117,7 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _classController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  String _selectedPointType = 'Pelanggaran';
+  final TextEditingController _noteController = TextEditingController();
   bool _isSubmitting = false;
 
   @override
@@ -162,7 +164,7 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
     _nameController.dispose();
     _classController.dispose();
     _dateController.dispose();
-    _descriptionController.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
@@ -170,18 +172,17 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
     _animationController.reverse().then((_) => Navigator.of(context).pop());
   }
 
-  void _submitPoint() async {
+  void _submitNote() async {
     setState(() => _isSubmitting = true);
-    final point = await PointUtils.submitPoint(
-      type: _selectedPointType,
+    final note = await NoteUtils.submitNote(
       studentName: _nameController.text,
       className: _classController.text,
       date: _dateController.text,
-      description: _descriptionController.text,
+      note: _noteController.text,
       context: context,
     );
     setState(() => _isSubmitting = false);
-    if (point != null) {
+    if (note != null) {
       _closeDialog();
     }
   }
@@ -195,7 +196,7 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFF3B82F6)),
+            colorScheme: const ColorScheme.light(primary: Color(0xFFEF4444)),
           ),
           child: child!,
         );
@@ -223,17 +224,14 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
                 scale: _scaleAnimation,
                 child: Material(
                   color: Colors.transparent,
-                  child: PointDialogContent(
+                  child: NoteDialogContent(
                     nameController: _nameController,
                     classController: _classController,
                     dateController: _dateController,
-                    descriptionController: _descriptionController,
-                    selectedPointType: _selectedPointType,
-                    onPointTypeChanged:
-                        (value) => setState(() => _selectedPointType = value),
+                    noteController: _noteController,
                     isSubmitting: _isSubmitting,
                     onClose: _closeDialog,
-                    onSubmit: _submitPoint,
+                    onSubmit: _submitNote,
                     onDateTap: _pickDate,
                   ),
                 ),
@@ -246,26 +244,22 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
   }
 }
 
-class PointDialogContent extends StatelessWidget {
+class NoteDialogContent extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController classController;
   final TextEditingController dateController;
-  final TextEditingController descriptionController;
-  final String selectedPointType;
-  final ValueChanged<String> onPointTypeChanged;
+  final TextEditingController noteController;
   final bool isSubmitting;
   final VoidCallback onClose;
   final VoidCallback onSubmit;
   final VoidCallback onDateTap;
 
-  const PointDialogContent({
+  const NoteDialogContent({
     Key? key,
     required this.nameController,
     required this.classController,
     required this.dateController,
-    required this.descriptionController,
-    required this.selectedPointType,
-    required this.onPointTypeChanged,
+    required this.noteController,
     required this.isSubmitting,
     required this.onClose,
     required this.onSubmit,
@@ -296,9 +290,7 @@ class PointDialogContent extends StatelessWidget {
             nameController: nameController,
             classController: classController,
             dateController: dateController,
-            descriptionController: descriptionController,
-            selectedPointType: selectedPointType,
-            onPointTypeChanged: onPointTypeChanged,
+            noteController: noteController,
             onDateTap: onDateTap,
           ),
           ActionButtons(
@@ -323,7 +315,7 @@ class HeaderSection extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+          colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -341,7 +333,7 @@ class HeaderSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
-              Icons.add_circle_outline,
+              Icons.psychology_outlined,
               color: Colors.white,
               size: 24,
             ),
@@ -352,7 +344,7 @@ class HeaderSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tambah Poin',
+                  'Catatan untuk BK',
                   style: GoogleFonts.poppins(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -360,7 +352,7 @@ class HeaderSection extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Isi formulir di bawah ini',
+                  'Catat hal penting untuk konseling',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: Colors.white.withOpacity(0.8),
@@ -390,9 +382,7 @@ class FormSection extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController classController;
   final TextEditingController dateController;
-  final TextEditingController descriptionController;
-  final String selectedPointType;
-  final ValueChanged<String> onPointTypeChanged;
+  final TextEditingController noteController;
   final VoidCallback onDateTap;
 
   const FormSection({
@@ -400,9 +390,7 @@ class FormSection extends StatelessWidget {
     required this.nameController,
     required this.classController,
     required this.dateController,
-    required this.descriptionController,
-    required this.selectedPointType,
-    required this.onPointTypeChanged,
+    required this.noteController,
     required this.onDateTap,
   }) : super(key: key);
 
@@ -432,17 +420,16 @@ class FormSection extends StatelessWidget {
             onTap: onDateTap,
           ),
           const SizedBox(height: 16),
-          PointTypeDropdown(
-            selectedPointType: selectedPointType,
-            onChanged: onPointTypeChanged,
-          ),
-          const SizedBox(height: 16),
           CustomTextField(
-            controller: descriptionController,
-            hint: 'Uraian pelanggaran atau prestasi',
-            icon: Icons.description_outlined,
+            controller: noteController,
+            hint: 'Catatan untuk BK (perilaku, kondisi psikologi, dll)',
+            icon: Icons.edit_note,
             maxLines: 4,
+            fillColor: const Color(0xFFFEF2F2),
+            borderColor: const Color(0xFFFECACA),
           ),
+          const SizedBox(height: 24),
+          const InfoCard(),
         ],
       ),
     );
@@ -456,6 +443,8 @@ class CustomTextField extends StatelessWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final int maxLines;
+  final Color? fillColor;
+  final Color? borderColor;
 
   const CustomTextField({
     Key? key,
@@ -465,6 +454,8 @@ class CustomTextField extends StatelessWidget {
     this.readOnly = false,
     this.onTap,
     this.maxLines = 1,
+    this.fillColor,
+    this.borderColor,
   }) : super(key: key);
 
   @override
@@ -474,9 +465,10 @@ class CustomTextField extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: (fillColor == null ? Colors.black : const Color(0xFFEF4444))
+                .withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -491,20 +483,27 @@ class CustomTextField extends StatelessWidget {
             fontSize: 14,
             color: const Color(0xFF9CA3AF),
           ),
-          prefixIcon: Icon(icon, color: const Color(0xFF6B7280), size: 20),
+          prefixIcon: Container(
+            padding: const EdgeInsets.all(12),
+            child: Icon(icon, color: const Color(0xFFEF4444), size: 20),
+          ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: fillColor ?? Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+            borderSide: BorderSide(
+              color: borderColor ?? const Color(0xFFE5E7EB),
+            ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+            borderSide: BorderSide(
+              color: borderColor ?? const Color(0xFFE5E7EB),
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2),
+            borderSide: const BorderSide(color: Color(0xFFEF4444), width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
@@ -521,83 +520,33 @@ class CustomTextField extends StatelessWidget {
   }
 }
 
-class PointTypeDropdown extends StatelessWidget {
-  final String selectedPointType;
-  final ValueChanged<String> onChanged;
-
-  const PointTypeDropdown({
-    Key? key,
-    required this.selectedPointType,
-    required this.onChanged,
-  }) : super(key: key);
+class InfoCard extends StatelessWidget {
+  const InfoCard({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final pointTypes = ['Pelanggaran', 'Prestasi'];
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFECACA)),
       ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              selectedPointType == 'Pelanggaran'
-                  ? Icons.warning_rounded
-                  : Icons.star_rounded,
-              color:
-                  selectedPointType == 'Pelanggaran'
-                      ? const Color(0xFFEF4444)
-                      : const Color(0xFFFBBF24),
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: selectedPointType,
-                  isExpanded: true,
-                  icon: const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Color(0xFF6B7280),
-                  ),
-                  items:
-                      pointTypes.map((String type) {
-                        return DropdownMenuItem<String>(
-                          value: type,
-                          child: Text(
-                            type,
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF374151),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      onChanged(newValue);
-                    }
-                  },
-                ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: Color(0xFFEF4444), size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Catatan ini akan diteruskan ke guru BK untuk tindak lanjut konseling',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: const Color(0xFF991B1B),
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -651,14 +600,14 @@ class ActionButtons extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                    colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF3B82F6).withOpacity(0.3),
+                      color: const Color(0xFFEF4444).withOpacity(0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -676,14 +625,24 @@ class ActionButtons extends StatelessWidget {
                             ),
                           ),
                         )
-                        : Text(
-                          'Tambah Poin',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                        : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.send,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Kirim ke BK',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
               ),
             ),
@@ -694,14 +653,14 @@ class ActionButtons extends StatelessWidget {
   }
 }
 
-void showPointPopup(BuildContext context, String studentName) {
+void showBKNotePopup(BuildContext context, String studentName) {
   showDialog(
     context: context,
     barrierDismissible: false,
     builder: (BuildContext context) {
       return Material(
         color: Colors.transparent,
-        child: PointPopup(studentName: studentName),
+        child: BKNotePopup(studentName: studentName),
       );
     },
   );

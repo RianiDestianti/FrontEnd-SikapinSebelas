@@ -1,5 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+class Activity {
+  final int id;
+  final String type;
+  final IconData icon;
+  final List<Color> gradient;
+  final String title;
+  final String subtitle;
+  final String time;
+  final String date;
+  final DateTime fullDate;
+  final String status;
+  final Color statusColor;
+  final String priority;
+  final String details;
+
+  Activity({
+    required this.id,
+    required this.type,
+    required this.icon,
+    required this.gradient,
+    required this.title,
+    required this.subtitle,
+    required this.time,
+    required this.date,
+    required this.fullDate,
+    required this.status,
+    required this.statusColor,
+    required this.priority,
+    required this.details,
+  });
+}
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({Key? key}) : super(key: key);
@@ -22,100 +55,100 @@ class _ActivityScreenState extends State<ActivityScreen>
     'Sistem'
   ];
 
-  final List<Map<String, dynamic>> _allActivities = [
-    {
-      'id': 1,
-      'type': 'laporan',
-      'icon': Icons.assessment_outlined,
-      'gradient': [Color(0xFF61B8FF), Color(0xFF0083EE)],
-      'title': 'Laporan Bulanan',
-      'subtitle': 'Laporan evaluasi siswa telah selesai dibuat untuk bulan ini',
-      'time': '10.30',
-      'date': 'Hari ini',
-      'fullDate': DateTime.now(),
-      'status': 'SELESAI',
-      'statusColor': Color(0xFF10B981),
-      'priority': 'normal',
-      'details': 'Laporan mencakup evaluasi 120 siswa dengan berbagai aspek penilaian',
-    },
-    {
-      'id': 4,
-      'type': 'sistem',
-      'icon': Icons.sync_outlined,
-      'gradient': [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
-      'title': 'Sinkronisasi Data',
-      'subtitle': 'Data siswa berhasil disinkronkan dengan database pusat',
-      'time': '23.45',
-      'date': 'Kemarin',
-      'fullDate': DateTime.now().subtract(Duration(days: 1)),
-      'status': 'BERHASIL',
-      'statusColor': Color(0xFF10B981),
-      'priority': 'low',
-      'details': 'Total 850 record siswa berhasil disinkronkan tanpa error',
-    },
-    {
-      'id': 5,
-      'type': 'laporan',
-      'icon': Icons.analytics_outlined,
-      'gradient': [Color(0xFF61B8FF), Color(0xFF0083EE)],
-      'title': 'Analisis Kehadiran',
-      'subtitle': 'Laporan analisis kehadiran siswa minggu ini telah dibuat',
-      'time': '15.20',
-      'date': 'Kemarin',
-      'fullDate': DateTime.now().subtract(Duration(days: 1)),
-      'status': 'SELESAI',
-      'statusColor': Color(0xFF10B981),
-      'priority': 'normal',
-      'details': 'Tingkat kehadiran rata-rata: 92.5% dengan 15 siswa tidak hadir',
-    },
-    {
-      'id': 8,
-      'type': 'sistem',
-      'icon': Icons.backup_outlined,
-      'gradient': [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
-      'title': 'Backup Otomatis',
-      'subtitle': 'Backup data harian telah selesai dilakukan',
-      'time': '02.00',
-      'date': '2 hari lalu',
-      'fullDate': DateTime.now().subtract(Duration(days: 2)),
-      'status': 'OTOMATIS',
-      'statusColor': Color(0xFF6B7280),
-      'priority': 'low',
-      'details': 'Backup size: 2.3GB, lokasi: cloud storage',
-    },
-    {
-      'id': 9,
-      'type': 'laporan',
-      'icon': Icons.bar_chart_outlined,
-      'gradient': [Color(0xFF61B8FF), Color(0xFF0083EE)],
-      'title': 'Laporan Mingguan',
-      'subtitle': 'Laporan aktivitas siswa minggu ini telah selesai dibuat',
-      'time': '09.15',
-      'date': '3 hari lalu',
-      'fullDate': DateTime.now().subtract(Duration(days: 3)),
-      'status': 'SELESAI',
-      'statusColor': Color(0xFF10B981),
-      'priority': 'normal',
-      'details': 'Laporan mencakup aktivitas 120 siswa selama seminggu terakhir',
-    },
-    {
-      'id': 10,
-      'type': 'sistem',
-      'icon': Icons.update_outlined,
-      'gradient': [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
-      'title': 'Update Sistem',
-      'subtitle': 'Sistem telah diperbarui ke versi terbaru',
-      'time': '14.30',
-      'date': '4 hari lalu',
-      'fullDate': DateTime.now().subtract(Duration(days: 4)),
-      'status': 'BERHASIL',
-      'statusColor': Color(0xFF10B981),
-      'priority': 'medium',
-      'details': 'Update sistem v2.1.0 dengan fitur baru dan perbaikan bug',
-    },
+  final List<Activity> _allActivities = [
+    Activity(
+      id: 1,
+      type: 'laporan',
+      icon: Icons.assessment_outlined,
+      gradient: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+      title: 'Laporan Bulanan',
+      subtitle: 'Laporan evaluasi siswa telah selesai dibuat untuk bulan ini',
+      time: '10.30',
+      date: 'Hari ini',
+      fullDate: DateTime.now(),
+      status: 'SELESAI',
+      statusColor: Color(0xFF10B981),
+      priority: 'normal',
+      details: 'Laporan mencakup evaluasi 120 siswa dengan berbagai aspek penilaian',
+    ),
+    Activity(
+      id: 4,
+      type: 'sistem',
+      icon: Icons.sync_outlined,
+      gradient: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+      title: 'Sinkronisasi Data',
+      subtitle: 'Data siswa berhasil disinkronkan dengan database pusat',
+      time: '23.45',
+      date: 'Kemarin',
+      fullDate: DateTime.now().subtract(Duration(days: 1)),
+      status: 'BERHASIL',
+      statusColor: Color(0xFF10B981),
+      priority: 'low',
+      details: 'Total 850 record siswa berhasil disinkronkan tanpa error',
+    ),
+    Activity(
+      id: 5,
+      type: 'laporan',
+      icon: Icons.analytics_outlined,
+      gradient: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+      title: 'Analisis Kehadiran',
+      subtitle: 'Laporan analisis kehadiran siswa minggu ini telah dibuat',
+      time: '15.20',
+      date: 'Kemarin',
+      fullDate: DateTime.now().subtract(Duration(days: 1)),
+      status: 'SELESAI',
+      statusColor: Color(0xFF10B981),
+      priority: 'normal',
+      details: 'Tingkat kehadiran rata-rata: 92.5% dengan 15 siswa tidak hadir',
+    ),
+    Activity(
+      id: 8,
+      type: 'sistem',
+      icon: Icons.backup_outlined,
+      gradient: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+      title: 'Backup Otomatis',
+      subtitle: 'Backup data harian telah selesai dilakukan',
+      time: '02.00',
+      date: '2 hari lalu',
+      fullDate: DateTime.now().subtract(Duration(days: 2)),
+      status: 'OTOMATIS',
+      statusColor: Color(0xFF6B7280),
+      priority: 'low',
+      details: 'Backup size: 2.3GB, lokasi: cloud storage',
+    ),
+    Activity(
+      id: 9,
+      type: 'laporan',
+      icon: Icons.bar_chart_outlined,
+      gradient: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+      title: 'Laporan Mingguan',
+      subtitle: 'Laporan aktivitas siswa minggu ini telah selesai dibuat',
+      time: '09.15',
+      date: '3 hari lalu',
+      fullDate: DateTime.now().subtract(Duration(days: 3)),
+      status: 'SELESAI',
+      statusColor: Color(0xFF10B981),
+      priority: 'normal',
+      details: 'Laporan mencakup aktivitas 120 siswa selama seminggu terakhir',
+    ),
+    Activity(
+      id: 10,
+      type: 'sistem',
+      icon: Icons.update_outlined,
+      gradient: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+      title: 'Update Sistem',
+      subtitle: 'Sistem telah diperbarui ke versi terbaru',
+      time: '14.30',
+      date: '4 hari lalu',
+      fullDate: DateTime.now().subtract(Duration(days: 4)),
+      status: 'BERHASIL',
+      statusColor: Color(0xFF10B981),
+      priority: 'medium',
+      details: 'Update sistem v2.1.0 dengan fitur baru dan perbaikan bug',
+    ),
   ];
 
-  List<Map<String, dynamic>> _filteredActivities = [];
+  List<Activity> _filteredActivities = [];
 
   @override
   void initState() {
@@ -140,20 +173,17 @@ class _ActivityScreenState extends State<ActivityScreen>
   void _filterActivities() {
     setState(() {
       String selectedType = _selectedFilter.toLowerCase();
-      
+
       _filteredActivities = _allActivities.where((activity) {
-        // Filter by type
-        bool matchesFilter = _selectedFilter == 'Semua' || activity['type'] == selectedType;
-        
-        // Filter by search query
+        bool matchesFilter = _selectedFilter == 'Semua' || activity.type == selectedType;
+
         bool matchesSearch = _searchQuery.isEmpty ||
-            activity['title'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            activity['subtitle'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
-        
-        // Filter by date
+            activity.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            activity.subtitle.toLowerCase().contains(_searchQuery.toLowerCase());
+
         bool matchesDate = _selectedDate == null ||
-            _isSameDay(activity['fullDate'], _selectedDate!);
-        
+            _isSameDay(activity.fullDate, _selectedDate!);
+
         return matchesFilter && matchesSearch && matchesDate;
       }).toList();
     });
@@ -193,7 +223,7 @@ class _ActivityScreenState extends State<ActivityScreen>
         );
       },
     );
-    
+
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
@@ -202,7 +232,7 @@ class _ActivityScreenState extends State<ActivityScreen>
     }
   }
 
-  void _clearDateFilter() {
+  void _clearDate() {
     setState(() {
       _selectedDate = null;
     });
@@ -211,37 +241,49 @@ class _ActivityScreenState extends State<ActivityScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            children: [
-              _buildAppBar(),
-              
-              // Activities list
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: _filteredActivities.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.builder(
-                          itemCount: _filteredActivities.length,
-                          itemBuilder: (context, index) {
-                            final activity = _filteredActivities[index];
-                            return Padding(
-                              padding: EdgeInsets.only(
-                                bottom: index < _filteredActivities.length - 1 ? 16 : 0,
-                              ),
-                              child: _buildActivityCard(activity),
-                            );
-                          },
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            double maxWidth = constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
+            return Center(
+              child: SizedBox(
+                width: maxWidth,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Column(
+                    children: [
+                      _buildAppBar(),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: _filteredActivities.isEmpty
+                              ? _buildEmptyState()
+                              : ListView.builder(
+                                  itemCount: _filteredActivities.length,
+                                  itemBuilder: (context, index) {
+                                    final activity = _filteredActivities[index];
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                        bottom: index < _filteredActivities.length - 1 ? 16 : 0,
+                                      ),
+                                      child: _buildActivityCard(activity),
+                                    );
+                                  },
+                                ),
                         ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -264,7 +306,7 @@ class _ActivityScreenState extends State<ActivityScreen>
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+        padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 20, 20, 30),
         child: Column(
           children: [
             Row(
@@ -324,8 +366,6 @@ class _ActivityScreenState extends State<ActivityScreen>
               ],
             ),
             const SizedBox(height: 24),
-            
-            // Search bar
             Container(
               height: 50,
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -382,13 +422,9 @@ class _ActivityScreenState extends State<ActivityScreen>
                 ],
               ),
             ),
-            
             const SizedBox(height: 20),
-            
-            // Filter dropdowns
             Row(
               children: [
-                // Type filter dropdown
                 Expanded(
                   child: Container(
                     height: 45,
@@ -445,8 +481,6 @@ class _ActivityScreenState extends State<ActivityScreen>
                   ),
                 ),
                 const SizedBox(width: 12),
-                
-                // Date filter button
                 GestureDetector(
                   onTap: _selectDate,
                   child: Container(
@@ -483,7 +517,7 @@ class _ActivityScreenState extends State<ActivityScreen>
                         if (_selectedDate != null) ...[
                           const SizedBox(width: 8),
                           GestureDetector(
-                            onTap: _clearDateFilter,
+                            onTap: _clearDate,
                             child: Icon(
                               Icons.close,
                               size: 16,
@@ -543,7 +577,7 @@ class _ActivityScreenState extends State<ActivityScreen>
     );
   }
 
-  Widget _buildActivityCard(Map<String, dynamic> activity) {
+  Widget _buildActivityCard(Activity activity) {
     return GestureDetector(
       onTap: () => _showActivityDetail(activity),
       child: Container(
@@ -553,7 +587,7 @@ class _ActivityScreenState extends State<ActivityScreen>
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: LinearGradient(
-              colors: activity['gradient'],
+              colors: activity.gradient,
             ).colors.first.withOpacity(0.1),
             width: 1,
           ),
@@ -574,11 +608,11 @@ class _ActivityScreenState extends State<ActivityScreen>
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: activity['gradient']),
+                    gradient: LinearGradient(colors: activity.gradient),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: LinearGradient(colors: activity['gradient'])
+                        color: LinearGradient(colors: activity.gradient)
                             .colors
                             .first
                             .withOpacity(0.3),
@@ -588,7 +622,7 @@ class _ActivityScreenState extends State<ActivityScreen>
                     ],
                   ),
                   child: Icon(
-                    activity['icon'],
+                    activity.icon,
                     color: Colors.white,
                     size: 24,
                   ),
@@ -602,7 +636,7 @@ class _ActivityScreenState extends State<ActivityScreen>
                         children: [
                           Expanded(
                             child: Text(
-                              activity['title'],
+                              activity.title,
                               style: GoogleFonts.poppins(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -616,17 +650,17 @@ class _ActivityScreenState extends State<ActivityScreen>
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: activity['statusColor'].withOpacity(0.1),
+                              color: activity.statusColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: activity['statusColor'].withOpacity(0.3),
+                                color: activity.statusColor.withOpacity(0.3),
                                 width: 1,
                               ),
                             ),
                             child: Text(
-                              activity['status'],
+                              activity.status,
                               style: GoogleFonts.poppins(
-                                color: activity['statusColor'],
+                                color: activity.statusColor,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
@@ -637,7 +671,7 @@ class _ActivityScreenState extends State<ActivityScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        activity['subtitle'],
+                        activity.subtitle,
                         style: GoogleFonts.poppins(
                           color: const Color(0xFF6B7280),
                           fontSize: 13,
@@ -665,7 +699,7 @@ class _ActivityScreenState extends State<ActivityScreen>
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '${activity['time']} • ${activity['date']}',
+                      '${activity.time} • ${activity.date}',
                       style: GoogleFonts.poppins(
                         color: const Color(0xFF9CA3AF),
                         fontSize: 12,
@@ -694,7 +728,7 @@ class _ActivityScreenState extends State<ActivityScreen>
     );
   }
 
-  void _showActivityDetail(Map<String, dynamic> activity) {
+  void _showActivityDetail(Activity activity) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -732,11 +766,11 @@ class _ActivityScreenState extends State<ActivityScreen>
                         width: 60,
                         height: 60,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: activity['gradient']),
+                          gradient: LinearGradient(colors: activity.gradient),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: LinearGradient(colors: activity['gradient'])
+                              color: LinearGradient(colors: activity.gradient)
                                   .colors
                                   .first
                                   .withOpacity(0.3),
@@ -746,7 +780,7 @@ class _ActivityScreenState extends State<ActivityScreen>
                           ],
                         ),
                         child: Icon(
-                          activity['icon'],
+                          activity.icon,
                           color: Colors.white,
                           size: 28,
                         ),
@@ -757,7 +791,7 @@ class _ActivityScreenState extends State<ActivityScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              activity['title'],
+                              activity.title,
                               style: GoogleFonts.poppins(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
@@ -771,17 +805,17 @@ class _ActivityScreenState extends State<ActivityScreen>
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: activity['statusColor'].withOpacity(0.1),
+                                color: activity.statusColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: activity['statusColor'].withOpacity(0.3),
+                                  color: activity.statusColor.withOpacity(0.3),
                                   width: 1,
                                 ),
                               ),
                               child: Text(
-                                activity['status'],
+                                activity.status,
                                 style: GoogleFonts.poppins(
-                                  color: activity['statusColor'],
+                                  color: activity.statusColor,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.5,
@@ -800,13 +834,13 @@ class _ActivityScreenState extends State<ActivityScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildDetailRow('Waktu', '${activity['time']} • ${activity['date']}'),
+                          _buildDetailRow('Waktu', '${activity.time} • ${activity.date}'),
                           const SizedBox(height: 16),
-                          _buildDetailRow('Deskripsi', activity['subtitle']),
+                          _buildDetailRow('Deskripsi', activity.subtitle),
                           const SizedBox(height: 16),
-                          _buildDetailRow('Detail', activity['details']),
+                          _buildDetailRow('Detail', activity.details),
                           const SizedBox(height: 16),
-                          _buildDetailRow('Prioritas', activity['priority'].toString().toUpperCase()),
+                          _buildDetailRow('Prioritas', activity.priority.toUpperCase()),
                         ],
                       ),
                     ),
