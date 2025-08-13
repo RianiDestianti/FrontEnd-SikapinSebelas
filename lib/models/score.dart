@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 class Score {
   final String keterangan;
   final String tanggal;
