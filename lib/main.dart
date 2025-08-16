@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:skoring/introduction/onboarding.dart';
 import 'package:skoring/screens/kaprog/student.dart';
 import 'package:skoring/screens/walikelas/home.dart';
-import 'package:skoring/screens/login.dart';
 import 'package:skoring/screens/kaprog/report.dart';
 
 void main() {
@@ -15,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'School Management App',
+      title: 'SKoring App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         useMaterial3: true,
@@ -25,7 +24,6 @@ class MyApp extends StatelessWidget {
       initialRoute: '/introduction',
       routes: {
         '/introduction': (context) => const IntroductionScreen(),
-        '/role': (context) => const RoleSelectionScreen(),
         '/walikelas': (context) => const WalikelasMainScreen(),
         '/kaprog': (context) => const ProgramKeahlianScreen(),
       },

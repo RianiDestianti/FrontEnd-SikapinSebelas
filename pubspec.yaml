@@ -71,6 +71,8 @@ flutter:
     - assets/backpack.png
     - assets/smkn.png
     - assets/apk.png
+    - assets/batang.png
+    - assets/lingkaran.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
