@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/models/profile.dart';
+import 'package:skoring/introduction/onboarding.dart'; 
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -76,7 +77,19 @@ class _ProfileScreenState extends State<ProfileScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => const LogoutDialog(),
+      builder: (BuildContext context) => LogoutDialog(
+        onLogout: _handleLogout, 
+      ),
+    );
+  }
+
+  // Add the logout handler method
+  void _handleLogout() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => const IntroductionScreen(),
+      ),
+      (route) => false, 
     );
   }
 
@@ -86,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF007AFF), Color(0xFF0051D5)],
+            colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -276,15 +289,15 @@ class ProfileHeader extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF007AFF).withOpacity(0.05),
-            const Color(0xFF007AFF).withOpacity(0.02),
+            const Color(0xFF61B8FF).withOpacity(0.05),
+            const Color(0xFF0083EE).withOpacity(0.02),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(padding * 0.75),
         border: Border.all(
-          color: const Color(0xFF007AFF).withOpacity(0.1),
+          color: const Color(0xFF61B8FF).withOpacity(0.1),
           width: 1,
         ),
       ),
@@ -298,13 +311,13 @@ class ProfileHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(avatarSize * 0.25),
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF007AFF), Color(0xFF0051D5)],
+                    colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF007AFF).withOpacity(0.3),
+                      color: const Color(0xFF0083EE).withOpacity(0.3),
                       blurRadius: 15,
                       offset: Offset(0, 5),
                     ),
@@ -373,12 +386,12 @@ class ProfileHeader extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF007AFF), Color(0xFF0051D5)],
+                      colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
                     ),
                     borderRadius: BorderRadius.circular(padding * 0.4),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF007AFF).withOpacity(0.3),
+                        color: const Color(0xFF0083EE).withOpacity(0.3),
                         blurRadius: 8,
                         offset: Offset(0, 2),
                       ),
@@ -440,7 +453,7 @@ class ProfileFieldCard extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(padding * 0.9),
                 border: Border.all(
-                  color: const Color(0xFF007AFF).withOpacity(0.08),
+                  color: const Color(0xFF61B8FF).withOpacity(0.08),
                   width: 1,
                 ),
                 boxShadow: [
@@ -450,7 +463,7 @@ class ProfileFieldCard extends StatelessWidget {
                     offset: const Offset(0, 2),
                   ),
                   BoxShadow(
-                    color: const Color(0xFF007AFF).withOpacity(0.02),
+                    color: const Color(0xFF0083EE).withOpacity(0.02),
                     blurRadius: 20,
                     offset: const Offset(0, 4),
                   ),
@@ -464,19 +477,19 @@ class ProfileFieldCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF007AFF).withOpacity(0.1),
-                          const Color(0xFF007AFF).withOpacity(0.05),
+                          const Color(0xFF61B8FF).withOpacity(0.1),
+                          const Color(0xFF0083EE).withOpacity(0.05),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(iconSize * 0.3),
                       border: Border.all(
-                        color: const Color(0xFF007AFF).withOpacity(0.1),
+                        color: const Color(0xFF61B8FF).withOpacity(0.1),
                         width: 1,
                       ),
                     ),
                     child: Icon(
                       icon,
-                      color: const Color(0xFF007AFF),
+                      color: const Color(0xFF0083EE),
                       size: iconSize * 0.46,
                     ),
                   ),
@@ -626,7 +639,12 @@ class LogoutButton extends StatelessWidget {
 }
 
 class LogoutDialog extends StatelessWidget {
-  const LogoutDialog({super.key});
+  final VoidCallback onLogout;
+
+  const LogoutDialog({
+    super.key,
+    required this.onLogout, 
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -713,29 +731,8 @@ class LogoutDialog extends StatelessWidget {
             Expanded(
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Row(
-                        children: [
-                          const Icon(Icons.check_circle, color: Colors.white),
-                          SizedBox(width: padding * 0.3),
-                          Text(
-                            'Berhasil logout',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              fontSize: fontSize * 0.9,
-                            ),
-                          ),
-                        ],
-                      ),
-                      backgroundColor: const Color(0xFF10B981),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(padding * 0.6),
-                      ),
-                    ),
-                  );
+                  Navigator.pop(context); 
+                  onLogout(); 
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF6B6B),

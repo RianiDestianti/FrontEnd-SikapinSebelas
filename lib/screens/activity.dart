@@ -14,7 +14,6 @@ class Activity {
   final DateTime fullDate;
   final String status;
   final Color statusColor;
-  final String priority;
   final String details;
 
   Activity({
@@ -29,7 +28,6 @@ class Activity {
     required this.fullDate,
     required this.status,
     required this.statusColor,
-    required this.priority,
     required this.details,
   });
 }
@@ -68,7 +66,6 @@ class _ActivityScreenState extends State<ActivityScreen>
       fullDate: DateTime.now(),
       status: 'SELESAI',
       statusColor: Color(0xFF10B981),
-      priority: 'normal',
       details: 'Laporan mencakup evaluasi 120 siswa dengan berbagai aspek penilaian',
     ),
     Activity(
@@ -83,7 +80,6 @@ class _ActivityScreenState extends State<ActivityScreen>
       fullDate: DateTime.now().subtract(Duration(days: 1)),
       status: 'BERHASIL',
       statusColor: Color(0xFF10B981),
-      priority: 'low',
       details: 'Total 850 record siswa berhasil disinkronkan tanpa error',
     ),
     Activity(
@@ -98,7 +94,6 @@ class _ActivityScreenState extends State<ActivityScreen>
       fullDate: DateTime.now().subtract(Duration(days: 1)),
       status: 'SELESAI',
       statusColor: Color(0xFF10B981),
-      priority: 'normal',
       details: 'Tingkat kehadiran rata-rata: 92.5% dengan 15 siswa tidak hadir',
     ),
     Activity(
@@ -113,7 +108,6 @@ class _ActivityScreenState extends State<ActivityScreen>
       fullDate: DateTime.now().subtract(Duration(days: 2)),
       status: 'OTOMATIS',
       statusColor: Color(0xFF6B7280),
-      priority: 'low',
       details: 'Backup size: 2.3GB, lokasi: cloud storage',
     ),
     Activity(
@@ -128,7 +122,6 @@ class _ActivityScreenState extends State<ActivityScreen>
       fullDate: DateTime.now().subtract(Duration(days: 3)),
       status: 'SELESAI',
       statusColor: Color(0xFF10B981),
-      priority: 'normal',
       details: 'Laporan mencakup aktivitas 120 siswa selama seminggu terakhir',
     ),
     Activity(
@@ -143,7 +136,6 @@ class _ActivityScreenState extends State<ActivityScreen>
       fullDate: DateTime.now().subtract(Duration(days: 4)),
       status: 'BERHASIL',
       statusColor: Color(0xFF10B981),
-      priority: 'medium',
       details: 'Update sistem v2.1.0 dengan fitur baru dan perbaikan bug',
     ),
   ];
@@ -839,8 +831,6 @@ class _ActivityScreenState extends State<ActivityScreen>
                           _buildDetailRow('Deskripsi', activity.subtitle),
                           const SizedBox(height: 16),
                           _buildDetailRow('Detail', activity.details),
-                          const SizedBox(height: 16),
-                          _buildDetailRow('Prioritas', activity.priority.toUpperCase()),
                         ],
                       ),
                     ),

@@ -52,6 +52,29 @@ class _HistoryScreenState extends State<HistoryScreen>
   String _selectedTimeFilter = 'Semua';
   bool _showOnlyNew = false;
 
+  // Data kategori berdasarkan FAQ
+  final Map<String, List<Map<String, String>>> _categories = {
+    'Prestasi': [
+      {'value': 'R1', 'title': 'Pengembangan Keagamaan'},
+      {'value': 'R2', 'title': 'Kejujuran'},
+      {'value': 'R3', 'title': 'Prestasi Akademis'},
+      {'value': 'R4', 'title': 'Kedisiplinan'},
+      {'value': 'R5', 'title': 'Pengembangan Sosial'},
+      {'value': 'R6', 'title': 'Kepemimpinan'},
+      {'value': 'R7', 'title': 'Kebangsaan'},
+      {'value': 'R8', 'title': 'Ekstrakurikuler dan Prestasi'},
+      {'value': 'R9', 'title': 'Peduli Lingkungan'},
+      {'value': 'R10', 'title': 'Kewirausahaan'},
+    ],
+    'Pelanggaran': [
+      {'value': 'P1', 'title': 'Terlambat'},
+      {'value': 'P2', 'title': 'Kehadiran'},
+      {'value': 'P3', 'title': 'Seragam'},
+      {'value': 'P4', 'title': 'Kerapian dan Penampilan'},
+      {'value': 'P5', 'title': 'Kedisiplinan Berat'},
+    ],
+  };
+
   List<HistoryItem> allHistory = [
     HistoryItem(
       id: "apr_001",
@@ -318,41 +341,45 @@ class _HistoryScreenState extends State<HistoryScreen>
                     spacing: 8,
                     children:
                         ['Semua', 'Apresiasi', 'Pelanggaran'].map((filter) {
-                      bool isSelected = _selectedFilter == filter;
-                      return GestureDetector(
-                        onTap: () {
-                          setBottomSheetState(() {
-                            _selectedFilter = filter;
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Color(0xFF0083EE)
-                                : Color(0xFFF3F4F6),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected
-                                  ? Color(0xFF0083EE)
-                                  : Color(0xFFE5E7EB),
+                          bool isSelected = _selectedFilter == filter;
+                          return GestureDetector(
+                            onTap: () {
+                              setBottomSheetState(() {
+                                _selectedFilter = filter;
+                              });
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? Color(0xFF0083EE)
+                                        : Color(0xFFF3F4F6),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color:
+                                      isSelected
+                                          ? Color(0xFF0083EE)
+                                          : Color(0xFFE5E7EB),
+                                ),
+                              ),
+                              child: Text(
+                                filter,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color:
+                                      isSelected
+                                          ? Colors.white
+                                          : Color(0xFF6B7280),
+                                ),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            filter,
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  isSelected ? Colors.white : Color(0xFF6B7280),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                          );
+                        }).toList(),
                   ),
                   SizedBox(height: 24),
 
@@ -369,43 +396,47 @@ class _HistoryScreenState extends State<HistoryScreen>
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: ['Semua', '7 Hari', '30 Hari', '3 Bulan']
-                        .map((filter) {
-                      bool isSelected = _selectedTimeFilter == filter;
-                      return GestureDetector(
-                        onTap: () {
-                          setBottomSheetState(() {
-                            _selectedTimeFilter = filter;
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Color(0xFF0083EE)
-                                : Color(0xFFF3F4F6),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected
-                                  ? Color(0xFF0083EE)
-                                  : Color(0xFFE5E7EB),
+                    children:
+                        ['Semua', '7 Hari', '30 Hari', '3 Bulan'].map((filter) {
+                          bool isSelected = _selectedTimeFilter == filter;
+                          return GestureDetector(
+                            onTap: () {
+                              setBottomSheetState(() {
+                                _selectedTimeFilter = filter;
+                              });
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? Color(0xFF0083EE)
+                                        : Color(0xFFF3F4F6),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color:
+                                      isSelected
+                                          ? Color(0xFF0083EE)
+                                          : Color(0xFFE5E7EB),
+                                ),
+                              ),
+                              child: Text(
+                                filter,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color:
+                                      isSelected
+                                          ? Colors.white
+                                          : Color(0xFF6B7280),
+                                ),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            filter,
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  isSelected ? Colors.white : Color(0xFF6B7280),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                          );
+                        }).toList(),
                   ),
                   SizedBox(height: 24),
 
@@ -531,15 +562,18 @@ class _HistoryScreenState extends State<HistoryScreen>
                         if (value.isEmpty) {
                           searchResults = [];
                         } else {
-                          searchResults = allHistory
-                              .where((item) =>
-                                  item.type.toLowerCase().contains(
-                                        value.toLowerCase(),
-                                      ) ||
-                                  item.description.toLowerCase().contains(
-                                        value.toLowerCase(),
-                                      ))
-                              .toList();
+                          searchResults =
+                              allHistory
+                                  .where(
+                                    (item) =>
+                                        item.type.toLowerCase().contains(
+                                          value.toLowerCase(),
+                                        ) ||
+                                        item.description.toLowerCase().contains(
+                                          value.toLowerCase(),
+                                        ),
+                                  )
+                                  .toList();
                         }
                       });
                     },
@@ -547,58 +581,60 @@ class _HistoryScreenState extends State<HistoryScreen>
                   SizedBox(height: 20),
 
                   Expanded(
-                    child: searchResults.isEmpty && searchController.text.isNotEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.search_off,
-                                  size: 64,
-                                  color: Color(0xFF9CA3AF),
-                                ),
-                                SizedBox(height: 16),
-                                Text(
-                                  'Tidak ada hasil ditemukan',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF6B7280),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : searchResults.isEmpty
+                    child:
+                        searchResults.isEmpty &&
+                                searchController.text.isNotEmpty
                             ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.search,
-                                      size: 64,
-                                      color: Color(0xFF9CA3AF),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.search_off,
+                                    size: 64,
+                                    color: Color(0xFF9CA3AF),
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Tidak ada hasil ditemukan',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF6B7280),
                                     ),
-                                    SizedBox(height: 16),
-                                    Text(
-                                      'Mulai mengetik untuk mencari',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF6B7280),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : ListView.builder(
-                                itemCount: searchResults.length,
-                                itemBuilder: (context, index) {
-                                  return _buildSearchResultCard(
-                                    searchResults[index],
-                                  );
-                                },
+                                  ),
+                                ],
                               ),
+                            )
+                            : searchResults.isEmpty
+                            ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.search,
+                                    size: 64,
+                                    color: Color(0xFF9CA3AF),
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Mulai mengetik untuk mencari',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                            : ListView.builder(
+                              itemCount: searchResults.length,
+                              itemBuilder: (context, index) {
+                                return _buildSearchResultCard(
+                                  searchResults[index],
+                                );
+                              },
+                            ),
                   ),
                 ],
               ),
@@ -677,240 +713,533 @@ class _HistoryScreenState extends State<HistoryScreen>
     final TextEditingController pointsController = TextEditingController(
       text: item.points.abs().toString(),
     );
+    final TextEditingController dateController = TextEditingController(
+      text: item.date,
+    );
+    final TextEditingController reporterController = TextEditingController(
+      text: item.isPelanggaran ? (item.pelapor ?? '') : (item.pemberi ?? ''),
+    );
+
     String selectedType = item.type;
+    String selectedCategory = '';
     bool isPelanggaran = item.isPelanggaran;
+
+    List<Map<String, String>> availableCategories =
+        _categories[isPelanggaran ? 'Pelanggaran' : 'Prestasi'] ?? [];
+    if (availableCategories.isNotEmpty) {
+      selectedCategory = availableCategories.first['value'] ?? '';
+    }
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
+            return Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              title: Row(
-                children: [
-                  Icon(
-                    isPelanggaran ? Icons.warning : Icons.star,
-                    color: isPelanggaran
-                        ? const Color(0xFFFF6B6D)
-                        : const Color(0xFFFFD700),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Edit ${isPelanggaran ? 'Pelanggaran' : 'Apresiasi'}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
+              insetPadding: EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 420),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Jenis',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF374151),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                    // Header Section
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          colors:
+                              isPelanggaran
+                                  ? [Color(0xFFEF4444), Color(0xFFDC2626)]
+                                  : [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
                       ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: selectedType,
-                          isExpanded: true,
-                          items: (isPelanggaran
-                                  ? [
-                                      'Pelanggaran Kedisiplinan',
-                                      'Pelanggaran Pakaian',
-                                      'Pelanggaran Tugas',
-                                      'Pelanggaran Ketertiban',
-                                      'Pelanggaran Lainnya',
-                                    ]
-                                  : [
-                                      'Prestasi Akademik',
-                                      'Prestasi Non-Akademik',
-                                      'Prestasi Olahraga',
-                                      'Kegiatan Sosial',
-                                      'Sikap Positif',
-                                      'Sikap Kepemimpinan',
-                                      'Apresiasi Lainnya',
-                                    ])
-                              .map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(
-                                value,
-                                style: GoogleFonts.poppins(),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              isPelanggaran
+                                  ? Icons.warning_rounded
+                                  : Icons.star_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Edit ${isPelanggaran ? 'Pelanggaran' : 'Prestasi'}',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  'Update data siswa',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: Colors.white.withOpacity(0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setDialogState(() {
-                              selectedType = newValue!;
-                            });
-                          },
-                        ),
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
 
-                    Text(
-                      'Deskripsi',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF374151),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: descriptionController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE5E7EB),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF0083EE),
-                          ),
-                        ),
-                        hintText: 'Masukkan deskripsi...',
-                        hintStyle: GoogleFonts.poppins(
-                          color: const Color(0xFF9CA3AF),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                    // Form Section
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            // Category Dropdown
+                            _buildCustomDropdown(
+                              icon: Icons.category_outlined,
+                              hint: 'Pilih Kategori',
+                              value:
+                                  selectedCategory.isEmpty
+                                      ? null
+                                      : selectedCategory,
+                              items:
+                                  availableCategories.map((category) {
+                                    return DropdownMenuItem<String>(
+                                      value: category['value'],
+                                      child: Text(
+                                        '${category['value']} - ${category['title']}',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFF374151),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  selectedCategory = value!;
+                                  var category = availableCategories.firstWhere(
+                                    (cat) => cat['value'] == value,
+                                    orElse: () => {'title': selectedType},
+                                  );
+                                  selectedType =
+                                      category['title'] ?? selectedType;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 16),
 
-                    Text(
-                      'Poin',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF374151),
+                            // Description Field
+                            _buildCustomTextField(
+                              controller: descriptionController,
+                              hint:
+                                  'Uraian ${isPelanggaran ? 'pelanggaran' : 'prestasi'}',
+                              icon: Icons.description_outlined,
+                              maxLines: 4,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Date Field
+                            _buildCustomTextField(
+                              controller: dateController,
+                              hint: 'Tanggal',
+                              icon: Icons.calendar_today_outlined,
+                              readOnly: true,
+                              onTap: () async {
+                                final DateTime? pickedDate =
+                                    await showDatePicker(
+                                      context: context,
+                                      initialDate: DateTime.now(),
+                                      firstDate: DateTime(2020),
+                                      lastDate: DateTime.now(),
+                                      builder: (context, child) {
+                                        return Theme(
+                                          data: Theme.of(context).copyWith(
+                                            colorScheme: ColorScheme.light(
+                                              primary:
+                                                  isPelanggaran
+                                                      ? Color(0xFFEF4444)
+                                                      : Color(0xFF3B82F6),
+                                            ),
+                                          ),
+                                          child: child!,
+                                        );
+                                      },
+                                    );
+                                if (pickedDate != null) {
+                                  setDialogState(() {
+                                    dateController.text =
+                                        pickedDate.toString().split(' ')[0];
+                                  });
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Reporter Field
+                            _buildCustomTextField(
+                              controller: reporterController,
+                              hint: isPelanggaran ? 'Pelapor' : 'Pemberi',
+                              icon: Icons.person_outline,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Points Field
+                            _buildCustomTextField(
+                              controller: pointsController,
+                              hint: 'Poin',
+                              icon:
+                                  isPelanggaran
+                                      ? Icons.remove_circle_outline
+                                      : Icons.add_circle_outline,
+                              keyboardType: TextInputType.number,
+                              prefixText: isPelanggaran ? '- ' : '+ ',
+                              prefixColor:
+                                  isPelanggaran
+                                      ? Color(0xFFEF4444)
+                                      : Color(0xFF10B981),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: pointsController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE5E7EB),
+
+                    // Action Buttons
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(0xFFE5E7EB),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Batal',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF0083EE),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                // Validate points input
+                                if (pointsController.text.isEmpty ||
+                                    int.tryParse(pointsController.text) ==
+                                        null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Masukkan poin yang valid',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      backgroundColor: Colors.red,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      margin: const EdgeInsets.all(16),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                setState(() {
+                                  int newPoints =
+                                      isPelanggaran
+                                          ? -int.parse(pointsController.text)
+                                          : int.parse(pointsController.text);
+                                  int index = allHistory.indexOf(item);
+                                  allHistory[index] = HistoryItem(
+                                    id: item.id,
+                                    type: selectedType,
+                                    description: descriptionController.text,
+                                    date: dateController.text,
+                                    time: item.time,
+                                    points: newPoints,
+                                    icon: item.icon,
+                                    color: item.color,
+                                    pemberi:
+                                        isPelanggaran
+                                            ? null
+                                            : reporterController.text,
+                                    pelapor:
+                                        isPelanggaran
+                                            ? reporterController.text
+                                            : null,
+                                    isNew: true,
+                                    isPelanggaran: item.isPelanggaran,
+                                    createdAt: DateTime.now(),
+                                  );
+                                });
+                                _sortHistory();
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.check_circle_outline,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            '${isPelanggaran ? 'Pelanggaran' : 'Prestasi'} berhasil diupdate!',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: const Color(0xFF10B981),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    margin: const EdgeInsets.all(16),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors:
+                                        isPelanggaran
+                                            ? [
+                                              Color(0xFFEF4444),
+                                              Color(0xFFDC2626),
+                                            ]
+                                            : [
+                                              Color(0xFF3B82F6),
+                                              Color(0xFF1D4ED8),
+                                            ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (isPelanggaran
+                                              ? Color(0xFFEF4444)
+                                              : Color(0xFF3B82F6))
+                                          .withOpacity(0.3),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  'Simpan Perubahan',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                        hintText: 'Masukkan poin...',
-                        hintStyle: GoogleFonts.poppins(
-                          color: const Color(0xFF9CA3AF),
-                        ),
-                        prefixText: isPelanggaran ? '- ' : '+ ',
-                        prefixStyle: GoogleFonts.poppins(
-                          color: isPelanggaran
-                              ? const Color(0xFFFF6B6D)
-                              : const Color(0xFF10B981),
-                          fontWeight: FontWeight.w600,
-                        ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    'Batal',
-                    style: GoogleFonts.poppins(
-                      color: const Color(0xFF6B7280),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      int newPoints = isPelanggaran
-                          ? -int.parse(pointsController.text)
-                          : int.parse(pointsController.text);
-                      int index = allHistory.indexOf(item);
-                      allHistory[index] = HistoryItem(
-                        id: item.id,
-                        type: selectedType,
-                        description: descriptionController.text,
-                        date: item.date,
-                        time: item.time,
-                        points: newPoints,
-                        icon: item.icon,
-                        color: item.color,
-                        pemberi: item.pemberi,
-                        pelapor: item.pelapor,
-                        isNew: true,
-                        isPelanggaran: item.isPelanggaran,
-                        createdAt: DateTime.now(),
-                      );
-                    });
-                    _sortHistory();
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${isPelanggaran ? 'Pelanggaran' : 'Apresiasi'} berhasil diupdate!',
-                        ),
-                        backgroundColor: const Color(0xFF10B981),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0083EE),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    'Simpan',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
             );
           },
         );
       },
+    );
+  }
+
+  Widget _buildCustomTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool readOnly = false,
+    VoidCallback? onTap,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+    String? prefixText,
+    Color? prefixColor,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        readOnly: readOnly,
+        onTap: onTap,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        inputFormatters:
+            keyboardType == TextInputType.number
+                ? [FilteringTextInputFormatter.digitsOnly]
+                : null,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.poppins(
+            fontSize: 14,
+            color: const Color(0xFF9CA3AF),
+          ),
+          prefixIcon: Icon(icon, color: const Color(0xFF6B7280), size: 20),
+          prefixText: prefixText?.isNotEmpty == true ? prefixText : null,
+          prefixStyle:
+              prefixText != null
+                  ? GoogleFonts.poppins(
+                    color: prefixColor ?? const Color(0xFF6B7280),
+                    fontWeight: FontWeight.w600,
+                  )
+                  : null,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+        ),
+        style: GoogleFonts.poppins(
+          fontSize: 14,
+          color: const Color(0xFF374151),
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomDropdown({
+    required IconData icon,
+    required String hint,
+    required String? value,
+    required List<DropdownMenuItem<String>> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFF6B7280), size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: value,
+                  isExpanded: true,
+                  hint: Text(
+                    hint,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: const Color(0xFF9CA3AF),
+                    ),
+                  ),
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Color(0xFF6B7280),
+                  ),
+                  items: items,
+                  onChanged: onChanged,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -958,12 +1287,31 @@ class _HistoryScreenState extends State<HistoryScreen>
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Data berhasil dihapus!'),
+                    content: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Data berhasil dihapus!',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     backgroundColor: const Color(0xFFFF6B6D),
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
+                    margin: const EdgeInsets.all(16),
                   ),
                 );
               },
@@ -1014,8 +1362,11 @@ class _HistoryScreenState extends State<HistoryScreen>
                   child: Column(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(24).add(EdgeInsets.only(
-                            top: MediaQuery.of(context).padding.top)),
+                        padding: const EdgeInsets.all(24).add(
+                          EdgeInsets.only(
+                            top: MediaQuery.of(context).padding.top,
+                          ),
+                        ),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
@@ -1067,8 +1418,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                                       Text(
                                         '${widget.student['name']}',
                                         style: GoogleFonts.poppins(
-                                          color:
-                                              Colors.white.withOpacity(0.9),
+                                          color: Colors.white.withOpacity(0.9),
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -1105,8 +1455,9 @@ class _HistoryScreenState extends State<HistoryScreen>
                                   child: GestureDetector(
                                     onTap: _showSearchBottomSheet,
                                     child: Container(
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 12),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Colors.white.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(12),
@@ -1139,8 +1490,9 @@ class _HistoryScreenState extends State<HistoryScreen>
                                   child: GestureDetector(
                                     onTap: _showFilterBottomSheet,
                                     child: Container(
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 12),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Colors.white.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(12),
@@ -1224,170 +1576,292 @@ class _HistoryScreenState extends State<HistoryScreen>
                         ),
 
                       Expanded(
-                        child: filteredHistory.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      width: 80,
-                                      height: 80,
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            Color(0xFF61B8FF),
-                                            Color(0xFF0083EE),
-                                          ],
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(40),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFF0083EE)
-                                                .withOpacity(0.3),
-                                            blurRadius: 20,
-                                            offset: const Offset(0, 10),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.search_off,
-                                        color: Colors.white,
-                                        size: 40,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    Text(
-                                      'Tidak ada data yang sesuai dengan filter',
-                                      textAlign: TextAlign.center,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF6B7280),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Coba ubah pengaturan filter',
-                                      textAlign: TextAlign.center,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: const Color(0xFF9CA3AF),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : SingleChildScrollView(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (newItems.isNotEmpty) ...[
+                        child:
+                            filteredHistory.isEmpty
+                                ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
                                       Container(
-                                        margin:
-                                            const EdgeInsets.only(bottom: 16),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 8,
-                                        ),
+                                        width: 80,
+                                        height: 80,
                                         decoration: BoxDecoration(
                                           gradient: const LinearGradient(
                                             colors: [
-                                              Color(0xFFFF6B6D),
-                                              Color(0xFFEA580C),
+                                              Color(0xFF61B8FF),
+                                              Color(0xFF0083EE),
                                             ],
                                           ),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(
+                                            40,
+                                          ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: const Color(0xFFFF6B6D)
-                                                  .withOpacity(0.3),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 4),
+                                              color: const Color(
+                                                0xFF0083EE,
+                                              ).withOpacity(0.3),
+                                              blurRadius: 20,
+                                              offset: const Offset(0, 10),
                                             ),
                                           ],
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              width: 8,
-                                              height: 8,
-                                              decoration: const BoxDecoration(
-                                                color: Colors.white,
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'DATA TERBARU (${newItems.length})',
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w800,
-                                                color: Colors.white,
-                                                letterSpacing: 0.5,
-                                              ),
-                                            ),
-                                          ],
+                                        child: const Icon(
+                                          Icons.search_off,
+                                          color: Colors.white,
+                                          size: 40,
                                         ),
                                       ),
-                                      ...newItems
-                                          .map((item) =>
-                                              _buildHistoryCard(item))
-                                          .toList(),
-                                    ],
-
-                                    if (oldItems.isNotEmpty) ...[
-                                      if (newItems.isNotEmpty)
-                                        const SizedBox(height: 24),
-                                      Container(
-                                        margin:
-                                            const EdgeInsets.only(bottom: 16),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 8,
-                                        ),
-                                        decoration: BoxDecoration(
+                                      const SizedBox(height: 20),
+                                      Text(
+                                        'Tidak ada data yang sesuai dengan filter',
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
                                           color: const Color(0xFF6B7280),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              width: 8,
-                                              height: 8,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white
-                                                    .withOpacity(0.7),
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'DATA SEBELUMNYA (${oldItems.length})',
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w800,
-                                                color: Colors.white,
-                                                letterSpacing: 0.5,
-                                              ),
-                                            ),
-                                          ],
                                         ),
                                       ),
-                                      ...oldItems
-                                          .map((item) =>
-                                              _buildHistoryCard(item))
-                                          .toList(),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Coba ubah pengaturan filter',
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFF9CA3AF),
+                                        ),
+                                      ),
                                     ],
-                                  ],
+                                  ),
+                                )
+                                : SingleChildScrollView(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (newItems.isNotEmpty) ...[
+                                        Container(
+                                          margin: const EdgeInsets.only(
+                                            bottom: 16,
+                                          ),
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                Color(0xFF0EA5E9),
+                                                Color(0xFF0284C7),
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(
+                                                  0xFF0EA5E9,
+                                                ).withOpacity(0.3),
+                                                blurRadius: 15,
+                                                offset: const Offset(0, 5),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  8,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.fiber_new_rounded,
+                                                  color: Colors.white,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      'Data Terbaru',
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            color: Colors.white,
+                                                          ),
+                                                    ),
+                                                    Text(
+                                                      '${newItems.length} item baru tersedia',
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            color: Colors.white
+                                                                .withOpacity(
+                                                                  0.8,
+                                                                ),
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 6,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: Text(
+                                                  '${newItems.length}',
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        ...newItems
+                                            .map(
+                                              (item) => _buildHistoryCard(item),
+                                            )
+                                            .toList(),
+                                      ],
+
+                                      if (oldItems.isNotEmpty) ...[
+                                        if (newItems.isNotEmpty)
+                                          const SizedBox(height: 24),
+                                        Container(
+                                          margin: const EdgeInsets.only(
+                                            bottom: 16,
+                                          ),
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                Color(0xFF64748B),
+                                                Color(0xFF475569),
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(
+                                                  0xFF64748B,
+                                                ).withOpacity(0.3),
+                                                blurRadius: 15,
+                                                offset: const Offset(0, 5),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  8,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.history_rounded,
+                                                  color: Colors.white,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      'Data Sebelumnya',
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            color: Colors.white,
+                                                          ),
+                                                    ),
+                                                    Text(
+                                                      'Riwayat data yang sudah tersimpan',
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            color: Colors.white
+                                                                .withOpacity(
+                                                                  0.8,
+                                                                ),
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 6,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: Text(
+                                                  '${oldItems.length}',
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        ...oldItems
+                                            .map(
+                                              (item) => _buildHistoryCard(item),
+                                            )
+                                            .toList(),
+                                      ],
+                                    ],
+                                  ),
                                 ),
-                              ),
                       ),
                     ],
                   ),
@@ -1478,9 +1952,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                       decoration: BoxDecoration(
                         color: item.color.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: item.color.withOpacity(0.3),
-                        ),
+                        border: Border.all(color: item.color.withOpacity(0.3)),
                       ),
                       child: Text(
                         '${item.points > 0 ? '+' : ''}${item.points}',
@@ -1505,7 +1977,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                   size: 16,
                   color: const Color(0xFF9CA3AF),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
                 Text(
                   '${item.date} • ${item.time}',
                   style: GoogleFonts.poppins(
@@ -1514,39 +1986,28 @@ class _HistoryScreenState extends State<HistoryScreen>
                     color: const Color(0xFF9CA3AF),
                   ),
                 ),
-                const Spacer(),
+              ],
+            ),
 
-                if (isPelanggaran) ...[
-                  Icon(
-                    Icons.person,
-                    size: 16,
-                    color: const Color(0xFF9CA3AF),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Pelapor: ${item.pelapor}',
+            const SizedBox(height: 8),
+
+            Row(
+              children: [
+                Icon(Icons.person, size: 16, color: const Color(0xFF9CA3AF)),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    isPelanggaran
+                        ? 'Pelapor: ${item.pelapor ?? 'Tidak diketahui'}'
+                        : 'Oleh: ${item.pemberi ?? 'Tidak diketahui'}',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: const Color(0xFF9CA3AF),
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ] else ...[
-                  Icon(
-                    Icons.person,
-                    size: 16,
-                    color: const Color(0xFF9CA3AF),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Oleh: ${item.pemberi}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF9CA3AF),
-                    ),
-                  ),
-                ],
+                ),
               ],
             ),
 

@@ -9,9 +9,10 @@ class PointUtils {
     required String className,
     required String date,
     required String description,
+    required String category,
     required BuildContext context,
   }) async {
-    if (studentName.isEmpty || className.isEmpty || date.isEmpty) {
+    if (studentName.isEmpty || className.isEmpty || date.isEmpty || category.isEmpty) {
       _showErrorSnackBar(context, 'Mohon lengkapi semua field yang diperlukan');
       return null;
     }
@@ -24,10 +25,11 @@ class PointUtils {
       className: className,
       date: date,
       description: description,
+      category: category, 
     );
 
     print(
-      'Point data: ${pointData.type}, ${pointData.studentName}, ${pointData.className}, ${pointData.date}, ${pointData.description}',
+      'Point data: ${pointData.type}, ${pointData.studentName}, ${pointData.className}, ${pointData.date}, ${pointData.description}, ${pointData.category}',
     );
 
     _showSuccessSnackBar(
@@ -116,7 +118,31 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   String _selectedPointType = 'Pelanggaran';
+  String _selectedCategory = '';
   bool _isSubmitting = false;
+
+  // Data kategori berdasarkan FAQ
+  final Map<String, List<Map<String, String>>> _categories = {
+    'Prestasi': [
+      {'value': 'R1', 'title': 'Pengembangan Keagamaan'},
+      {'value': 'R2', 'title': 'Kejujuran'},
+      {'value': 'R3', 'title': 'Prestasi Akademis'},
+      {'value': 'R4', 'title': 'Kedisiplinan'},
+      {'value': 'R5', 'title': 'Pengembangan Sosial'},
+      {'value': 'R6', 'title': 'Kepemimpinan'},
+      {'value': 'R7', 'title': 'Kebangsaan'},
+      {'value': 'R8', 'title': 'Ekstrakurikuler dan Prestasi'},
+      {'value': 'R9', 'title': 'Peduli Lingkungan'},
+      {'value': 'R10', 'title': 'Kewirausahaan'},
+    ],
+    'Pelanggaran': [
+      {'value': 'P1', 'title': 'Terlambat'},
+      {'value': 'P2', 'title': 'Kehadiran'},
+      {'value': 'P3', 'title': 'Seragam'},
+      {'value': 'P4', 'title': 'Kerapian dan Penampilan'},
+      {'value': 'P5', 'title': 'Kedisiplinan Berat'},
+    ],
+  };
 
   @override
   void initState() {
@@ -125,6 +151,7 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
     _nameController.text = widget.studentName;
     _classController.text = 'XII RPL 2'; // Set default class
     _dateController.text = DateTime.now().toString().split(' ')[0];
+    _selectedCategory = _categories[_selectedPointType]?.first['value'] ?? '';
   }
 
   void _initializeAnimations() {
@@ -178,6 +205,7 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
       className: _classController.text,
       date: _dateController.text,
       description: _descriptionController.text,
+      category: _selectedCategory,
       context: context,
     );
     setState(() => _isSubmitting = false);
@@ -208,6 +236,13 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
     }
   }
 
+  void _onPointTypeChanged(String value) {
+    setState(() {
+      _selectedPointType = value;
+      _selectedCategory = _categories[_selectedPointType]?.first['value'] ?? '';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return FadeTransition(
@@ -229,8 +264,10 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
                     dateController: _dateController,
                     descriptionController: _descriptionController,
                     selectedPointType: _selectedPointType,
-                    onPointTypeChanged:
-                        (value) => setState(() => _selectedPointType = value),
+                    selectedCategory: _selectedCategory,
+                    categories: _categories,
+                    onPointTypeChanged: _onPointTypeChanged,
+                    onCategoryChanged: (value) => setState(() => _selectedCategory = value),
                     isSubmitting: _isSubmitting,
                     onClose: _closeDialog,
                     onSubmit: _submitPoint,
@@ -252,7 +289,10 @@ class PointDialogContent extends StatelessWidget {
   final TextEditingController dateController;
   final TextEditingController descriptionController;
   final String selectedPointType;
+  final String selectedCategory;
+  final Map<String, List<Map<String, String>>> categories;
   final ValueChanged<String> onPointTypeChanged;
+  final ValueChanged<String> onCategoryChanged;
   final bool isSubmitting;
   final VoidCallback onClose;
   final VoidCallback onSubmit;
@@ -265,7 +305,10 @@ class PointDialogContent extends StatelessWidget {
     required this.dateController,
     required this.descriptionController,
     required this.selectedPointType,
+    required this.selectedCategory,
+    required this.categories,
     required this.onPointTypeChanged,
+    required this.onCategoryChanged,
     required this.isSubmitting,
     required this.onClose,
     required this.onSubmit,
@@ -298,7 +341,10 @@ class PointDialogContent extends StatelessWidget {
             dateController: dateController,
             descriptionController: descriptionController,
             selectedPointType: selectedPointType,
+            selectedCategory: selectedCategory,
+            categories: categories,
             onPointTypeChanged: onPointTypeChanged,
+            onCategoryChanged: onCategoryChanged,
             onDateTap: onDateTap,
           ),
           ActionButtons(
@@ -392,7 +438,10 @@ class FormSection extends StatelessWidget {
   final TextEditingController dateController;
   final TextEditingController descriptionController;
   final String selectedPointType;
+  final String selectedCategory;
+  final Map<String, List<Map<String, String>>> categories;
   final ValueChanged<String> onPointTypeChanged;
+  final ValueChanged<String> onCategoryChanged;
   final VoidCallback onDateTap;
 
   const FormSection({
@@ -402,7 +451,10 @@ class FormSection extends StatelessWidget {
     required this.dateController,
     required this.descriptionController,
     required this.selectedPointType,
+    required this.selectedCategory,
+    required this.categories,
     required this.onPointTypeChanged,
+    required this.onCategoryChanged,
     required this.onDateTap,
   }) : super(key: key);
 
@@ -435,6 +487,12 @@ class FormSection extends StatelessWidget {
           PointTypeDropdown(
             selectedPointType: selectedPointType,
             onChanged: onPointTypeChanged,
+          ),
+          const SizedBox(height: 16),
+          CategoryDropdown(
+            selectedCategory: selectedCategory,
+            categories: categories[selectedPointType] ?? [],
+            onChanged: onCategoryChanged,
           ),
           const SizedBox(height: 16),
           CustomTextField(
@@ -574,20 +632,103 @@ class PointTypeDropdown extends StatelessWidget {
                     Icons.keyboard_arrow_down,
                     color: Color(0xFF6B7280),
                   ),
-                  items:
-                      pointTypes.map((String type) {
-                        return DropdownMenuItem<String>(
-                          value: type,
-                          child: Text(
-                            type,
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF374151),
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                  items: pointTypes.map((String type) {
+                    return DropdownMenuItem<String>(
+                      value: type,
+                      child: Text(
+                        type,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF374151),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      onChanged(newValue);
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class CategoryDropdown extends StatelessWidget {
+  final String selectedCategory;
+  final List<Map<String, String>> categories;
+  final ValueChanged<String> onChanged;
+
+  const CategoryDropdown({
+    Key? key,
+    required this.selectedCategory,
+    required this.categories,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.category_outlined,
+              color: Color(0xFF6B7280),
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: selectedCategory.isEmpty ? null : selectedCategory,
+                  isExpanded: true,
+                  hint: Text(
+                    'Pilih Kategori',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: const Color(0xFF9CA3AF),
+                    ),
+                  ),
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Color(0xFF6B7280),
+                  ),
+                  items: categories.map((Map<String, String> category) {
+                    return DropdownMenuItem<String>(
+                      value: category['value'],
+                      child: Text(
+                        '${category['value']} - ${category['title']}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF374151),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                   onChanged: (String? newValue) {
                     if (newValue != null) {
                       onChanged(newValue);

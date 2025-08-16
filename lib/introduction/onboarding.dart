@@ -116,6 +116,14 @@ class _IntroductionScreenState extends State<IntroductionScreen> with TickerProv
     }
   }
 
+  void _skipToFinalPage() {
+    _pageController.animateToPage(
+      _pages.length - 1,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
   void _showLogin() {
     setState(() => _showLoginOverlay = true);
     _loginController.forward();
@@ -197,7 +205,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> with TickerProv
               ],
             ),
             if (_currentPage != _pages.length - 1)
-              _SkipButton(onSkip: () {}),
+              _SkipButton(onSkip: _skipToFinalPage),
             if (_showLoginOverlay)
               _LoginOverlay(
                 loginController: _loginController,
@@ -656,6 +664,7 @@ class _LoginForm extends StatefulWidget {
 class _LoginFormState extends State<_LoginForm> {
   final TextEditingController _nipController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isPasswordVisible = false; // Tambahkan ini
 
   void _showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -728,10 +737,17 @@ class _LoginFormState extends State<_LoginForm> {
                   _LoginTextField(
                     hintText: 'Masukkan password anda',
                     icon: Icons.lock_outline,
-                    obscureText: true,
-                    suffixIcon: Icons.visibility_off_outlined,
+                    obscureText: !_isPasswordVisible, 
+                    suffixIcon: _isPasswordVisible 
+                        ? Icons.visibility_outlined 
+                        : Icons.visibility_off_outlined, 
                     controller: _passwordController,
                     isWeb: isWeb,
+                    onSuffixIconTap: () { 
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
                   ),
                   SizedBox(height: isWeb ? 40 : 30),
                   _GradientButton(
@@ -740,17 +756,6 @@ class _LoginFormState extends State<_LoginForm> {
                     isWeb: isWeb,
                   ),
                   SizedBox(height: isWeb ? 24 : 20),
-                  GestureDetector(
-                    onTap: () => _showSnackBar(context, 'Fitur lupa password akan segera hadir'),
-                    child: Text(
-                      'Lupa Password?',
-                      style: GoogleFonts.poppins(
-                        fontSize: isWeb ? 16 : 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF0083EE),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -827,7 +832,7 @@ class _LoginHeader extends StatelessWidget {
                 ),
                 SizedBox(height: isWeb ? 12 : 8),
                 Text(
-                  'Yuk, masuk dan lanjutkan aktivitasmu di Aplikasi SMK!',
+                  'Yuk, lanjutkan aktivitasmu di Aplikasi Sikapin!',
                   style: GoogleFonts.poppins(
                     fontSize: isWeb ? 16 : 13,
                     fontWeight: FontWeight.w400,
@@ -851,6 +856,7 @@ class _LoginTextField extends StatelessWidget {
   final IconData? suffixIcon;
   final TextEditingController? controller;
   final bool isWeb;
+  final VoidCallback? onSuffixIconTap; 
 
   const _LoginTextField({
     required this.hintText,
@@ -859,6 +865,7 @@ class _LoginTextField extends StatelessWidget {
     this.suffixIcon,
     this.controller,
     required this.isWeb,
+    this.onSuffixIconTap, 
   });
 
   @override
@@ -880,7 +887,10 @@ class _LoginTextField extends StatelessWidget {
           ),
           prefixIcon: Icon(icon, color: Colors.grey[400]),
           suffixIcon: suffixIcon != null 
-              ? Icon(suffixIcon, color: Colors.grey[400]) 
+              ? GestureDetector( 
+                  onTap: onSuffixIconTap,
+                  child: Icon(suffixIcon, color: Colors.grey[400]),
+                )
               : null,
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(
@@ -892,7 +902,6 @@ class _LoginTextField extends StatelessWidget {
     );
   }
 }
-
 class _GradientButton extends StatelessWidget {
   final String text;
   final VoidCallback onTap;

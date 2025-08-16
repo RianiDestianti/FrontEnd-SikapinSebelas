@@ -106,6 +106,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Animation<double> _fadeAnimation;
   String _searchQuery = '';
   List<Student> _filteredSiswaTerbaik = [];
+  List<Student> _filteredSiswaBerat = [];
 
   final List<Student> _siswaTerbaik = [
     Student(
@@ -186,6 +187,85 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     ),
   ];
 
+  final List<Student> _siswaBerat = [
+    Student(
+      name: 'Ahmad Lutfi',
+      kelas: 'XII RPL 2',
+      poin: -150,
+      prestasi: 'Pelanggaran berulang: terlambat',
+      avatar: Icons.person,
+      rank: 1,
+      status: 'Prioritas',
+      nis: '2023005',
+      ttl: 'Bandung, 12 Juni 2007',
+      jenkel: 'Laki-laki',
+      alamat: 'Jl. Raya No. 10, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456793',
+      email: 'ahmad.lutfi@smk.sch.id',
+      namaOrtu: 'Siti Aminah',
+      noHpOrtu: '08129876547',
+    ),
+    Student(
+      name: 'Rudi Hartono',
+      kelas: 'XII RPL 2',
+      poin: -120,
+      prestasi: 'Pelanggaran: tidak memakai seragam',
+      avatar: Icons.person,
+      rank: 2,
+      status: 'Prioritas',
+      nis: '2023006',
+      ttl: 'Jakarta, 18 Februari 2007',
+      jenkel: 'Laki-laki',
+      alamat: 'Jl. Veteran No. 20, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456794',
+      email: 'rudi.hartono@smk.sch.id',
+      namaOrtu: 'Dewi Lestari',
+      noHpOrtu: '08129876548',
+    ),
+    Student(
+      name: 'Lina Marlina',
+      kelas: 'XII RPL 2',
+      poin: -100,
+      prestasi: 'Pelanggaran: bolos kelas',
+      avatar: Icons.person,
+      rank: 3,
+      status: 'Bermasalah',
+      nis: '2023007',
+      ttl: 'Surabaya, 5 April 2007',
+      jenkel: 'Perempuan',
+      alamat: 'Jl. Diponegoro No. 30, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456795',
+      email: 'lina.marlina@smk.sch.id',
+      namaOrtu: 'Hadi Susanto',
+      noHpOrtu: '08129876549',
+    ),
+    Student(
+      name: 'Eko Prasetyo',
+      kelas: 'XII RPL 2',
+      poin: -80,
+      prestasi: 'Pelanggaran: tidak mengerjakan tugas',
+      avatar: Icons.person,
+      rank: 4,
+      status: 'Bermasalah',
+      nis: '2023008',
+      ttl: 'Medan, 22 Januari 2007',
+      jenkel: 'Laki-laki',
+      alamat: 'Jl. Gatot Subroto No. 40, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456796',
+      email: 'eko.prasetyo@smk.sch.id',
+      namaOrtu: 'Rina Wulandari',
+      noHpOrtu: '08129876550',
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -198,6 +278,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     _animationController.forward();
     _filteredSiswaTerbaik = _siswaTerbaik;
+    _filteredSiswaBerat = _siswaBerat;
   }
 
   @override
@@ -211,13 +292,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _searchQuery = query;
       if (query.isEmpty) {
         _filteredSiswaTerbaik = _siswaTerbaik;
+        _filteredSiswaBerat = _siswaBerat;
       } else {
+        final searchLower = query.toLowerCase();
         _filteredSiswaTerbaik =
             _siswaTerbaik.where((siswa) {
               final namaLower = siswa.name.toLowerCase();
               final kelasLower = siswa.kelas.toLowerCase();
               final prestasiLower = siswa.prestasi.toLowerCase();
-              final searchLower = query.toLowerCase();
+              return namaLower.contains(searchLower) ||
+                  kelasLower.contains(searchLower) ||
+                  prestasiLower.contains(searchLower);
+            }).toList();
+        _filteredSiswaBerat =
+            _siswaBerat.where((siswa) {
+              final namaLower = siswa.name.toLowerCase();
+              final kelasLower = siswa.kelas.toLowerCase();
+              final prestasiLower = siswa.prestasi.toLowerCase();
               return namaLower.contains(searchLower) ||
                   kelasLower.contains(searchLower) ||
                   prestasiLower.contains(searchLower);
@@ -247,6 +338,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 'nama_ortu': siswa.namaOrtu,
                 'no_hp_ortu': siswa.noHpOrtu,
               },
+              // initialTab: siswa.poin < 0 ? 'pelanggaran' : 'apresiasi',
             ),
       ),
     );
@@ -306,9 +398,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     GestureDetector(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                      },
+                                      onTap: () => Navigator.pop(context),
                                       child: Container(
                                         width: 40,
                                         height: 40,
@@ -492,6 +582,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     _buildActionButton('Umum', 0),
                                     const SizedBox(width: 10),
                                     _buildActionButton('Terbaik', 2),
+                                    const SizedBox(width: 10),
+                                    _buildActionButton('Berat', 3),
                                   ],
                                 ),
                               ],
@@ -504,6 +596,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             children: [
                               if (_selectedTab == 2) ...[
                                 _buildSiswaTerbaikSection(),
+                                const SizedBox(height: 20),
+                              ] else if (_selectedTab == 3) ...[
+                                _buildSiswaBeratSection(),
                                 const SizedBox(height: 20),
                               ] else ...[
                                 _buildEnhancedChartCard(
@@ -702,10 +797,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                               Color(0xFF34D399),
                                             ],
                                           ),
-                                          'Poin Apresiasi',
-                                          'Poin apresiasi berhasil ditambahkan kepada 3 siswa berprestasi',
+                                          'Laporan Apresiasi',
+                                          'Rekap berhasil dalam kategori apresiasi',
                                           '08.30',
-                                          'BARU',
+                                          'SELESAI',
                                           const Color(0xFF10B981),
                                         ),
                                         const SizedBox(height: 16),
@@ -717,11 +812,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                               Color(0xFFFF8E8F),
                                             ],
                                           ),
-                                          'Pelanggaran',
-                                          'Terdapat 3 siswa dengan pelanggaran ringan',
+                                          'Laporan Pelanggaran',
+                                          'Rekap berhasil dalam kategori pelanggaran',
                                           '06.30',
-                                          'PERLU TINDAKAN',
-                                          const Color(0xFFEA580C),
+                                          'SELESAI',
+                                          const Color(0xFF10B981),
                                         ),
                                       ],
                                     ),
@@ -838,6 +933,108 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     : 0,
                           ),
                           child: _buildSiswaTerbaikItem(siswa),
+                        );
+                      }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSiswaBeratSection() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Siswa Berat',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Top 4 siswa dengan pelanggaran terberat',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children:
+                  _filteredSiswaBerat.isEmpty
+                      ? [
+                        Text(
+                          'Tidak ada hasil ditemukan',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: const Color(0xFF6B7280),
+                          ),
+                        ),
+                      ]
+                      : _filteredSiswaBerat.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        Student siswa = entry.value;
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom:
+                                index < _filteredSiswaBerat.length - 1 ? 16 : 0,
+                          ),
+                          child: _buildSiswaBeratItem(siswa),
                         );
                       }).toList(),
             ),
@@ -1020,6 +1217,179 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildSiswaBeratItem(Student siswa) {
+    Color rankColor = _getRankColor(siswa.rank);
+
+    return GestureDetector(
+      onTap: () => _navigateToDetailScreen(siswa),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: rankColor.withOpacity(0.2), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: rankColor.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: rankColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(Icons.person, color: Colors.white, size: 24),
+                  if (siswa.rank <= 3)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: rankColor,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Icon(
+                          _getRankIcon(siswa.rank),
+                          color: Colors.white,
+                          size: 10,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: rankColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: rankColor.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          '#${siswa.rank}',
+                          style: GoogleFonts.poppins(
+                            color: rankColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          siswa.name,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: const Color(0xFF1F2937),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0083EE).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          siswa.kelas,
+                          style: GoogleFonts.poppins(
+                            color: const Color(0xFF0083EE),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Color(0xFFFF6B6D),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${siswa.poin} poin',
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFFFF6B6D),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    siswa.prestasi,
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFF6B7280),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: rankColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.trending_down, color: rankColor, size: 20),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Color _getRankColor(int rank) {
     switch (rank) {
       case 1:
@@ -1095,15 +1465,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     shape: BoxShape.circle,
                   ),
                 ),
+              if (isActive && index == 3)
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                ),
               Text(
                 text,
                 style: GoogleFonts.poppins(
-                  color:
-                      isActive
-                          ? (index == 0
-                              ? const Color(0xFF1F2937)
-                              : const Color(0xFF6B7280))
-                          : Colors.white,
+                  color: isActive ? const Color(0xFF1F2937) : Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),

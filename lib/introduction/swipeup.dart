@@ -57,7 +57,7 @@ class SwipeUpButton extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Start Now',
+                  'Mulai Sekarang',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -69,7 +69,7 @@ class SwipeUpButton extends StatelessWidget {
                   opacity: swipeOffset < -30 ? 0.0 : 0.8,
                   duration: const Duration(milliseconds: 200),
                   child: Text(
-                    'Swipe up to continue',
+                    'Geser ke atas untuk melanjutkan',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,

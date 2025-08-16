@@ -18,7 +18,6 @@ class NoteUtils {
       return null;
     }
 
-    // Simulate API call
     await Future.delayed(const Duration(milliseconds: 1500));
 
     final noteData = Note(

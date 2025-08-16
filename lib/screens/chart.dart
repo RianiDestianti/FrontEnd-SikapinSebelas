@@ -52,8 +52,9 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
       ChartDataItem(value: 320.0, label: 'Jan', detail: 'Total siswa: 85, Rata-rata: 3.8 poin'),
       ChartDataItem(value: 480.0, label: 'Feb', detail: 'Total siswa: 85, Rata-rata: 5.6 poin'),
       ChartDataItem(value: 360.0, label: 'Mar', detail: 'Total siswa: 85, Rata-rata: 4.2 poin'),
-      ChartDataItem(value: 160.0, label: 'Apr', detail: 'Total siswa: 85, Rata-rata: 1.9 poin'),
-      ChartDataItem(value: 400.0, label: 'May', detail: 'Total siswa: 85, Rata-rata: 4.7 poin'),
+      ChartDataItem(value: 420.0, label: 'Apr', detail: 'Total siswa: 85, Rata-rata: 4.9 poin'),
+      ChartDataItem(value: 380.0, label: 'Mei', detail: 'Total siswa: 85, Rata-rata: 4.5 poin'),
+      ChartDataItem(value: 450.0, label: 'Jun', detail: 'Total siswa: 85, Rata-rata: 5.3 poin'),
     ],
     'tahun': [
       ChartDataItem(value: 1800.0, label: '2022', detail: 'Total: 1800 poin, Siswa aktif: 80'),
@@ -76,8 +77,9 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
       ChartDataItem(value: 240.0, label: 'Jan', detail: 'Total kasus: 48, Rata-rata: 2.8 per siswa'),
       ChartDataItem(value: 100.0, label: 'Feb', detail: 'Total kasus: 20, Rata-rata: 1.2 per siswa'),
       ChartDataItem(value: 60.0, label: 'Mar', detail: 'Total kasus: 12, Rata-rata: 0.7 per siswa'),
-      ChartDataItem(value: 40.0, label: 'Apr', detail: 'Total kasus: 8, Rata-rata: 0.5 per siswa'),
-      ChartDataItem(value: 80.0, label: 'May', detail: 'Total kasus: 16, Rata-rata: 0.9 per siswa'),
+      ChartDataItem(value: 45.0, label: 'Apr', detail: 'Total kasus: 9, Rata-rata: 0.5 per siswa'),
+      ChartDataItem(value: 35.0, label: 'Mei', detail: 'Total kasus: 7, Rata-rata: 0.4 per siswa'),
+      ChartDataItem(value: 25.0, label: 'Jun', detail: 'Total kasus: 5, Rata-rata: 0.3 per siswa'),
     ],
     'tahun': [
       ChartDataItem(value: 960.0, label: '2022', detail: 'Total: 960 kasus, Siswa terlibat: 65'),

@@ -853,13 +853,13 @@ class _LaporanScreenState extends State<LaporanScreen>
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // Ubah ke transparent
+        statusBarColor: Colors.transparent, 
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         body: SafeArea(
-          top: false, // Biarkan header extend ke atas
+          top: false,
           child: LayoutBuilder(
             builder: (context, constraints) {
               double maxWidth =
