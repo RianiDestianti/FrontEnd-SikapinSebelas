@@ -12,8 +12,7 @@ class IntroductionScreen extends StatefulWidget {
   State<IntroductionScreen> createState() => _IntroductionScreenState();
 }
 
-class _IntroductionScreenState extends State<IntroductionScreen>
-    with TickerProviderStateMixin {
+class _IntroductionScreenState extends State<IntroductionScreen> with TickerProviderStateMixin {
   late final AnimationController _animationController;
   late final AnimationController _swipeController;
   late final AnimationController _loginController;
@@ -32,26 +31,22 @@ class _IntroductionScreenState extends State<IntroductionScreen>
     PageData(
       image: 'assets/batang.png',
       title: 'Selamat Datang di Sistem Skoring!',
-      description:
-          'Kelola pencatatan, penilaian, hingga laporan dalam satu aplikasi praktis.Nikmati kemudahan mengelola penilaian secara cepat dan efisien.',
+      description: 'Kelola pencatatan, penilaian, hingga laporan dalam satu aplikasi praktis.Nikmati kemudahan mengelola penilaian secara cepat.',
     ),
     PageData(
       image: 'assets/lingkaran.png',
       title: 'Penilaian Lebih Cepat & Akurat',
-      description:
-          'Tidak perlu hitung manual. Sistem kami memproses penilaian secara otomatis dan real-time.',
+      description: 'Tidak perlu hitung manual. Sistem kami memproses penilaian secara otomatis dan real-time.',
     ),
     PageData(
       image: 'assets/apk.png',
       title: 'Laporan Lengkap di Ujung Jari',
-      description:
-          'Pantau perkembangan, pelanggaran, dan apresiasi siswa melalui laporan interaktif yang mudah dibaca.',
+      description: 'Pantau perkembangan, pelanggaran, dan apresiasi siswa melalui laporan interaktif yang mudah dibaca.',
     ),
     PageData(
       image: 'assets/backpack.png',
-      title: 'Learn anything\nAnytime anywhere',
-      description:
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nunc ut tristique luctus, nunc lorem molestie mauris.',
+      title: 'Sikapin Sebelas',
+      description: 'Siap untuk mulai?\nGeser ke atas untuk masuk ke sistem dan kelola penilaian siswa dengan mudah!',
     ),
   ];
 
@@ -80,23 +75,16 @@ class _IntroductionScreenState extends State<IntroductionScreen>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
     );
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
-    _swipeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
-    _loginSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(
+    _swipeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+    );
+    _loginSlideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(
       CurvedAnimation(parent: _loginController, curve: Curves.easeOutCubic),
     );
     _loginFadeAnimation = Tween<double>(begin: 0.0, end: 0.5).animate(
@@ -162,19 +150,16 @@ class _IntroductionScreenState extends State<IntroductionScreen>
   @override
   Widget build(BuildContext context) {
     // Set status bar style
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-      ),
-    );
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ));
 
     return Scaffold(
-      backgroundColor:
-          _currentPage == _pages.length - 1
-              ? const Color(0xFF1E6BB8)
-              : Colors.white,
+      backgroundColor: _currentPage == _pages.length - 1 
+          ? const Color(0xFF1E6BB8) 
+          : Colors.white,
       body: SafeArea(
         top: false,
         child: Stack(
@@ -185,24 +170,22 @@ class _IntroductionScreenState extends State<IntroductionScreen>
                   child: PageView.builder(
                     controller: _pageController,
                     itemCount: _pages.length,
-                    itemBuilder:
-                        (context, index) =>
-                            index == _pages.length - 1
-                                ? _FinalPage(
-                                  pageData: _pages[index],
-                                  scaleAnimation: _scaleAnimation,
-                                  fadeAnimation: _fadeAnimation,
-                                  swipeAnimation: _swipeAnimation,
-                                  swipeOffset: _swipeOffset,
-                                  onPanUpdate: _onPanUpdate,
-                                  onPanEnd: _onPanEnd,
-                                )
-                                : _RegularPage(
-                                  pageData: _pages[index],
-                                  fadeAnimation: _fadeAnimation,
-                                  slideAnimation: _slideAnimation,
-                                  scaleAnimation: _scaleAnimation,
-                                ),
+                    itemBuilder: (context, index) => index == _pages.length - 1
+                        ? _FinalPage(
+                            pageData: _pages[index],
+                            scaleAnimation: _scaleAnimation,
+                            fadeAnimation: _fadeAnimation,
+                            swipeAnimation: _swipeAnimation,
+                            swipeOffset: _swipeOffset,
+                            onPanUpdate: _onPanUpdate,
+                            onPanEnd: _onPanEnd,
+                          )
+                        : _RegularPage(
+                            pageData: _pages[index],
+                            fadeAnimation: _fadeAnimation,
+                            slideAnimation: _slideAnimation,
+                            scaleAnimation: _scaleAnimation,
+                          ),
                   ),
                 ),
                 if (_currentPage != _pages.length - 1)
@@ -213,7 +196,8 @@ class _IntroductionScreenState extends State<IntroductionScreen>
                   ),
               ],
             ),
-            if (_currentPage != _pages.length - 1) _SkipButton(onSkip: () {}),
+            if (_currentPage != _pages.length - 1)
+              _SkipButton(onSkip: () {}),
             if (_showLoginOverlay)
               _LoginOverlay(
                 loginController: _loginController,
@@ -247,7 +231,7 @@ class _RegularPage extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isWeb = screenWidth > 800;
-
+    
     return FadeTransition(
       opacity: fadeAnimation,
       child: SlideTransition(
@@ -256,7 +240,9 @@ class _RegularPage extends StatelessWidget {
           builder: (context, constraints) {
             return SingleChildScrollView(
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
                 child: Container(
                   padding: EdgeInsets.fromLTRB(
                     isWeb ? screenWidth * 0.1 : 24.0,
@@ -272,7 +258,7 @@ class _RegularPage extends StatelessWidget {
                         scale: scaleAnimation,
                         child: _LayeredImage(
                           image: pageData.image!,
-                          size: isWeb ? 250 : screenWidth * 0.6,
+                          size: isWeb ? 400 : screenWidth * 0.85,
                         ),
                       ),
                       SizedBox(height: isWeb ? 60 : 40),
@@ -329,7 +315,7 @@ class _FinalPage extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isWeb = screenWidth > 800;
-
+    
     return Container(
       decoration: const BoxDecoration(
         gradient: RadialGradient(
@@ -343,7 +329,9 @@ class _FinalPage extends StatelessWidget {
         builder: (context, constraints) {
           return SingleChildScrollView(
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight,
+              ),
               child: Container(
                 padding: EdgeInsets.fromLTRB(
                   isWeb ? screenWidth * 0.1 : 24.0,
@@ -359,7 +347,7 @@ class _FinalPage extends StatelessWidget {
                       scale: scaleAnimation,
                       child: _LayeredImage(
                         image: pageData.image!,
-                        size: isWeb ? 250 : screenWidth * 0.6,
+                        size: isWeb ? 400 : screenWidth * 0.85,
                       ),
                     ),
                     SizedBox(height: isWeb ? 60 : 40),
@@ -419,7 +407,10 @@ class _LayeredImage extends StatelessWidget {
   final String image;
   final double size;
 
-  const _LayeredImage({required this.image, required this.size});
+  const _LayeredImage({
+    required this.image,
+    required this.size,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -470,7 +461,9 @@ class _DescriptionBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: BoxConstraints(maxWidth: isWeb ? 600 : double.infinity),
+      constraints: BoxConstraints(
+        maxWidth: isWeb ? 600 : double.infinity,
+      ),
       padding: EdgeInsets.symmetric(
         horizontal: isWeb ? 32 : 20,
         vertical: isWeb ? 20 : 14,
@@ -511,10 +504,12 @@ class _BottomNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWeb = screenWidth > 800;
-
+    
     return Container(
       padding: EdgeInsets.all(isWeb ? 40.0 : 24.0),
-      constraints: BoxConstraints(maxWidth: isWeb ? 400 : double.infinity),
+      constraints: BoxConstraints(
+        maxWidth: isWeb ? 400 : double.infinity,
+      ),
       child: Column(
         children: [
           Row(
@@ -526,17 +521,20 @@ class _BottomNavigation extends StatelessWidget {
                 width: currentPage == index ? 12 : 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color:
-                      currentPage == index
-                          ? const Color(0xFF0083EE)
-                          : const Color(0xFF9CA3AF),
+                  color: currentPage == index 
+                      ? const Color(0xFF0083EE) 
+                      : const Color(0xFF9CA3AF),
                   borderRadius: BorderRadius.circular(4),
                 ),
               );
             }),
           ),
           SizedBox(height: isWeb ? 32 : 24),
-          _GradientButton(text: 'Lanjut', onTap: onNext, isWeb: isWeb),
+          _GradientButton(
+            text: 'Lanjut',
+            onTap: onNext,
+            isWeb: isWeb,
+          ),
         ],
       ),
     );
@@ -552,7 +550,7 @@ class _SkipButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWeb = screenWidth > 800;
-
+    
     return Positioned(
       top: MediaQuery.of(context).padding.top + (isWeb ? 24 : 16),
       right: isWeb ? 40 : 16,
@@ -629,7 +627,10 @@ class _LoginOverlay extends StatelessWidget {
               position: loginSlideAnimation,
               child: Align(
                 alignment: Alignment.bottomCenter,
-                child: _LoginForm(onClose: onClose, onLogin: onLogin),
+                child: _LoginForm(
+                  onClose: onClose,
+                  onLogin: onLogin,
+                ),
               ),
             ),
           ],
@@ -643,7 +644,10 @@ class _LoginForm extends StatefulWidget {
   final VoidCallback onClose;
   final VoidCallback onLogin;
 
-  const _LoginForm({required this.onClose, required this.onLogin});
+  const _LoginForm({
+    required this.onClose,
+    required this.onLogin,
+  });
 
   @override
   State<_LoginForm> createState() => _LoginFormState();
@@ -654,9 +658,9 @@ class _LoginFormState extends State<_LoginForm> {
   final TextEditingController _passwordController = TextEditingController();
 
   void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   void _handleLogin() {
@@ -688,7 +692,7 @@ class _LoginFormState extends State<_LoginForm> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isWeb = screenWidth > 800;
-
+    
     return Container(
       width: double.infinity,
       constraints: BoxConstraints(
@@ -737,11 +741,7 @@ class _LoginFormState extends State<_LoginForm> {
                   ),
                   SizedBox(height: isWeb ? 24 : 20),
                   GestureDetector(
-                    onTap:
-                        () => _showSnackBar(
-                          context,
-                          'Fitur lupa password akan segera hadir',
-                        ),
+                    onTap: () => _showSnackBar(context, 'Fitur lupa password akan segera hadir'),
                     child: Text(
                       'Lupa Password?',
                       style: GoogleFonts.poppins(
@@ -798,15 +798,18 @@ class _LoginHeader extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: isWeb ? 100 : 80,
-            height: isWeb ? 100 : 80,
+            width: isWeb ? 120 : 100,
+            height: isWeb ? 120 : 100,
             decoration: BoxDecoration(
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(15),
             ),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
-              child: Image.asset('assets/smkn.png', fit: BoxFit.contain),
+              child: Image.asset(
+                'assets/smkn.png',
+                fit: BoxFit.contain,
+              ),
             ),
           ),
           SizedBox(width: isWeb ? 24 : 16),
@@ -876,10 +879,9 @@ class _LoginTextField extends StatelessWidget {
             color: Colors.grey[500],
           ),
           prefixIcon: Icon(icon, color: Colors.grey[400]),
-          suffixIcon:
-              suffixIcon != null
-                  ? Icon(suffixIcon, color: Colors.grey[400])
-                  : null,
+          suffixIcon: suffixIcon != null 
+              ? Icon(suffixIcon, color: Colors.grey[400]) 
+              : null,
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(
             horizontal: 16,
@@ -908,7 +910,9 @@ class _GradientButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: isWeb ? 20 : 18),
+        padding: EdgeInsets.symmetric(
+          vertical: isWeb ? 20 : 18,
+        ),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
