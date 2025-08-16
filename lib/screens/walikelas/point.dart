@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/models/point.dart';
 
@@ -25,6 +24,10 @@ class PointUtils {
       className: className,
       date: date,
       description: description,
+    );
+
+    print(
+      'Point data: ${pointData.type}, ${pointData.studentName}, ${pointData.className}, ${pointData.date}, ${pointData.description}',
     );
 
     _showSuccessSnackBar(
@@ -100,7 +103,14 @@ class PointPopup extends StatefulWidget {
   State<PointPopup> createState() => _PointPopupState();
 }
 
-class _PointPopupState extends State<PointPopup> {
+class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late AnimationController _slideController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _rotateAnimation;
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _classController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
@@ -111,13 +121,44 @@ class _PointPopupState extends State<PointPopup> {
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
     _nameController.text = widget.studentName;
-    _classController.text = 'XII RPL 2';
+    _classController.text = 'XII RPL 2'; // Set default class
     _dateController.text = DateTime.now().toString().split(' ')[0];
+  }
+
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
+    );
+    _rotateAnimation = Tween<double>(begin: 0.1, end: 0.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    _animationController.forward();
   }
 
   @override
   void dispose() {
+    _animationController.dispose();
+    _slideController.dispose();
     _nameController.dispose();
     _classController.dispose();
     _dateController.dispose();
@@ -126,7 +167,7 @@ class _PointPopupState extends State<PointPopup> {
   }
 
   void _closeDialog() {
-    Navigator.of(context).pop();
+    _animationController.reverse().then((_) => Navigator.of(context).pop());
   }
 
   void _submitPoint() async {
@@ -169,28 +210,35 @@ class _PointPopupState extends State<PointPopup> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.black.withOpacity(0.6),
-        body: Center(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                child: PointDialogContent(
-                  nameController: _nameController,
-                  classController: _classController,
-                  dateController: _dateController,
-                  descriptionController: _descriptionController,
-                  selectedPointType: _selectedPointType,
-                  onPointTypeChanged: (value) => setState(() => _selectedPointType = value),
-                  isSubmitting: _isSubmitting,
-                  onClose: _closeDialog,
-                  onSubmit: _submitPoint,
-                  onDateTap: _pickDate,
-                  constraints: constraints,
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Container(
+        color: Colors.black.withOpacity(0.6),
+        child: Center(
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: RotationTransition(
+              turns: _rotateAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Material(
+                  color: Colors.transparent,
+                  child: PointDialogContent(
+                    nameController: _nameController,
+                    classController: _classController,
+                    dateController: _dateController,
+                    descriptionController: _descriptionController,
+                    selectedPointType: _selectedPointType,
+                    onPointTypeChanged:
+                        (value) => setState(() => _selectedPointType = value),
+                    isSubmitting: _isSubmitting,
+                    onClose: _closeDialog,
+                    onSubmit: _submitPoint,
+                    onDateTap: _pickDate,
+                  ),
                 ),
-              );
-            },
+              ),
+            ),
           ),
         ),
       ),
@@ -209,7 +257,6 @@ class PointDialogContent extends StatelessWidget {
   final VoidCallback onClose;
   final VoidCallback onSubmit;
   final VoidCallback onDateTap;
-  final BoxConstraints constraints;
 
   const PointDialogContent({
     Key? key,
@@ -223,15 +270,13 @@ class PointDialogContent extends StatelessWidget {
     required this.onClose,
     required this.onSubmit,
     required this.onDateTap,
-    required this.constraints,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final double dialogWidth = constraints.maxWidth > 600 ? 420 : constraints.maxWidth * 0.9;
     return Container(
-      width: dialogWidth,
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      constraints: const BoxConstraints(maxWidth: 420),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -654,7 +699,10 @@ void showPointPopup(BuildContext context, String studentName) {
     context: context,
     barrierDismissible: false,
     builder: (BuildContext context) {
-      return PointPopup(studentName: studentName);
+      return Material(
+        color: Colors.transparent,
+        child: PointPopup(studentName: studentName),
+      );
     },
   );
 }
