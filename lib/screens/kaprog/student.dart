@@ -166,234 +166,235 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.light,
         ),
-        child: _currentIndex == 0
-            ? const KaprogHomeScreen()
-            : SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(32),
-                          bottomRight: Radius.circular(32),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0x200083EE),
-                            blurRadius: 20,
-                            offset: Offset(0, 10),
+        child:
+            _currentIndex == 0
+                ? const KaprogHomeScreen()
+                : SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          24,
-                          MediaQuery.of(context).padding.top + 20,
-                          24,
-                          32,
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(
-                                      Icons.arrow_back_ios_new_rounded,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) =>
-                                                const ProfileScreen(),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(30),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(
-                                            0.1,
-                                          ),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.person_rounded,
-                                      color: Color(0xFF0083EE),
-                                      size: 24,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 28),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Hello, Pak Budi! 👋',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontSize: 26,
-                                      fontWeight: FontWeight.w700,
-                                      height: 1.2,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Kelola program keahlian dengan optimal',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white.withOpacity(0.9),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Container(
-                              height: 50,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(25),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF61B8FF),
-                                          Color(0xFF0083EE),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    child: const Icon(
-                                      Icons.search,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _searchController,
-                                      decoration: InputDecoration(
-                                        hintText: 'Cari program keahlian...',
-                                        hintStyle: GoogleFonts.poppins(
-                                          color: const Color(0xFF9CA3AF),
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.zero,
-                                      ),
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 15,
-                                        color: const Color(0xFF1F2937),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                _buildFilterButton('Semua', 0),
-                                const SizedBox(width: 10),
-                                _buildFilterButton('IT', 1),
-                                const SizedBox(width: 10),
-                                _buildFilterButton('Bisnis', 2),
-                              ],
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(32),
+                            bottomRight: Radius.circular(32),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x200083EE),
+                              blurRadius: 20,
+                              offset: Offset(0, 10),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children:
-                            _filteredPrograms.isEmpty
-                                ? [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 40,
-                                    ),
-                                    child: Text(
-                                      'Tidak ada program ditemukan',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        color: const Color(0xFF6B7280),
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            24,
+                            MediaQuery.of(context).padding.top + 20,
+                            24,
+                            32,
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.arrow_back_ios_new_rounded,
+                                        color: Colors.white,
+                                        size: 18,
                                       ),
                                     ),
                                   ),
-                                ]
-                                : _filteredPrograms.map((program) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(
-                                      bottom: 16,
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) =>
+                                                  const ProfileScreen(),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(30),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.1,
+                                            ),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.person_rounded,
+                                        color: Color(0xFF0083EE),
+                                        size: 24,
+                                      ),
                                     ),
-                                    child: GestureDetector(
-                                      onTap: () => _showClassOptions(program),
-                                      child: _buildProgramCard(program),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 28),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Hello, Pak Budi! 👋',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w700,
+                                        height: 1.2,
+                                      ),
                                     ),
-                                  );
-                                }).toList(),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Kelola program keahlian dengan optimal',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Container(
+                                height: 50,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(25),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFF61B8FF),
+                                            Color(0xFF0083EE),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                      child: const Icon(
+                                        Icons.search,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _searchController,
+                                        decoration: InputDecoration(
+                                          hintText: 'Cari program keahlian...',
+                                          hintStyle: GoogleFonts.poppins(
+                                            color: const Color(0xFF9CA3AF),
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 15,
+                                          color: const Color(0xFF1F2937),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _buildFilterButton('Semua', 0),
+                                  const SizedBox(width: 10),
+                                  _buildFilterButton('IT', 1),
+                                  const SizedBox(width: 10),
+                                  _buildFilterButton('Bisnis', 2),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children:
+                              _filteredPrograms.isEmpty
+                                  ? [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 40,
+                                      ),
+                                      child: Text(
+                                        'Tidak ada program ditemukan',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          color: const Color(0xFF6B7280),
+                                        ),
+                                      ),
+                                    ),
+                                  ]
+                                  : _filteredPrograms.map((program) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 16,
+                                      ),
+                                      child: GestureDetector(
+                                        onTap: () => _showClassOptions(program),
+                                        child: _buildProgramCard(program),
+                                      ),
+                                    );
+                                  }).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
       ),
       bottomNavigationBar: KaprogNavigation(
         currentIndex: _currentIndex,
@@ -1147,24 +1148,28 @@ class _SiswaScreenState extends State<SiswaScreen>
             ),
             const SizedBox(width: 16),
 
+            // Fixed status badge with consistent sizing like walikelas
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
+                  width: 85, // Fixed width like walikelas
+                  height: 28, // Fixed height like walikelas
                   decoration: BoxDecoration(
                     color: _getStatusColor(student['status']).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    student['status'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: _getStatusColor(student['status']),
+                  child: Center(
+                    child: Text(
+                      student['status'],
+                      style: GoogleFonts.poppins(
+                        fontSize: 11, // Same font size as walikelas
+                        fontWeight: FontWeight.w700,
+                        color: _getStatusColor(student['status']),
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
