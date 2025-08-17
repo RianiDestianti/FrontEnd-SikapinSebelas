@@ -45,8 +45,6 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
       ChartDataItem(value: 90.0, label: 'Rab', detail: 'Kebersihan: 35, Kedisiplinan: 30, Prestasi: 25'),
       ChartDataItem(value: 40.0, label: 'Kam', detail: 'Kebersihan: 15, Kedisiplinan: 10, Prestasi: 15'),
       ChartDataItem(value: 100.0, label: 'Jum', detail: 'Kebersihan: 35, Kedisiplinan: 30, Prestasi: 35'),
-      ChartDataItem(value: 75.0, label: 'Sab', detail: 'Kebersihan: 25, Kedisiplinan: 25, Prestasi: 25'),
-      ChartDataItem(value: 85.0, label: 'Min', detail: 'Kebersihan: 30, Kedisiplinan: 25, Prestasi: 30'),
     ],
     'bulan': [
       ChartDataItem(value: 320.0, label: 'Jan', detail: 'Total siswa: 85, Rata-rata: 3.8 poin'),
@@ -70,8 +68,6 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
       ChartDataItem(value: 15.0, label: 'Rab', detail: 'Terlambat: 8, Seragam: 4, Lainnya: 3'),
       ChartDataItem(value: 10.0, label: 'Kam', detail: 'Terlambat: 5, Seragam: 3, Lainnya: 2'),
       ChartDataItem(value: 20.0, label: 'Jum', detail: 'Terlambat: 12, Seragam: 5, Lainnya: 3'),
-      ChartDataItem(value: 18.0, label: 'Sab', detail: 'Terlambat: 10, Seragam: 5, Lainnya: 3'),
-      ChartDataItem(value: 12.0, label: 'Min', detail: 'Terlambat: 8, Seragam: 2, Lainnya: 2'),
     ],
     'bulan': [
       ChartDataItem(value: 240.0, label: 'Jan', detail: 'Total kasus: 48, Rata-rata: 2.8 per siswa'),
@@ -982,7 +978,9 @@ class LineChartPainter extends CustomPainter {
       double y = size.height - (data[i].value / maxValue) * size.height;
 
       if (i == 0) {
-        path.moveTo(x, y);
+        path.moveTo(x,
+
+ y);
       } else {
         path.lineTo(x, y);
       }

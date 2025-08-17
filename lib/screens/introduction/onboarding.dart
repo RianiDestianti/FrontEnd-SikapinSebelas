@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/models/introduction.dart';
-import 'package:skoring/introduction/swipeup.dart';
+import 'package:skoring/screens/introduction/swipeup.dart';
 import 'package:skoring/screens/kaprog/student.dart';
 
 class IntroductionScreen extends StatefulWidget {

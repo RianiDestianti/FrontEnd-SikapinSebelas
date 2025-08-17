@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:skoring/introduction/onboarding.dart';
+import 'package:skoring/screens/introduction/onboarding.dart';
 import 'package:skoring/screens/kaprog/student.dart';
 import 'package:skoring/screens/walikelas/home.dart';
 import 'package:skoring/screens/kaprog/report.dart';
