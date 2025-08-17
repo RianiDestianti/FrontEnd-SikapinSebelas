@@ -1,100 +1,231 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/screens/profile.dart';
-import 'package:skoring/models/student.dart';
+import 'package:skoring/screens/chart.dart';
+import 'package:skoring/screens/activity.dart';
+import 'package:skoring/screens/kaprog/student.dart';
+import 'package:skoring/screens/kaprog/report.dart';
+import 'detail.dart';
 
-class HomeKaprogScreen extends StatefulWidget {
-  const HomeKaprogScreen({Key? key}) : super(key: key);
+class Student {
+  final String name;
+  final String kelas;
+  final int poin;
+  final String prestasi;
+  final IconData avatar;
+  final int rank;
+  final String status;
+  final String nis;
+  final String ttl;
+  final String jenkel;
+  final String alamat;
+  final String programKeahlian;
+  final String tahunMasuk;
+  final String noHp;
+  final String email;
+  final String namaOrtu;
+  final String noHpOrtu;
 
-  @override
-  State<HomeKaprogScreen> createState() => _HomeKaprogScreenState();
+  Student({
+    required this.name,
+    required this.kelas,
+    required this.poin,
+    required this.prestasi,
+    required this.avatar,
+    required this.rank,
+    required this.status,
+    required this.nis,
+    required this.ttl,
+    required this.jenkel,
+    required this.alamat,
+    required this.programKeahlian,
+    required this.tahunMasuk,
+    required this.noHp,
+    required this.email,
+    required this.namaOrtu,
+    required this.noHpOrtu,
+  });
 }
 
-class _HomeKaprogScreenState extends State<HomeKaprogScreen> with TickerProviderStateMixin {
-  int _selectedTab = 0;
-  late final AnimationController _animationController;
-  late final Animation<double> _fadeAnimation;
-  late final TextEditingController _searchController;
-  String _searchQuery = '';
+class KaprogHomeScreen extends StatefulWidget {
+  const KaprogHomeScreen({Key? key}) : super(key: key);
 
-  final List<BestStudent> _siswaTerbaik = [
-    BestStudent(
-      nama: 'Ahmad Zaky',
+  @override
+  State<KaprogHomeScreen> createState() => _KaprogHomeScreenState();
+}
+
+class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProviderStateMixin {
+  int _selectedTab = 0;
+  int _apresiasiChartTab = 0;
+  int _pelanggaranChartTab = 0;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  String _searchQuery = '';
+  List<Student> _filteredSiswaTerbaik = [];
+  List<Student> _filteredSiswaBerat = [];
+
+  final List<Student> _siswaTerbaik = [
+    Student(
+      name: 'Ahmad Zaky',
       kelas: 'XII RPL 1',
       poin: 400,
       prestasi: 'Juara 1 Hackathon Nasional',
       avatar: Icons.person,
       rank: 1,
+      status: 'Aman',
+      nis: '2023001',
+      ttl: 'Bandung, 15 Mei 2007',
+      jenkel: 'Laki-laki',
+      alamat: 'Jl. Merdeka No. 123, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456789',
+      email: 'ahmad.zaky@smk.sch.id',
+      namaOrtu: 'Budi Santoso',
+      noHpOrtu: '08129876543',
     ),
-    BestStudent(
-      nama: 'Siti Aisyah',
+    Student(
+      name: 'Siti Aisyah',
       kelas: 'XII RPL 2',
       poin: 345,
       prestasi: 'Juara 2 Desain Poster',
       avatar: Icons.person,
       rank: 2,
+      status: 'Aman',
+      nis: '2023002',
+      ttl: 'Jakarta, 20 April 2007',
+      jenkel: 'Perempuan',
+      alamat: 'Jl. Sudirman No. 45, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456790',
+      email: 'siti.aisyah@smk.sch.id',
+      namaOrtu: 'Ahmad Sudarjo',
+      noHpOrtu: '08129876544',
     ),
-    BestStudent(
-      nama: 'Budi Santoso',
+    Student(
+      name: 'Budi Santoso',
       kelas: 'XII RPL 1',
       poin: 300,
       prestasi: 'Ketua Tim Jaringan Berprestasi',
       avatar: Icons.person,
       rank: 3,
+      status: 'Aman',
+      nis: '2023003',
+      ttl: 'Surabaya, 10 Januari 2007',
+      jenkel: 'Laki-laki',
+      alamat: 'Jl. Pahlawan No. 78, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456791',
+      email: 'budi.santoso@smk.sch.id',
+      namaOrtu: 'Sari Dewi',
+      noHpOrtu: '08129876545',
     ),
-    BestStudent(
-      nama: 'Rina Amelia',
+    Student(
+      name: 'Rina Amelia',
       kelas: 'XII RPL 1',
       poin: 290,
       prestasi: 'Juara 1 Lomba Administrasi',
       avatar: Icons.person,
       rank: 4,
+      status: 'Aman',
+      nis: '2023004',
+      ttl: 'Medan, 25 Maret 2007',
+      jenkel: 'Perempuan',
+      alamat: 'Jl. Kemerdekaan No. 90, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456792',
+      email: 'rina.amelia@smk.sch.id',
+      namaOrtu: 'Hendra Wijaya',
+      noHpOrtu: '08129876546',
     ),
   ];
 
-  final List<ViolationStudent> _siswaBerpelanggaran = [
-    ViolationStudent(
-      nama: 'Dedi Kurniawan',
+  final List<Student> _siswaBerat = [
+    Student(
+      name: 'Dedi Kurniawan',
       kelas: 'XII RPL 2',
-      pelanggaran: 'Terlambat 3 kali',
-      poin: 50,
+      poin: -50,
+      prestasi: 'Terlambat 3 kali',
       avatar: Icons.person,
-      severity: 'Ringan',
+      rank: 1,
+      status: 'Prioritas',
+      nis: '2023005',
+      ttl: 'Bandung, 12 Juni 2007',
+      jenkel: 'Laki-laki',
+      alamat: 'Jl. Raya No. 10, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456793',
+      email: 'dedi.kurniawan@smk.sch.id',
+      namaOrtu: 'Siti Aminah',
+      noHpOrtu: '08129876547',
     ),
-    ViolationStudent(
-      nama: 'Lina Sari',
+    Student(
+      name: 'Lina Sari',
       kelas: 'XII RPL 1',
-      pelanggaran: 'Tidak memakai seragam lengkap',
-      poin: 30,
+      poin: -30,
+      prestasi: 'Tidak memakai seragam lengkap',
       avatar: Icons.person,
-      severity: 'Ringan',
+      rank: 2,
+      status: 'Prioritas',
+      nis: '2023006',
+      ttl: 'Jakarta, 18 Februari 2007',
+      jenkel: 'Perempuan',
+      alamat: 'Jl. Veteran No. 20, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456794',
+      email: 'lina.sari@smk.sch.id',
+      namaOrtu: 'Dewi Lestari',
+      noHpOrtu: '08129876548',
     ),
-    ViolationStudent(
-      nama: 'Rudi Hartono',
+    Student(
+      name: 'Rudi Hartono',
       kelas: 'XII RPL 2',
-      pelanggaran: 'Merokok di lingkungan sekolah',
-      poin: 75,
+      poin: -75,
+      prestasi: 'Merokok di lingkungan sekolah',
       avatar: Icons.person,
-      severity: 'Berat',
+      rank: 3,
+      status: 'Bermasalah',
+      nis: '2023007',
+      ttl: 'Surabaya, 5 April 2007',
+      jenkel: 'Laki-laki',
+      alamat: 'Jl. Diponegoro No. 30, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456795',
+      email: 'rudi.hartono@smk.sch.id',
+      namaOrtu: 'Hadi Susanto',
+      noHpOrtu: '08129876549',
     ),
-    ViolationStudent(
-      nama: 'Mila Putri',
+    Student(
+      name: 'Mila Putri',
       kelas: 'XII RPL 1',
-      pelanggaran: 'Melanggar tata tertib kelas',
-      poin: 25,
+      poin: -25,
+      prestasi: 'Melanggar tata tertib kelas',
       avatar: Icons.person,
-      severity: 'Ringan',
+      rank: 4,
+      status: 'Bermasalah',
+      nis: '2023008',
+      ttl: 'Medan, 22 Januari 2007',
+      jenkel: 'Perempuan',
+      alamat: 'Jl. Gatot Subroto No. 40, Cimahi, Jawa Barat',
+      programKeahlian: 'Rekayasa Perangkat Lunak',
+      tahunMasuk: '2023',
+      noHp: '08123456796',
+      email: 'mila.putri@smk.sch.id',
+      namaOrtu: 'Rina Wulandari',
+      noHpOrtu: '08129876550',
     ),
   ];
 
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
-    _initializeSearch();
-  }
-
-  void _initializeAnimations() {
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -103,345 +234,1001 @@ class _HomeKaprogScreenState extends State<HomeKaprogScreen> with TickerProvider
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
-  }
-
-  void _initializeSearch() {
-    _searchController = TextEditingController();
-    _searchController.addListener(() {
-      setState(() => _searchQuery = _searchController.text.toLowerCase());
-    });
+    _filteredSiswaTerbaik = _siswaTerbaik;
+    _filteredSiswaBerat = _siswaBerat;
   }
 
   @override
   void dispose() {
     _animationController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
-  List<BestStudent> _getFilteredSiswaTerbaik() {
-    if (_searchQuery.isEmpty) return _siswaTerbaik;
-    return _siswaTerbaik
-        .where((siswa) =>
-            siswa.nama.toLowerCase().contains(_searchQuery) ||
-            siswa.kelas.toLowerCase().contains(_searchQuery))
-        .toList();
+  void _filterSiswa(String query) {
+    setState(() {
+      _searchQuery = query;
+      if (query.isEmpty) {
+        _filteredSiswaTerbaik = _siswaTerbaik;
+        _filteredSiswaBerat = _siswaBerat;
+      } else {
+        final searchLower = query.toLowerCase();
+        _filteredSiswaTerbaik = _siswaTerbaik.where((siswa) {
+          final namaLower = siswa.name.toLowerCase();
+          final kelasLower = siswa.kelas.toLowerCase();
+          final prestasiLower = siswa.prestasi.toLowerCase();
+          return namaLower.contains(searchLower) ||
+              kelasLower.contains(searchLower) ||
+              prestasiLower.contains(searchLower);
+        }).toList();
+        _filteredSiswaBerat = _siswaBerat.where((siswa) {
+          final namaLower = siswa.name.toLowerCase();
+          final kelasLower = siswa.kelas.toLowerCase();
+          final prestasiLower = siswa.prestasi.toLowerCase();
+          return namaLower.contains(searchLower) ||
+              kelasLower.contains(searchLower) ||
+              prestasiLower.contains(searchLower);
+        }).toList();
+      }
+    });
   }
 
-  List<ViolationStudent> _getFilteredSiswaBerpelanggaran() {
-    if (_searchQuery.isEmpty) return _siswaBerpelanggaran;
-    return _siswaBerpelanggaran
-        .where((siswa) =>
-            siswa.nama.toLowerCase().contains(_searchQuery) ||
-            siswa.kelas.toLowerCase().contains(_searchQuery))
-        .toList();
+  void _navigateToDetailScreen(Student siswa) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => KaprogDetailScreen(
+          student: {
+            'name': siswa.name,
+            'status': siswa.status,
+            'nis': siswa.nis,
+            'ttl': siswa.ttl,
+            'jenkel': siswa.jenkel,
+            'alamat': siswa.alamat,
+            'program_keahlian': siswa.programKeahlian,
+            'kelas': siswa.kelas,
+            'tahun_masuk': siswa.tahunMasuk,
+            'no_hp': siswa.noHp,
+            'email': siswa.email,
+            'nama_ortu': siswa.namaOrtu,
+            'no_hp_ortu': siswa.noHpOrtu,
+          },
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                HeaderSection(
-                  onBack: () => Navigator.pop(context),
-                  onProfile: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ProfileScreen()),
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            double maxWidth = constraints.maxWidth;
+            if (maxWidth > 600) maxWidth = 600;
+            return Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(32),
+                              bottomRight: Radius.circular(32),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x200083EE),
+                                blurRadius: 20,
+                                offset: Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              24,
+                              MediaQuery.of(context).padding.top + 20,
+                              24,
+                              32,
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => Navigator.pop(context),
+                                      child: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.arrow_back_ios_new_rounded,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                    // Profile button only (no notification button for Kaprog)
+                                    GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const ProfileScreen(),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(30),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.1),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Icon(
+                                          Icons.person_rounded,
+                                          color: Color(0xFF0083EE),
+                                          size: 24,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 24),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Hello, Pak Budi! 👋',
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontSize: 26,
+                                          fontWeight: FontWeight.w700,
+                                          height: 1.2,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        'Kelola program keahlian dengan optimal',
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Container(
+                                  height: 50,
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(25),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.08),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                          ),
+                                          borderRadius: BorderRadius.circular(30),
+                                        ),
+                                        child: const Icon(
+                                          Icons.search,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: TextField(
+                                          onChanged: _filterSiswa,
+                                          decoration: InputDecoration(
+                                            hintText: 'Cari siswa, kelas, atau aktivitas...',
+                                            hintStyle: GoogleFonts.poppins(
+                                              color: const Color(0xFF9CA3AF),
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                            border: InputBorder.none,
+                                            contentPadding: EdgeInsets.zero,
+                                          ),
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 15,
+                                            color: const Color(0xFF1F2937),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                Row(
+                                  children: [
+                                    _buildActionButton('Umum', 0),
+                                    const SizedBox(width: 10),
+                                    _buildActionButton('Terbaik', 2),
+                                    const SizedBox(width: 10),
+                                    _buildActionButton('Berat', 3),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            children: [
+                              if (_selectedTab == 2) ...[
+                                _buildSiswaTerbaikSection(),
+                                const SizedBox(height: 20),
+                              ] else if (_selectedTab == 3) ...[
+                                _buildSiswaBeratSection(),
+                                const SizedBox(height: 20),
+                              ] else ...[
+                                _buildEnhancedChartCard(
+                                  'Grafik Apresiasi Siswa',
+                                  'Pencapaian positif minggu ini',
+                                  Icons.trending_up,
+                                  const LinearGradient(
+                                    colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                  ),
+                                  _buildBarChart(
+                                    _apresiasiChartTab == 0
+                                        ? [
+                                            {'value': 80.0, 'label': 'Sen'},
+                                            {'value': 120.0, 'label': 'Sel'},
+                                            {'value': 90.0, 'label': 'Rab'},
+                                            {'value': 40.0, 'label': 'Kam'},
+                                            {'value': 100.0, 'label': 'Jum'},
+                                          ]
+                                        : [
+                                            {'value': 320.0, 'label': 'Jan'},
+                                            {'value': 480.0, 'label': 'Feb'},
+                                            {'value': 360.0, 'label': 'Mar'},
+                                            {'value': 160.0, 'label': 'Apr'},
+                                            {'value': 400.0, 'label': 'May'},
+                                          ],
+                                    const LinearGradient(
+                                      colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                    ),
+                                  ),
+                                  _apresiasiChartTab,
+                                  (index) => setState(() => _apresiasiChartTab = index),
+                                  true,
+                                ),
+                                const SizedBox(height: 20),
+                                _buildEnhancedChartCard(
+                                  'Grafik Pelanggaran Siswa',
+                                  'Monitoring pelanggaran minggu ini',
+                                  Icons.warning_amber_rounded,
+                                  const LinearGradient(
+                                    colors: [Color(0xFFF2D6D7), Color(0xFFFF6B6D)],
+                                  ),
+                                  _buildBarChart(
+                                    _pelanggaranChartTab == 0
+                                        ? [
+                                            {'value': 60.0, 'label': 'Sen'},
+                                            {'value': 25.0, 'label': 'Sel'},
+                                            {'value': 15.0, 'label': 'Rab'},
+                                            {'value': 10.0, 'label': 'Kam'},
+                                            {'value': 20.0, 'label': 'Jum'},
+                                          ]
+                                        : [
+                                            {'value': 240.0, 'label': 'Jan'},
+                                            {'value': 100.0, 'label': 'Feb'},
+                                            {'value': 60.0, 'label': 'Mar'},
+                                            {'value': 40.0, 'label': 'Apr'},
+                                            {'value': 80.0, 'label': 'May'},
+                                          ],
+                                    const LinearGradient(
+                                      colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                                    ),
+                                  ),
+                                  _pelanggaranChartTab,
+                                  (index) => setState(() => _pelanggaranChartTab = index),
+                                  false,
+                                ),
+                                const SizedBox(height: 20),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const ActivityScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(24),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.06),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                gradient: const LinearGradient(
+                                                  colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                                ),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: const Icon(
+                                                Icons.history,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'Aktivitas Terkini',
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 18,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: const Color(0xFF1F2937),
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    'Update terbaru dari sistem',
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 12,
+                                                      color: const Color(0xFF6B7280),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF8FAFC),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: const Icon(
+                                                Icons.arrow_forward_ios,
+                                                size: 14,
+                                                color: Color(0xFF9CA3AF),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 24),
+                                        _buildEnhancedActivityItem(
+                                          Icons.assessment_outlined,
+                                          const LinearGradient(
+                                            colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                          ),
+                                          'Laporan Bulanan',
+                                          'Laporan evaluasi siswa telah selesai dibuat',
+                                          '10.30',
+                                          'SELESAI',
+                                          const Color(0xFF10B981),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        _buildEnhancedActivityItem(
+                                          Icons.emoji_events_outlined,
+                                          const LinearGradient(
+                                            colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                                          ),
+                                          'Laporan Apresiasi',
+                                          'Rekap berhasil dalam kategori apresiasi',
+                                          '08.30',
+                                          'SELESAI',
+                                          const Color(0xFF10B981),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        _buildEnhancedActivityItem(
+                                          Icons.report_problem_outlined,
+                                          const LinearGradient(
+                                            colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                                          ),
+                                          'Laporan Pelanggaran',
+                                          'Rekap berhasil dalam kategori pelanggaran',
+                                          '06.30',
+                                          'SELESAI',
+                                          const Color(0xFF10B981),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  searchController: _searchController,
-                  selectedTab: _selectedTab,
-                  onTabSelected: (index) => setState(() => _selectedTab = index),
                 ),
-                ContentSection(
-                  selectedTab: _selectedTab,
-                  siswaTerbaik: _getFilteredSiswaTerbaik(),
-                  siswaBerpelanggaran: _getFilteredSiswaBerpelanggaran(),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
-}
 
-class HeaderSection extends StatelessWidget {
-  final VoidCallback onBack;
-  final VoidCallback onProfile;
-  final TextEditingController searchController;
-  final int selectedTab;
-  final Function(int) onTabSelected;
-
-  const HeaderSection({
-    Key? key,
-    required this.onBack,
-    required this.onProfile,
-    required this.searchController,
-    required this.selectedTab,
-    required this.onTabSelected,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildSiswaTerbaikSection() {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Color(0x200083EE),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 20,
-            offset: Offset(0, 10),
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
               children: [
-                BackButtonWidget(onTap: onBack),
-                ProfileButtonWidget(onTap: onProfile),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.emoji_events,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Siswa Terbaik',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Top ${_filteredSiswaTerbaik.length} siswa dengan poin tertinggi',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 28),
-            const GreetingWidget(),
-            const SizedBox(height: 24),
-            SearchBarWidget(controller: searchController),
-            const SizedBox(height: 20),
-            TabSelector(
-              selectedTab: selectedTab,
-              onTabSelected: onTabSelected,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: _filteredSiswaTerbaik.isEmpty
+                  ? [
+                      Text(
+                        'Tidak ada hasil ditemukan',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ]
+                  : _filteredSiswaTerbaik.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      Student siswa = entry.value;
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: index < _filteredSiswaTerbaik.length - 1 ? 16 : 0,
+                        ),
+                        child: _buildSiswaTerbaikItem(siswa),
+                      );
+                    }).toList(),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-}
 
-class BackButtonWidget extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const BackButtonWidget({Key? key, required this.onTap}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Icon(
-          Icons.arrow_back_ios_new_rounded,
-          color: Colors.white,
-          size: 18,
-        ),
+  Widget _buildSiswaBeratSection() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Siswa Berpelanggaran',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Daftar ${_filteredSiswaBerat.length} siswa dengan pelanggaran',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: _filteredSiswaBerat.isEmpty
+                  ? [
+                      Text(
+                        'Tidak ada hasil ditemukan',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ]
+                  : _filteredSiswaBerat.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      Student siswa = entry.value;
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: index < _filteredSiswaBerat.length - 1 ? 16 : 0,
+                        ),
+                        child: _buildSiswaBeratItem(siswa),
+                      );
+                    }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
-}
 
-class ProfileButtonWidget extends StatelessWidget {
-  final VoidCallback onTap;
+  Widget _buildSiswaTerbaikItem(Student siswa) {
+    Color rankColor = _getRankColor(siswa.rank);
+    IconData rankIcon = _getRankIcon(siswa.rank);
 
-  const ProfileButtonWidget({Key? key, required this.onTap}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => _navigateToDetailScreen(siswa),
       child: Container(
-        width: 40,
-        height: 40,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(30),
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: rankColor.withOpacity(0.2), width: 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: rankColor.withOpacity(0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: const Icon(
-          Icons.person_rounded,
-          color: Color(0xFF0083EE),
-          size: 24,
-        ),
-      ),
-    );
-  }
-}
-
-class GreetingWidget extends StatelessWidget {
-  const GreetingWidget({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Hello, Pak Budi! 👋',
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Kelola program keahlian dengan optimal',
-            style: GoogleFonts.poppins(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class SearchBarWidget extends StatelessWidget {
-  final TextEditingController controller;
-
-  const SearchBarWidget({Key? key, required this.controller}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-              ),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: const Icon(Icons.search, color: Colors.white, size: 18),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: 'Cari siswa, kelas, atau aktivitas...',
-                hintStyle: GoogleFonts.poppins(
-                  color: const Color(0xFF9CA3AF),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: siswa.rank <= 3
+                      ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
+                      : [const Color(0xFF61B8FF), const Color(0xFF0083EE)],
                 ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: rankColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                color: const Color(0xFF1F2937),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(Icons.person, color: Colors.white, size: 24),
+                  if (siswa.rank <= 3)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: rankColor,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Icon(rankIcon, color: Colors.white, size: 10),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: rankColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: rankColor.withOpacity(0.3), width: 1),
+                        ),
+                        child: Text(
+                          '#${siswa.rank}',
+                          style: GoogleFonts.poppins(
+                            color: rankColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          siswa.name,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: const Color(0xFF1F2937),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0083EE).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          siswa.kelas,
+                          style: GoogleFonts.poppins(
+                            color: const Color(0xFF0083EE),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.star, color: Color(0xFFFFD700), size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${siswa.poin} poin',
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF6B7280),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    siswa.prestasi,
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFF6B7280),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: rankColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.trending_up, color: rankColor, size: 20),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
 
-class TabSelector extends StatelessWidget {
-  final int selectedTab;
-  final Function(int) onTabSelected;
+  Widget _buildSiswaBeratItem(Student siswa) {
+    const Color severityColor = Color(0xFFFF6B6D);
 
-  const TabSelector({
-    Key? key,
-    required this.selectedTab,
-    required this.onTabSelected,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        TabButton(
-          text: 'Siswa Terbaik',
-          index: 0,
-          isActive: selectedTab == 0,
-          onTap: onTabSelected,
-          activeGradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
+    return GestureDetector(
+      onTap: () => _navigateToDetailScreen(siswa),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: severityColor.withOpacity(0.2), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: severityColor.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        TabButton(
-          text: 'Siswa Berpelanggaran',
-          index: 1,
-          isActive: selectedTab == 1,
-          onTap: onTabSelected,
-          activeGradient: const LinearGradient(colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)]),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: severityColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.person, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: severityColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: severityColor.withOpacity(0.3), width: 1),
+                        ),
+                        child: Text(
+                          siswa.poin > -50 ? 'Ringan' : 'Berat',
+                          style: GoogleFonts.poppins(
+                            color: severityColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          siswa.name,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: const Color(0xFF1F2937),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0083EE).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          siswa.kelas,
+                          style: GoogleFonts.poppins(
+                            color: const Color(0xFF0083EE),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.warning_amber_rounded, color: severityColor, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${siswa.poin} poin',
+                        style: GoogleFonts.poppins(
+                          color: severityColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    siswa.prestasi,
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFF6B7280),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: severityColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.warning, color: severityColor, size: 20),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
-}
 
-class TabButton extends StatelessWidget {
-  final String text;
-  final int index;
-  final bool isActive;
-  final Function(int) onTap;
-  final LinearGradient activeGradient;
+  Color _getRankColor(int rank) {
+    switch (rank) {
+      case 1:
+        return const Color(0xFFFFD700);
+      case 2:
+        return const Color(0xFFC0C0C0);
+      case 3:
+        return const Color(0xFFCD7F32);
+      default:
+        return const Color(0xFF0083EE);
+    }
+  }
 
-  const TabButton({
-    Key? key,
-    required this.text,
-    required this.index,
-    required this.isActive,
-    required this.onTap,
-    required this.activeGradient,
-  }) : super(key: key);
+  IconData _getRankIcon(int rank) {
+    switch (rank) {
+      case 1:
+        return Icons.looks_one;
+      case 2:
+        return Icons.looks_two;
+      case 3:
+        return Icons.looks_3;
+      default:
+        return Icons.star;
+    }
+  }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildActionButton(String text, int index) {
+    bool isActive = _selectedTab == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => onTap(index),
+        onTap: () => setState(() => _selectedTab = index),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           height: 40,
@@ -461,13 +1248,39 @@ class TabButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (isActive)
+              if (isActive && index == 0)
                 Container(
                   width: 8,
                   height: 8,
                   margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    gradient: activeGradient,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              if (isActive && index == 2)
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              if (isActive && index == 3)
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                    ),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -485,38 +1298,17 @@ class TabButton extends StatelessWidget {
       ),
     );
   }
-}
 
-class ContentSection extends StatelessWidget {
-  final int selectedTab;
-  final List<BestStudent> siswaTerbaik;
-  final List<ViolationStudent> siswaBerpelanggaran;
-
-  const ContentSection({
-    Key? key,
-    required this.selectedTab,
-    required this.siswaTerbaik,
-    required this.siswaBerpelanggaran,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: selectedTab == 0
-          ? BestStudentSection(students: siswaTerbaik)
-          : ViolationStudentSection(students: siswaBerpelanggaran),
-    );
-  }
-}
-
-class BestStudentSection extends StatelessWidget {
-  final List<BestStudent> students;
-
-  const BestStudentSection({Key? key, required this.students}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildEnhancedChartCard(
+    String title,
+    String subtitle,
+    IconData icon,
+    Gradient gradient,
+    Widget chart,
+    int selectedTab,
+    Function(int) onTabChanged,
+    bool isFirst,
+  ) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -532,631 +1324,362 @@ class BestStudentSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const BestStudentHeader(),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: students.isEmpty
-                ? EmptyStateWidget(message: 'Tidak ada siswa ditemukan')
-                : Column(
-                    children: students.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final student = entry.value;
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: index < students.length - 1 ? 16 : 0),
-                        child: BestStudentCard(student: student),
-                      );
-                    }).toList(),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class BestStudentHeader extends StatelessWidget {
-  const BestStudentHeader({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Row(
-        children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
+              gradient: gradient,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
             ),
-            child: const Icon(Icons.emoji_events, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  'Siswa Terbaik',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  'Top ${context.findAncestorWidgetOfExactType<BestStudentSection>()!.students.length} siswa dengan poin tertinggi',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
+                _buildSwipeableChartButtons(selectedTab, onTabChanged),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class BestStudentCard extends StatelessWidget {
-  final BestStudent student;
-
-  const BestStudentCard({Key? key, required this.student}) : super(key: key);
-
-  Color _getRankColor(int rank) {
-    switch (rank) {
-      case 1: return const Color(0xFFFFD700);
-      case 2: return const Color(0xFFC0C0C0);
-      case 3: return const Color(0xFFCD7F32);
-      default: return const Color(0xFF0083EE);
-    }
-  }
-
-  IconData _getRankIcon(int rank) {
-    switch (rank) {
-      case 1: return Icons.looks_one;
-      case 2: return Icons.looks_two;
-      case 3: return Icons.looks_3;
-      default: return Icons.star;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final rankColor = _getRankColor(student.rank);
-    final rankIcon = _getRankIcon(student.rank);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: rankColor.withOpacity(0.2), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: rankColor.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          StudentAvatar(
-            rank: student.rank,
-            avatar: student.avatar,
-            rankColor: rankColor,
-            rankIcon: rankIcon,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: StudentDetails(
-              rank: student.rank,
-              nama: student.nama,
-              kelas: student.kelas,
-              poin: student.poin,
-              prestasi: student.prestasi,
-              rankColor: rankColor,
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GrafikScreen(
+                      chartType: isFirst ? 'apresiasi' : 'pelanggaran',
+                      title: title,
+                      subtitle: subtitle,
+                    ),
+                  ),
+                );
+              },
+              child: chart,
             ),
           ),
-          const SizedBox(width: 12),
-          TrendIcon(icon: Icons.trending_up, color: rankColor),
         ],
       ),
     );
   }
-}
 
-class ViolationStudentSection extends StatelessWidget {
-  final List<ViolationStudent> students;
-
-  const ViolationStudentSection({Key? key, required this.students}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-          ),
-        ],
+  Widget _buildSwipeableChartButtons(int selectedTab, Function(int) onTabChanged) {
+    return GestureDetector(
+      onPanUpdate: (details) {
+        if (details.delta.dx > 5) {
+          if (selectedTab > 0) {
+            onTabChanged(selectedTab - 1);
+          }
+        } else if (details.delta.dx < -5) {
+          if (selectedTab < 1) {
+            onTabChanged(selectedTab + 1);
+          }
+        }
+      },
+      child: Container(
+        height: 32,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildChartButton('Minggu', selectedTab == 0, () => onTabChanged(0)),
+            _buildChartButton('Bulan', selectedTab == 1, () => onTabChanged(1)),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildChartButton(String text, bool isActive, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        height: 28,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        margin: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: GoogleFonts.poppins(
+              color: isActive ? const Color(0xFF1F2937) : Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBarChart(List<Map<String, dynamic>> data, Gradient gradient) {
+    double maxValue = data
+        .map((e) => (e['value'] as double?) ?? 0.0)
+        .reduce((a, b) => a > b ? a : b);
+
+    return Container(
+      height: 160,
       child: Column(
         children: [
-          const ViolationStudentHeader(),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: students.isEmpty
-                ? EmptyStateWidget(message: 'Tidak ada siswa ditemukan')
-                : Column(
-                    children: students.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final student = entry.value;
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: index < students.length - 1 ? 16 : 0),
-                        child: ViolationStudentCard(student: student),
-                      );
-                    }).toList(),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ViolationStudentHeader extends StatelessWidget {
-  const ViolationStudentHeader({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  'Siswa Berpelanggaran',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                Container(
+                  width: 30,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${maxValue.toInt()}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${(maxValue * 0.75).toInt()}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${(maxValue * 0.5).toInt()}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${(maxValue * 0.25).toInt()}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '0',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  'Daftar ${context.findAncestorWidgetOfExactType<ViolationStudentSection>()!.students.length} siswa dengan pelanggaran',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: data.map((item) {
+                      double value = (item['value'] as double?) ?? 0.0;
+                      double height = maxValue > 0 ? (value / maxValue) * 120 : 0;
+                      return Container(
+                        width: 24,
+                        height: height,
+                        decoration: BoxDecoration(
+                          gradient: gradient,
+                          borderRadius: BorderRadius.circular(6),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class ViolationStudentCard extends StatelessWidget {
-  final ViolationStudent student;
-
-  const ViolationStudentCard({Key? key, required this.student}) : super(key: key);
-
-  Color _getSeverityColor(String severity) {
-    switch (severity) {
-      case 'Berat': return const Color(0xFFFF6B6D);
-      case 'Ringan': return const Color(0xFFEA580C);
-      default: return const Color(0xFFEA580C);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final severityColor = _getSeverityColor(student.severity);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: severityColor.withOpacity(0.2), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: severityColor.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          StudentAvatar(
-            rank: null,
-            avatar: student.avatar,
-            rankColor: severityColor,
-            rankIcon: Icons.warning_amber_rounded,
-            gradient: const LinearGradient(colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)]),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: ViolationStudentDetails(
-              severity: student.severity,
-              nama: student.nama,
-              kelas: student.kelas,
-              poin: student.poin,
-              pelanggaran: student.pelanggaran,
-              severityColor: severityColor,
-            ),
-          ),
-          const SizedBox(width: 12),
-          TrendIcon(icon: Icons.warning, color: severityColor),
-        ],
-      ),
-    );
-  }
-}
-
-class StudentAvatar extends StatelessWidget {
-  final int? rank;
-  final IconData avatar;
-  final Color rankColor;
-  final IconData rankIcon;
-  final LinearGradient? gradient;
-
-  const StudentAvatar({
-    Key? key,
-    this.rank,
-    required this.avatar,
-    required this.rankColor,
-    required this.rankIcon,
-    this.gradient,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        gradient: gradient ??
-            LinearGradient(
-              colors: rank != null && rank! <= 3
-                  ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
-                  : [const Color(0xFF61B8FF), const Color(0xFF0083EE)],
-            ),
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: rankColor.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Icon(avatar, color: Colors.white, size: 24),
-          if (rank != null && rank! <= 3)
-            Positioned(
-              top: -2,
-              right: -2,
-              child: Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: rankColor,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white, width: 2),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const SizedBox(width: 42),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: data.map((item) {
+                    return Text(
+                      (item['label'] as String?) ?? '',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: const Color(0xFF6B7280),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  }).toList(),
                 ),
-                child: Icon(rankIcon, color: Colors.white, size: 10),
               ),
-            ),
+            ],
+          ),
         ],
       ),
     );
   }
-}
 
-class StudentDetails extends StatelessWidget {
-  final int rank;
-  final String nama;
-  final String kelas;
-  final int poin;
-  final String prestasi;
-  final Color rankColor;
-
-  const StudentDetails({
-    Key? key,
-    required this.rank,
-    required this.nama,
-    required this.kelas,
-    required this.poin,
-    required this.prestasi,
-    required this.rankColor,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+  Widget _buildEnhancedActivityItem(
+    IconData icon,
+    Gradient gradient,
+    String title,
+    String subtitle,
+    String time,
+    String badge,
+    Color badgeColor,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ActivityScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+        ),
+        child: Row(
           children: [
-            RankTag(rank: rank, rankColor: rankColor),
-            const SizedBox(width: 8),
-            Text(
-              nama,
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-                color: const Color(0xFF1F2937),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: gradient,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
+              child: Icon(icon, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: const Color(0xFF1F2937),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFF6B7280),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      height: 1.4,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  time,
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF9CA3AF),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: badgeColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: badgeColor.withOpacity(0.3), width: 1),
+                  ),
+                  child: Text(
+                    badge,
+                    style: GoogleFonts.poppins(
+                      color: badgeColor,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            ClassTag(kelas: kelas),
-            const SizedBox(width: 8),
-            const Icon(Icons.star, color: Color(0xFFFFD700), size: 14),
-            const SizedBox(width: 4),
-            Text(
-              '$poin poin',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF6B7280),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          prestasi,
-          style: GoogleFonts.poppins(
-            color: const Color(0xFF6B7280),
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            fontStyle: FontStyle.italic,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-}
-
-class ViolationStudentDetails extends StatelessWidget {
-  final String severity;
-  final String nama;
-  final String kelas;
-  final int poin;
-  final String pelanggaran;
-  final Color severityColor;
-
-  const ViolationStudentDetails({
-    Key? key,
-    required this.severity,
-    required this.nama,
-    required this.kelas,
-    required this.poin,
-    required this.pelanggaran,
-    required this.severityColor,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            SeverityTag(severity: severity, severityColor: severityColor),
-            const SizedBox(width: 8),
-            Text(
-              nama,
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-                color: const Color(0xFF1F2937),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            ClassTag(kelas: kelas),
-            const SizedBox(width: 8),
-            Icon(Icons.warning_amber_rounded, color: severityColor, size: 14),
-            const SizedBox(width: 4),
-            Text(
-              '$poin poin',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF6B7280),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          pelanggaran,
-          style: GoogleFonts.poppins(
-            color: const Color(0xFF6B7280),
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            fontStyle: FontStyle.italic,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-}
-
-class RankTag extends StatelessWidget {
-  final int rank;
-  final Color rankColor;
-
-  const RankTag({Key? key, required this.rank, required this.rankColor}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: rankColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: rankColor.withOpacity(0.3), width: 1),
-      ),
-      child: Text(
-        '#$rank',
-        style: GoogleFonts.poppins(
-          color: rankColor,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class SeverityTag extends StatelessWidget {
-  final String severity;
-  final Color severityColor;
-
-  const SeverityTag({Key? key, required this.severity, required this.severityColor}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: severityColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: severityColor.withOpacity(0.3), width: 1),
-      ),
-      child: Text(
-        severity,
-        style: GoogleFonts.poppins(
-          color: severityColor,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class ClassTag extends StatelessWidget {
-  final String kelas;
-
-  const ClassTag({Key? key, required this.kelas}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0083EE).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        kelas,
-        style: GoogleFonts.poppins(
-          color: const Color(0xFF0083EE),
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-class TrendIcon extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-
-  const TrendIcon({Key? key, required this.icon, required this.color}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Icon(icon, color: color, size: 20),
-    );
-  }
-}
-
-class EmptyStateWidget extends StatelessWidget {
-  final String message;
-
-  const EmptyStateWidget({Key? key, required this.message}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      message,
-      style: GoogleFonts.poppins(
-        color: const Color(0xFF6B7280),
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
       ),
     );
   }

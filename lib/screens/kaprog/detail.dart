@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:skoring/screens/kaprog/history.dart';
 
 class KaprogDetailScreen extends StatefulWidget {
   final Map<String, dynamic> student;
@@ -10,7 +12,8 @@ class KaprogDetailScreen extends StatefulWidget {
   State<KaprogDetailScreen> createState() => _KaprogDetailScreenState();
 }
 
-class _KaprogDetailScreenState extends State<KaprogDetailScreen> with TickerProviderStateMixin {
+class _KaprogDetailScreenState extends State<KaprogDetailScreen>
+    with TickerProviderStateMixin {
   late final AnimationController _animationController;
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
@@ -163,7 +166,9 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen> with TickerProv
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack));
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
+    );
     _animationController.forward();
   }
 
@@ -175,10 +180,14 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen> with TickerProv
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'Aman': return const Color(0xFF10B981);
-      case 'Bermasalah': return const Color(0xFFEA580C);
-      case 'Prioritas': return const Color(0xFFFF6B6D);
-      default: return const Color(0xFF0083EE);
+      case 'Aman':
+        return const Color(0xFF10B981);
+      case 'Bermasalah':
+        return const Color(0xFFEA580C);
+      case 'Prioritas':
+        return const Color(0xFFFF6B6D);
+      default:
+        return const Color(0xFF0083EE);
     }
   }
 
@@ -189,39 +198,232 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen> with TickerProv
   }
 
   Color _getBackgroundShadowColor(String status) {
-    return status == 'Aman'
-        ? const Color(0x200083EE)
-        : const Color(0x20FF6B6D);
+    return status == 'Aman' ? const Color(0x200083EE) : const Color(0x20FF6B6D);
   }
 
   @override
   Widget build(BuildContext context) {
+    final backgroundGradient = _getBackgroundGradient(
+      detailedStudent['status'],
+    );
+    final shadowColor = _getBackgroundShadowColor(detailedStudent['status']);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+        ),
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: SingleChildScrollView(
             child: Column(
               children: [
-                HeaderSection(
-                  status: detailedStudent['status'],
-                  name: detailedStudent['name'],
-                  kelas: detailedStudent['kelas'],
-                  programKeahlian: detailedStudent['program_keahlian'],
-                  slideAnimation: _slideAnimation,
-                  onBack: () => Navigator.pop(context),
+                // Header dengan gradient sampai ke atas
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: backgroundGradient,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(32),
+                      bottomRight: Radius.circular(32),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: shadowColor,
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                    child: Column(
+                      children: [
+                        // Status bar padding
+                        SizedBox(
+                          height: MediaQuery.of(context).padding.top + 20,
+                        ),
+
+                        // Header bar
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_back_ios_new,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              'Profil Siswa',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 40),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Student profile card
+                        SlideTransition(
+                          position: _slideAnimation,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                // Avatar
+                                Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFEDBCC),
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFFEA580C,
+                                        ).withOpacity(0.2),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      detailedStudent['name'][0].toUpperCase(),
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFFEA580C),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Student name
+                                Text(
+                                  detailedStudent['name'],
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF1F2937),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+
+                                // Class and program
+                                Text(
+                                  '${detailedStudent['kelas']} - ${detailedStudent['program_keahlian']}',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF374151),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Status badge
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _getStatusColor(
+                                      detailedStudent['status'],
+                                    ).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: _getStatusColor(
+                                        detailedStudent['status'],
+                                      ).withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: _getStatusColor(
+                                            detailedStudent['status'],
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        detailedStudent['status'],
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: _getStatusColor(
+                                            detailedStudent['status'],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
+
+                // Biodata Section
                 BiodataSection(student: detailedStudent),
+
+                // Tab Section
                 TabSection(
                   selectedTab: _selectedTab,
-                  onTabSelected: (index) => setState(() => _selectedTab = index),
+                  onTabSelected:
+                      (index) => setState(() => _selectedTab = index),
                 ),
+
+                // Tab Content Section
                 TabContentSection(
                   selectedTab: _selectedTab,
                   pelanggaranHistory: pelanggaranHistory,
                   apresiasiHistory: apresiasiHistory,
                   akumulasiHistory: akumulasiHistory,
+                  student: detailedStudent,
                 ),
               ],
             ),
@@ -232,6 +434,7 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen> with TickerProv
   }
 }
 
+// History Item class
 class HistoryItem {
   final String type;
   final String description;
@@ -256,6 +459,7 @@ class HistoryItem {
   });
 }
 
+// Akumulasi Item class
 class AkumulasiItem {
   final String periode;
   final int pelanggaran;
@@ -274,267 +478,7 @@ class AkumulasiItem {
   });
 }
 
-class HeaderSection extends StatelessWidget {
-  final String status;
-  final String name;
-  final String kelas;
-  final String programKeahlian;
-  final Animation<Offset> slideAnimation;
-  final VoidCallback onBack;
-
-  const HeaderSection({
-    Key? key,
-    required this.status,
-    required this.name,
-    required this.kelas,
-    required this.programKeahlian,
-    required this.slideAnimation,
-    required this.onBack,
-  }) : super(key: key);
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Aman': return const Color(0xFF10B981);
-      case 'Bermasalah': return const Color(0xFFEA580C);
-      case 'Prioritas': return const Color(0xFFFF6B6D);
-      default: return const Color(0xFF0083EE);
-    }
-  }
-
-  List<Color> _getBackgroundGradient(String status) {
-    return status == 'Aman'
-        ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
-        : [const Color(0xFFFF6B6D), const Color(0xFFEA580C)];
-  }
-
-  Color _getBackgroundShadowColor(String status) {
-    return status == 'Aman'
-        ? const Color(0x200083EE)
-        : const Color(0x20FF6B6D);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final backgroundGradient = _getBackgroundGradient(status);
-    final shadowColor = _getBackgroundShadowColor(status);
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: backgroundGradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
-        boxShadow: [
-          BoxShadow(color: shadowColor, blurRadius: 20, offset: const Offset(0, 10)),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                BackButtonWidget(onTap: onBack),
-                Text(
-                  'Profil Siswa',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 40),
-              ],
-            ),
-            const SizedBox(height: 32),
-            SlideTransition(
-              position: slideAnimation,
-              child: StudentProfileCard(
-                name: name,
-                kelas: kelas,
-                programKeahlian: programKeahlian,
-                status: status,
-                statusColor: _getStatusColor(status),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class BackButtonWidget extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const BackButtonWidget({Key? key, required this.onTap}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Icon(
-          Icons.arrow_back_ios_new,
-          color: Colors.white,
-          size: 20,
-        ),
-      ),
-    );
-  }
-}
-
-class StudentProfileCard extends StatelessWidget {
-  final String name;
-  final String kelas;
-  final String programKeahlian;
-  final String status;
-  final Color statusColor;
-
-  const StudentProfileCard({
-    Key? key,
-    required this.name,
-    required this.kelas,
-    required this.programKeahlian,
-    required this.status,
-    required this.statusColor,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          AvatarWidget(initial: name[0].toUpperCase()),
-          const SizedBox(height: 20),
-          Text(
-            name,
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF1F2937),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '$kelas - $programKeahlian',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF374151),
-            ),
-          ),
-          const SizedBox(height: 16),
-          StatusBadge(status: status, statusColor: statusColor),
-        ],
-      ),
-    );
-  }
-}
-
-class AvatarWidget extends StatelessWidget {
-  final String initial;
-
-  const AvatarWidget({Key? key, required this.initial}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 80,
-      height: 80,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEDBCC),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFEA580C).withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          initial,
-          style: GoogleFonts.poppins(
-            fontSize: 32,
-            fontWeight: FontWeight.w800,
-            color: const Color(0xFFEA580C),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class StatusBadge extends StatelessWidget {
-  final String status;
-  final Color statusColor;
-
-  const StatusBadge({Key? key, required this.status, required this.statusColor}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: statusColor,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            status,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: statusColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
+// Biodata Section Widget
 class BiodataSection extends StatelessWidget {
   final Map<String, dynamic> student;
 
@@ -570,17 +514,61 @@ class BiodataSection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            BiodataRow(label: 'NIS/NISN', value: student['nis'], icon: Icons.badge),
-            BiodataRow(label: 'Tempat, Tanggal Lahir', value: student['ttl'], icon: Icons.cake),
-            BiodataRow(label: 'Jenis Kelamin', value: student['jenkel'], icon: Icons.person),
-            BiodataRow(label: 'Alamat', value: student['alamat'], icon: Icons.home),
-            BiodataRow(label: 'Program Keahlian', value: student['program_keahlian'], icon: Icons.school),
-            BiodataRow(label: 'Kelas', value: student['kelas'], icon: Icons.class_),
-            BiodataRow(label: 'Tahun Masuk', value: student['tahun_masuk'], icon: Icons.calendar_today),
-            BiodataRow(label: 'No. HP Siswa', value: student['no_hp'], icon: Icons.phone),
-            BiodataRow(label: 'Email', value: student['email'], icon: Icons.email),
-            BiodataRow(label: 'Nama Orang Tua', value: student['nama_ortu'], icon: Icons.family_restroom),
-            BiodataRow(label: 'No. HP Orang Tua', value: student['no_hp_ortu'], icon: Icons.phone_android),
+            BiodataRow(
+              label: 'NIS/NISN',
+              value: student['nis'],
+              icon: Icons.badge,
+            ),
+            BiodataRow(
+              label: 'Tempat, Tanggal Lahir',
+              value: student['ttl'],
+              icon: Icons.cake,
+            ),
+            BiodataRow(
+              label: 'Jenis Kelamin',
+              value: student['jenkel'],
+              icon: Icons.person,
+            ),
+            BiodataRow(
+              label: 'Alamat',
+              value: student['alamat'],
+              icon: Icons.home,
+            ),
+            BiodataRow(
+              label: 'Program Keahlian',
+              value: student['program_keahlian'],
+              icon: Icons.school,
+            ),
+            BiodataRow(
+              label: 'Kelas',
+              value: student['kelas'],
+              icon: Icons.class_,
+            ),
+            BiodataRow(
+              label: 'Tahun Masuk',
+              value: student['tahun_masuk'],
+              icon: Icons.calendar_today,
+            ),
+            BiodataRow(
+              label: 'No. HP Siswa',
+              value: student['no_hp'],
+              icon: Icons.phone,
+            ),
+            BiodataRow(
+              label: 'Email',
+              value: student['email'],
+              icon: Icons.email,
+            ),
+            BiodataRow(
+              label: 'Nama Orang Tua',
+              value: student['nama_ortu'],
+              icon: Icons.family_restroom,
+            ),
+            BiodataRow(
+              label: 'No. HP Orang Tua',
+              value: student['no_hp_ortu'],
+              icon: Icons.phone_android,
+            ),
           ],
         ),
       ),
@@ -588,6 +576,7 @@ class BiodataSection extends StatelessWidget {
   }
 }
 
+// Biodata Row Widget
 class BiodataRow extends StatelessWidget {
   final String label;
   final String value;
@@ -614,11 +603,7 @@ class BiodataRow extends StatelessWidget {
               color: const Color(0xFF0083EE).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              size: 16,
-              color: const Color(0xFF0083EE),
-            ),
+            child: Icon(icon, size: 16, color: const Color(0xFF0083EE)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -651,6 +636,7 @@ class BiodataRow extends StatelessWidget {
   }
 }
 
+// Tab Section Widget
 class TabSection extends StatelessWidget {
   final int selectedTab;
   final Function(int) onTabSelected;
@@ -680,9 +666,24 @@ class TabSection extends StatelessWidget {
         ),
         child: Row(
           children: [
-            TabButton(text: 'Pelanggaran', index: 0, isActive: selectedTab == 0, onTap: onTabSelected),
-            TabButton(text: 'Apresiasi', index: 1, isActive: selectedTab == 1, onTap: onTabSelected),
-            TabButton(text: 'Akumulasi', index: 2, isActive: selectedTab == 2, onTap: onTabSelected),
+            TabButton(
+              text: 'Pelanggaran',
+              index: 0,
+              isActive: selectedTab == 0,
+              onTap: onTabSelected,
+            ),
+            TabButton(
+              text: 'Apresiasi',
+              index: 1,
+              isActive: selectedTab == 1,
+              onTap: onTabSelected,
+            ),
+            TabButton(
+              text: 'Akumulasi',
+              index: 2,
+              isActive: selectedTab == 2,
+              onTap: onTabSelected,
+            ),
           ],
         ),
       ),
@@ -690,6 +691,7 @@ class TabSection extends StatelessWidget {
   }
 }
 
+// Tab Button Widget
 class TabButton extends StatelessWidget {
   final String text;
   final int index;
@@ -732,11 +734,13 @@ class TabButton extends StatelessWidget {
   }
 }
 
+// Tab Content Section Widget
 class TabContentSection extends StatelessWidget {
   final int selectedTab;
   final List<HistoryItem> pelanggaranHistory;
   final List<HistoryItem> apresiasiHistory;
   final List<AkumulasiItem> akumulasiHistory;
+  final Map<String, dynamic> student;
 
   const TabContentSection({
     Key? key,
@@ -744,25 +748,36 @@ class TabContentSection extends StatelessWidget {
     required this.pelanggaranHistory,
     required this.apresiasiHistory,
     required this.akumulasiHistory,
+    required this.student,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(20),
-      child: selectedTab == 0
-          ? PelanggaranContent(history: pelanggaranHistory)
-          : selectedTab == 1
-              ? ApresiasiContent(history: apresiasiHistory)
+      child:
+          selectedTab == 0
+              ? PelanggaranContent(
+                history: pelanggaranHistory,
+                student: student,
+              )
+              : selectedTab == 1
+              ? ApresiasiContent(history: apresiasiHistory, student: student)
               : AkumulasiContent(history: akumulasiHistory),
     );
   }
 }
 
+// Pelanggaran Content Widget
 class PelanggaranContent extends StatelessWidget {
   final List<HistoryItem> history;
+  final Map<String, dynamic> student;
 
-  const PelanggaranContent({Key? key, required this.history}) : super(key: key);
+  const PelanggaranContent({
+    Key? key,
+    required this.history,
+    required this.student,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -779,21 +794,37 @@ class PelanggaranContent extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         history.isEmpty
-            ? const EmptyState(message: 'Belum ada riwayat pelanggaran', icon: Icons.check_circle)
+            ? const EmptyState(
+              message: 'Belum ada riwayat pelanggaran',
+              icon: Icons.check_circle,
+            )
             : Column(
-                children: history
-                    .map((item) => HistoryCard(item: item, isPelanggaran: true))
-                    .toList(),
-              ),
+              children:
+                  history
+                      .map(
+                        (item) => KaprogHistoryCard(
+                          item: item,
+                          isPelanggaran: true,
+                          student: student,
+                        ),
+                      )
+                      .toList(),
+            ),
       ],
     );
   }
 }
 
+// Apresiasi Content Widget
 class ApresiasiContent extends StatelessWidget {
   final List<HistoryItem> history;
+  final Map<String, dynamic> student;
 
-  const ApresiasiContent({Key? key, required this.history}) : super(key: key);
+  const ApresiasiContent({
+    Key? key,
+    required this.history,
+    required this.student,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -810,130 +841,132 @@ class ApresiasiContent extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         history.isEmpty
-            ? const EmptyState(message: 'Belum ada riwayat apresiasi', icon: Icons.star)
+            ? const EmptyState(
+              message: 'Belum ada riwayat apresiasi',
+              icon: Icons.star,
+            )
             : Column(
-                children: history
-                    .map((item) => HistoryCard(item: item, isPelanggaran: false))
-                    .toList(),
-              ),
+              children:
+                  history
+                      .map(
+                        (item) => KaprogHistoryCard(
+                          item: item,
+                          isPelanggaran: false,
+                          student: student,
+                        ),
+                      )
+                      .toList(),
+            ),
       ],
     );
   }
 }
 
-class AkumulasiContent extends StatelessWidget {
-  final List<AkumulasiItem> history;
-
-  const AkumulasiContent({Key? key, required this.history}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Histori Akumulasi Poin',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF1F2937),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Column(
-          children: history.map((item) => AkumulasiCard(item: item)).toList(),
-        ),
-      ],
-    );
-  }
-}
-
-class HistoryCard extends StatelessWidget {
+// History Card untuk Kaprog (tanpa kemampuan edit/delete)
+class KaprogHistoryCard extends StatelessWidget {
   final HistoryItem item;
   final bool isPelanggaran;
+  final Map<String, dynamic> student;
 
-  const HistoryCard({Key? key, required this.item, required this.isPelanggaran}) : super(key: key);
+  const KaprogHistoryCard({
+    Key? key,
+    required this.item,
+    required this.isPelanggaran,
+    required this.student,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: item.color.withOpacity(0.2), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        // Navigate to history screen saat card diklik
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => KaprogHistoryScreen(student: student),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: item.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: item.color.withOpacity(0.2), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: item.color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(item.icon, color: item.color, size: 24),
                 ),
-                child: Icon(item.icon, color: item.color, size: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.type,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1F2937),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.type,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1F2937),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.description,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF6B7280),
+                      const SizedBox(height: 4),
+                      Text(
+                        item.description,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF6B7280),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Text(
-                '${item.points > 0 ? '+' : ''}${item.points}',
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: item.color,
+                Text(
+                  '${item.points > 0 ? '+' : ''}${item.points}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: item.color,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          HistoryDetails(
-            date: item.date,
-            time: item.time,
-            pelapor: item.pelapor,
-            pemberi: item.pemberi,
-            isPelanggaran: isPelanggaran,
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 12),
+            HistoryDetails(
+              date: item.date,
+              time: item.time,
+              pelapor: item.pelapor,
+              pemberi: item.pemberi,
+              isPelanggaran: isPelanggaran,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
+// History Details Widget
 class HistoryDetails extends StatelessWidget {
   final String date;
   final String time;
@@ -964,7 +997,11 @@ class HistoryDetails extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.calendar_today, size: 16, color: Color(0xFF6B7280)),
+              const Icon(
+                Icons.calendar_today,
+                size: 16,
+                color: Color(0xFF6B7280),
+              ),
               const SizedBox(width: 8),
               Text(
                 '$date • $time',
@@ -982,7 +1019,9 @@ class HistoryDetails extends StatelessWidget {
               const Icon(Icons.person, size: 16, color: Color(0xFF6B7280)),
               const SizedBox(width: 8),
               Text(
-                isPelanggaran ? 'Pelapor: ${pelapor ?? ''}' : 'Pemberi: ${pemberi ?? ''}',
+                isPelanggaran
+                    ? 'Pelapor: ${pelapor ?? ''}'
+                    : 'Pemberi: ${pemberi ?? ''}',
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -997,6 +1036,35 @@ class HistoryDetails extends StatelessWidget {
   }
 }
 
+// Akumulasi Content Widget
+class AkumulasiContent extends StatelessWidget {
+  final List<AkumulasiItem> history;
+
+  const AkumulasiContent({Key? key, required this.history}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Histori Akumulasi Poin',
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF1F2937),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Column(
+          children: history.map((item) => AkumulasiCard(item: item)).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+// Akumulasi Card Widget
 class AkumulasiCard extends StatelessWidget {
   final AkumulasiItem item;
 
@@ -1004,10 +1072,14 @@ class AkumulasiCard extends StatelessWidget {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'Aman': return const Color(0xFF10B981);
-      case 'Bermasalah': return const Color(0xFFEA580C);
-      case 'Prioritas': return const Color(0xFFFF6B6D);
-      default: return const Color(0xFF0083EE);
+      case 'Aman':
+        return const Color(0xFF10B981);
+      case 'Bermasalah':
+        return const Color(0xFFEA580C);
+      case 'Prioritas':
+        return const Color(0xFFFF6B6D);
+      default:
+        return const Color(0xFF0083EE);
     }
   }
 
@@ -1079,11 +1151,13 @@ class AkumulasiCard extends StatelessWidget {
   }
 }
 
+// Status Tag Widget
 class StatusTag extends StatelessWidget {
   final String status;
   final Color statusColor;
 
-  const StatusTag({Key? key, required this.status, required this.statusColor}) : super(key: key);
+  const StatusTag({Key? key, required this.status, required this.statusColor})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -1105,6 +1179,7 @@ class StatusTag extends StatelessWidget {
   }
 }
 
+// Point Summary Widget
 class PointSummary extends StatelessWidget {
   final int pelanggaran;
   final int apresiasi;
@@ -1146,6 +1221,7 @@ class PointSummary extends StatelessWidget {
   }
 }
 
+// Point Card Widget
 class PointCard extends StatelessWidget {
   final String title;
   final String value;
@@ -1197,6 +1273,7 @@ class PointCard extends StatelessWidget {
   }
 }
 
+// Point Progress Bar Widget
 class PointProgressBar extends StatelessWidget {
   final int pelanggaran;
   final int apresiasi;
@@ -1210,8 +1287,14 @@ class PointProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = pelanggaran.abs() + apresiasi;
-    final pelanggaranWidth = total > 0 ? (pelanggaran.abs() / total) * MediaQuery.of(context).size.width : 0.0;
-    final apresiasiWidth = total > 0 ? (apresiasi / total) * MediaQuery.of(context).size.width : 0.0;
+    final pelanggaranWidth =
+        total > 0
+            ? (pelanggaran.abs() / total) * MediaQuery.of(context).size.width
+            : 0.0;
+    final apresiasiWidth =
+        total > 0
+            ? (apresiasi / total) * MediaQuery.of(context).size.width
+            : 0.0;
 
     return Container(
       width: double.infinity,
@@ -1248,11 +1331,13 @@ class PointProgressBar extends StatelessWidget {
   }
 }
 
+// Empty State Widget
 class EmptyState extends StatelessWidget {
   final String message;
   final IconData icon;
 
-  const EmptyState({Key? key, required this.message, required this.icon}) : super(key: key);
+  const EmptyState({Key? key, required this.message, required this.icon})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {

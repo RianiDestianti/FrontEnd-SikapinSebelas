@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'point.dart';
 import 'note.dart';
-import '../history.dart';
+import 'history.dart';
 
 class Student {
   final String name;
