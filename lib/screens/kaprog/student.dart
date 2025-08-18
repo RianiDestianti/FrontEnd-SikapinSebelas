@@ -265,10 +265,10 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Hello, Pak Budi! 👋',
+                                      'Daftar Jurusan SMKN 11 Bandung',
                                       style: GoogleFonts.poppins(
                                         color: Colors.white,
-                                        fontSize: 26,
+                                        fontSize: 20,
                                         fontWeight: FontWeight.w700,
                                         height: 1.2,
                                       ),
