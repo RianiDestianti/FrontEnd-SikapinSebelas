@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'detail.dart'; 
+import 'detail.dart';
 
 class NotifikasiScreen extends StatefulWidget {
   const NotifikasiScreen({super.key});
@@ -188,13 +188,14 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
     switch (type) {
       case 'violation':
       case 'violation_repeat':
-        if (type == 'violation_repeat' || 
-            (notification.containsKey('repeatCount') && notification['repeatCount'] > 2)) {
+        if (type == 'violation_repeat' ||
+            (notification.containsKey('repeatCount') &&
+                notification['repeatCount'] > 2)) {
           return 'Prioritas';
         }
         return 'Bermasalah';
       case 'bk_treatment':
-        return 'Aman'; 
+        return 'Aman';
       case 'appreciation':
         return 'Aman';
       default:
@@ -206,7 +207,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
     final studentData = {
       'name': notification['student'],
       'status': _getStudentStatus(notification['type'], notification),
-      'class': 'XI RPL 2', 
+      'class': 'XI RPL 2',
     };
 
     String? initialTab;
@@ -220,7 +221,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
         initialTab = 'apresiasi';
         break;
       default:
-        initialTab = null; 
+        initialTab = null;
     }
 
     Navigator.push(
@@ -720,9 +721,10 @@ class NotificationCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isRead = notification['isRead'];
     final type = notification['type'];
-    final isUrgent = type == 'violation_repeat' || 
-                     (notification.containsKey('repeatCount') && 
-                      notification['repeatCount'] > 2);
+    final isUrgent =
+        type == 'violation_repeat' ||
+        (notification.containsKey('repeatCount') &&
+            notification['repeatCount'] > 2);
 
     return GestureDetector(
       onTap: onTap,
@@ -740,9 +742,10 @@ class NotificationCardWidget extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: isUrgent 
-                  ? const Color(0xFFDC2626).withOpacity(0.1)
-                  : Colors.black.withOpacity(0.04),
+              color:
+                  isUrgent
+                      ? const Color(0xFFDC2626).withOpacity(0.1)
+                      : Colors.black.withOpacity(0.04),
               blurRadius: isUrgent ? 12 : 8,
               offset: const Offset(0, 2),
             ),
@@ -936,10 +939,10 @@ class NotificationDetailWidget extends StatelessWidget {
   }
 
   bool _shouldShowStudentButton(String type) {
-    return type == 'violation' || 
-           type == 'violation_repeat' || 
-           type == 'appreciation' || 
-           type == 'bk_treatment';
+    return type == 'violation' ||
+        type == 'violation_repeat' ||
+        type == 'appreciation' ||
+        type == 'bk_treatment';
   }
 
   String _getButtonText(String type) {
@@ -1048,7 +1051,7 @@ class NotificationDetailWidget extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: padding),
-                  
+
                   // Student and Action Info
                   Row(
                     children: [
@@ -1119,10 +1122,11 @@ class NotificationDetailWidget extends StatelessWidget {
                       ),
                     ],
                   ),
-                  
+
                   // Conditional Information based on notification type
                   SizedBox(height: padding),
-                  if (notification['type'] == 'violation' || notification['type'] == 'violation_repeat') ...[
+                  if (notification['type'] == 'violation' ||
+                      notification['type'] == 'violation_repeat') ...[
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.all(padding * 0.8),
@@ -1207,7 +1211,7 @@ class NotificationDetailWidget extends StatelessWidget {
                       ),
                     ),
                   ],
-                  
+
                   if (notification['type'] == 'appreciation') ...[
                     Container(
                       width: double.infinity,
@@ -1272,7 +1276,7 @@ class NotificationDetailWidget extends StatelessWidget {
                       ),
                     ),
                   ],
-                  
+
                   if (notification['type'] == 'bk_treatment') ...[
                     Container(
                       width: double.infinity,

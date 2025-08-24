@@ -5,6 +5,7 @@ import 'package:skoring/navigation/kaprog.dart';
 import 'package:skoring/screens/kaprog/home.dart';
 import 'package:skoring/screens/profile.dart';
 import 'package:skoring/screens/kaprog/detail.dart';
+import 'package:skoring/screens/kaprog/report.dart';
 
 class ProgramKeahlianScreen extends StatefulWidget {
   const ProgramKeahlianScreen({Key? key}) : super(key: key);
@@ -70,7 +71,6 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
       'category': 'Bisnis',
     },
   ];
-
   @override
   void initState() {
     super.initState();
@@ -169,7 +169,8 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
         child:
             _currentIndex == 0
                 ? const KaprogHomeScreen()
-                : SingleChildScrollView(
+                : _currentIndex == 1
+                ? SingleChildScrollView(
                   child: Column(
                     children: [
                       Container(
@@ -394,7 +395,8 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                       ),
                     ],
                   ),
-                ),
+                )
+                : const LaporanKaprog(), // Navigate to LaporanKaprog when index is 2
       ),
       bottomNavigationBar: KaprogNavigation(
         currentIndex: _currentIndex,

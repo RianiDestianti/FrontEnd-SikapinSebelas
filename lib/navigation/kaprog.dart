@@ -29,6 +29,12 @@ class _KaprogNavigationState extends State<KaprogNavigation> {
       activeIcon: Icons.groups,
       label: 'Siswa',
     ),
+    NavigationItemData(
+      index: 2,
+      icon: Icons.description_outlined,
+      activeIcon: Icons.description,
+      label: 'Laporan',
+    ),
   ];
 
   @override
