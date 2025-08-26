@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:skoring/screens/walikelas/notification.dart';
 import 'package:skoring/screens/profile.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -9,7 +8,6 @@ import 'package:printing/printing.dart';
 import 'package:excel/excel.dart' as excel;
 import 'package:file_saver/file_saver.dart';
 import 'dart:typed_data';
-import 'package:path_provider/path_provider.dart';
 
 class LaporanKaprog extends StatefulWidget {
   const LaporanKaprog({Key? key}) : super(key: key);
@@ -60,7 +58,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
         'kelas': 'XII',
         'scores': [
           {
-            'keterangan': 'Juara 1 Olimpiade',
+            'keterangan': 'Juara 1 Olimpiade Programming',
             'tanggal': '10 Juli 2025',
             'poin': 50,
             'type': 'apresiasi',
@@ -108,7 +106,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
         'kelas': 'X',
         'scores': [
           {
-            'keterangan': 'Juara 1 Lomba Desain',
+            'keterangan': 'Juara 1 Lomba Web Design',
             'tanggal': '14 Juli 2025',
             'poin': 50,
             'type': 'apresiasi',
@@ -116,6 +114,30 @@ class _LaporanKaprogState extends State<LaporanKaprog>
           {
             'keterangan': 'Aktif di Kelas',
             'tanggal': '12 Juli 2025',
+            'poin': 30,
+            'type': 'apresiasi',
+          },
+        ],
+      },
+      {
+        'name': 'Rizky Pratama',
+        'totalPoin': 95,
+        'apresiasi': 100,
+        'pelanggaran': 5,
+        'isPositive': true,
+        'color': const Color(0xFF10B981),
+        'avatar': 'RP',
+        'kelas': 'XII',
+        'scores': [
+          {
+            'keterangan': 'Membuat Aplikasi Sekolah',
+            'tanggal': '15 Juli 2025',
+            'poin': 70,
+            'type': 'apresiasi',
+          },
+          {
+            'keterangan': 'Mentor Programming',
+            'tanggal': '13 Juli 2025',
             'poin': 30,
             'type': 'apresiasi',
           },
@@ -134,7 +156,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
         'kelas': 'XII',
         'scores': [
           {
-            'keterangan': 'Juara 1 Desain Poster',
+            'keterangan': 'Juara 1 Desain Poster Nasional',
             'tanggal': '10 Juli 2025',
             'poin': 50,
             'type': 'apresiasi',
@@ -171,6 +193,30 @@ class _LaporanKaprogState extends State<LaporanKaprog>
           },
         ],
       },
+      {
+        'name': 'Sari Indah',
+        'totalPoin': 68,
+        'apresiasi': 75,
+        'pelanggaran': 7,
+        'isPositive': true,
+        'color': const Color(0xFF10B981),
+        'avatar': 'SI',
+        'kelas': 'X',
+        'scores': [
+          {
+            'keterangan': 'Desain Logo Sekolah',
+            'tanggal': '16 Juli 2025',
+            'poin': 45,
+            'type': 'apresiasi',
+          },
+          {
+            'keterangan': 'Portfolio Terbaik',
+            'tanggal': '14 Juli 2025',
+            'poin': 30,
+            'type': 'apresiasi',
+          },
+        ],
+      },
     ],
     'TKJ': [
       {
@@ -184,13 +230,13 @@ class _LaporanKaprogState extends State<LaporanKaprog>
         'kelas': 'XII',
         'scores': [
           {
-            'keterangan': 'Juara 1 Kompetisi Jaringan',
+            'keterangan': 'Juara 1 Kompetisi Jaringan Nasional',
             'tanggal': '15 Juli 2025',
             'poin': 100,
             'type': 'apresiasi',
           },
           {
-            'keterangan': 'Membantu Lab',
+            'keterangan': 'Maintenance Lab Network',
             'tanggal': '12 Juli 2025',
             'poin': 25,
             'type': 'apresiasi',
@@ -214,9 +260,33 @@ class _LaporanKaprogState extends State<LaporanKaprog>
             'type': 'apresiasi',
           },
           {
-            'keterangan': 'Maintenance PC',
+            'keterangan': 'Setup Network Lab',
             'tanggal': '11 Juli 2025',
             'poin': 30,
+            'type': 'apresiasi',
+          },
+        ],
+      },
+      {
+        'name': 'Andri Wijaya',
+        'totalPoin': -15,
+        'apresiasi': 10,
+        'pelanggaran': 25,
+        'isPositive': false,
+        'color': const Color(0xFFFF6B6D),
+        'avatar': 'AW',
+        'kelas': 'X',
+        'scores': [
+          {
+            'keterangan': 'Merusak Perangkat Lab',
+            'tanggal': '13 Juli 2025',
+            'poin': -25,
+            'type': 'pelanggaran',
+          },
+          {
+            'keterangan': 'Membantu Instalasi',
+            'tanggal': '10 Juli 2025',
+            'poin': 10,
             'type': 'apresiasi',
           },
         ],
@@ -234,7 +304,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
         'kelas': 'XII',
         'scores': [
           {
-            'keterangan': 'Organisasi Terbaik',
+            'keterangan': 'Organisasi Event Terbaik',
             'tanggal': '10 Juli 2025',
             'poin': 30,
             'type': 'apresiasi',
@@ -242,6 +312,30 @@ class _LaporanKaprogState extends State<LaporanKaprog>
           {
             'keterangan': 'Dokumentasi Lengkap',
             'tanggal': '8 Juli 2025',
+            'poin': 20,
+            'type': 'apresiasi',
+          },
+        ],
+      },
+      {
+        'name': 'Hari Nugroho',
+        'totalPoin': 38,
+        'apresiasi': 45,
+        'pelanggaran': 7,
+        'isPositive': true,
+        'color': const Color(0xFF10B981),
+        'avatar': 'HN',
+        'kelas': 'XI',
+        'scores': [
+          {
+            'keterangan': 'Event Organizer Sekolah',
+            'tanggal': '12 Juli 2025',
+            'poin': 25,
+            'type': 'apresiasi',
+          },
+          {
+            'keterangan': 'Koordinasi Tim',
+            'tanggal': '9 Juli 2025',
             'poin': 20,
             'type': 'apresiasi',
           },
@@ -273,6 +367,30 @@ class _LaporanKaprogState extends State<LaporanKaprog>
           },
         ],
       },
+      {
+        'name': 'Lisa Permata',
+        'totalPoin': 42,
+        'apresiasi': 50,
+        'pelanggaran': 8,
+        'isPositive': true,
+        'color': const Color(0xFF10B981),
+        'avatar': 'LP',
+        'kelas': 'XI',
+        'scores': [
+          {
+            'keterangan': 'Audit Keuangan OSIS',
+            'tanggal': '14 Juli 2025',
+            'poin': 30,
+            'type': 'apresiasi',
+          },
+          {
+            'keterangan': 'Pembukuan Akurat',
+            'tanggal': '11 Juli 2025',
+            'poin': 20,
+            'type': 'apresiasi',
+          },
+        ],
+      },
     ],
     'MLOG': [
       {
@@ -286,14 +404,38 @@ class _LaporanKaprogState extends State<LaporanKaprog>
         'kelas': 'XI',
         'scores': [
           {
-            'keterangan': 'Manajemen Gudang Baik',
+            'keterangan': 'Manajemen Gudang Efisien',
             'tanggal': '14 Juli 2025',
             'poin': 25,
             'type': 'apresiasi',
           },
           {
-            'keterangan': 'Koordinasi Tim',
+            'keterangan': 'Koordinasi Logistik',
             'tanggal': '11 Juli 2025',
+            'poin': 15,
+            'type': 'apresiasi',
+          },
+        ],
+      },
+      {
+        'name': 'Joko Hartono',
+        'totalPoin': 28,
+        'apresiasi': 35,
+        'pelanggaran': 7,
+        'isPositive': true,
+        'color': const Color(0xFF10B981),
+        'avatar': 'JH',
+        'kelas': 'XII',
+        'scores': [
+          {
+            'keterangan': 'Supply Chain Management',
+            'tanggal': '13 Juli 2025',
+            'poin': 20,
+            'type': 'apresiasi',
+          },
+          {
+            'keterangan': 'Inventory Control',
+            'tanggal': '10 Juli 2025',
             'poin': 15,
             'type': 'apresiasi',
           },
@@ -312,15 +454,39 @@ class _LaporanKaprogState extends State<LaporanKaprog>
         'kelas': 'XII',
         'scores': [
           {
-            'keterangan': 'Presentasi Terbaik',
+            'keterangan': 'Presentasi Marketing Terbaik',
             'tanggal': '13 Juli 2025',
             'poin': 30,
             'type': 'apresiasi',
           },
           {
-            'keterangan': 'Strategi Marketing',
+            'keterangan': 'Strategi Branding',
             'tanggal': '10 Juli 2025',
             'poin': 15,
+            'type': 'apresiasi',
+          },
+        ],
+      },
+      {
+        'name': 'Maya Sari',
+        'totalPoin': 52,
+        'apresiasi': 60,
+        'pelanggaran': 8,
+        'isPositive': true,
+        'color': const Color(0xFF10B981),
+        'avatar': 'MS',
+        'kelas': 'XI',
+        'scores': [
+          {
+            'keterangan': 'Campaign Digital Marketing',
+            'tanggal': '15 Juli 2025',
+            'poin': 35,
+            'type': 'apresiasi',
+          },
+          {
+            'keterangan': 'Social Media Strategy',
+            'tanggal': '12 Juli 2025',
+            'poin': 25,
             'type': 'apresiasi',
           },
         ],
@@ -403,12 +569,10 @@ class _LaporanKaprogState extends State<LaporanKaprog>
           );
           if (!matchesSearch) return false;
 
-          // Filter berdasarkan kelas
           bool matchesKelas =
               _selectedKelas == 'Semua' || student['kelas'] == _selectedKelas;
           if (!matchesKelas) return false;
 
-          // Filter berdasarkan poin
           int poin = student['totalPoin'];
           switch (_selectedFilter) {
             case '0-50':
@@ -429,158 +593,191 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     return filtered;
   }
 
-  Map<String, Map<String, dynamic>> get _jurusanSummary {
-    Map<String, Map<String, dynamic>> summary = {};
-
-    _allStudentsData.forEach((jurusan, students) {
-      int totalStudents = students.length;
-      int positiveStudents = students.where((s) => s['totalPoin'] > 0).length;
-      int negativeStudents = students.where((s) => s['totalPoin'] < 0).length;
-      double avgPoints =
-          totalStudents > 0
-              ? (students.fold(0.0, (sum, s) => sum + s['totalPoin'])) /
-                  totalStudents
-              : 0.0;
-
-      summary[jurusan] = {
-        'totalStudents': totalStudents,
-        'positiveStudents': positiveStudents,
-        'negativeStudents': negativeStudents,
-        'avgPoints': avgPoints,
-        'positivePercentage': positiveStudents / totalStudents,
-        'negativePercentage': negativeStudents / totalStudents,
-      };
-    });
-
-    return summary;
-  }
-
   void _showFilterBottomSheet() {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      isScrollControlled: true,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Filter Data Siswa',
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1F2937),
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Filter Data Siswa',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1F2937),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  Text(
-                    'Jurusan:',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children:
-                        _jurusanList.map((jurusan) {
-                          return ChoiceChip(
-                            label: Text(jurusan),
-                            selected: _selectedJurusan == jurusan,
-                            onSelected: (selected) {
-                              setModalState(() {
-                                _selectedJurusan = jurusan;
-                              });
-                              setState(() {
-                                _selectedJurusan = jurusan;
-                              });
-                            },
-                          );
-                        }).toList(),
-                  ),
-                  const SizedBox(height: 16),
+                    Text(
+                      'Jurusan:',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          _jurusanList.map((jurusan) {
+                            return FilterChip(
+                              label: Text(
+                                jurusan,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              selected: _selectedJurusan == jurusan,
+                              onSelected: (selected) {
+                                setModalState(() {
+                                  _selectedJurusan = jurusan;
+                                });
+                                setState(() {
+                                  _selectedJurusan = jurusan;
+                                });
+                              },
+                              selectedColor: const Color(
+                                0xFF0083EE,
+                              ).withOpacity(0.2),
+                              checkmarkColor: const Color(0xFF0083EE),
+                            );
+                          }).toList(),
+                    ),
+                    const SizedBox(height: 16),
 
-                  Text(
-                    'Kelas:',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children:
-                        _kelasList.map((kelas) {
-                          return ChoiceChip(
-                            label: Text(kelas),
-                            selected: _selectedKelas == kelas,
-                            onSelected: (selected) {
-                              setModalState(() {
-                                _selectedKelas = kelas;
-                              });
-                              setState(() {
-                                _selectedKelas = kelas;
-                              });
-                            },
-                          );
-                        }).toList(),
-                  ),
-                  const SizedBox(height: 16),
+                    Text(
+                      'Kelas:',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          _kelasList.map((kelas) {
+                            return FilterChip(
+                              label: Text(
+                                kelas,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              selected: _selectedKelas == kelas,
+                              onSelected: (selected) {
+                                setModalState(() {
+                                  _selectedKelas = kelas;
+                                });
+                                setState(() {
+                                  _selectedKelas = kelas;
+                                });
+                              },
+                              selectedColor: const Color(
+                                0xFF10B981,
+                              ).withOpacity(0.2),
+                              checkmarkColor: const Color(0xFF10B981),
+                            );
+                          }).toList(),
+                    ),
+                    const SizedBox(height: 16),
 
-                  Text(
-                    'Rentang Poin:',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children:
-                        _filterList.map((filter) {
-                          return ChoiceChip(
-                            label: Text(
-                              filter == 'Negatif'
-                                  ? 'Nilai Negatif'
-                                  : filter == '101+'
-                                  ? '101 ke atas'
-                                  : filter,
+                    Text(
+                      'Rentang Poin:',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          _filterList.map((filter) {
+                            return FilterChip(
+                              label: Text(
+                                filter == 'Negatif'
+                                    ? 'Nilai Negatif'
+                                    : filter == '101+'
+                                    ? '101 ke atas'
+                                    : filter,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              selected: _selectedFilter == filter,
+                              onSelected: (selected) {
+                                setModalState(() {
+                                  _selectedFilter = filter;
+                                });
+                                setState(() {
+                                  _selectedFilter = filter;
+                                });
+                              },
+                              selectedColor: const Color(
+                                0xFFFF6B6D,
+                              ).withOpacity(0.2),
+                              checkmarkColor: const Color(0xFFFF6B6D),
+                            );
+                          }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(
+                              'Tutup',
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFF6B7280),
+                              ),
                             ),
-                            selected: _selectedFilter == filter,
-                            onSelected: (selected) {
-                              setModalState(() {
-                                _selectedFilter = filter;
-                              });
-                              setState(() {
-                                _selectedFilter = filter;
-                              });
+                          ),
+                        ),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {});
+                              Navigator.pop(context);
                             },
-                          );
-                        }).toList(),
-                  ),
-                  const SizedBox(height: 20),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text('Tutup'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0083EE),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'Terapkan',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(() {});
-                            Navigator.pop(context);
-                          },
-                          child: Text('Terapkan'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -618,6 +815,10 @@ class _LaporanKaprogState extends State<LaporanKaprog>
               ),
               const SizedBox(height: 16),
               ListTile(
+                leading: const Icon(
+                  Icons.picture_as_pdf,
+                  color: Color(0xFFFF6B6D),
+                ),
                 title: Text('PDF', style: GoogleFonts.poppins(fontSize: 15)),
                 onTap: () {
                   Navigator.pop(context);
@@ -625,6 +826,10 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                 },
               ),
               ListTile(
+                leading: const Icon(
+                  Icons.table_chart,
+                  color: Color(0xFF10B981),
+                ),
                 title: Text('Excel', style: GoogleFonts.poppins(fontSize: 15)),
                 onTap: () {
                   Navigator.pop(context);
@@ -713,7 +918,6 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     final excelInstance = excel.Excel.createExcel();
     final sheet = excelInstance['Sheet1'];
 
-    // Header
     sheet.appendRow(['Laporan Rekap Siswa SMKN 11 Bandung']);
     sheet.appendRow([
       'Filter: Jurusan $_selectedJurusan, Kelas $_selectedKelas, Poin $_selectedFilter',
@@ -750,6 +954,36 @@ class _LaporanKaprogState extends State<LaporanKaprog>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isTablet = screenWidth >= 768;
+    final isDesktop = screenWidth >= 1024;
+
+    final horizontalPadding =
+        isDesktop
+            ? 40.0
+            : isTablet
+            ? 24.0
+            : 20.0;
+    final cardPadding =
+        isDesktop
+            ? 24.0
+            : isTablet
+            ? 20.0
+            : 16.0;
+    final titleFontSize =
+        isDesktop
+            ? 24.0
+            : isTablet
+            ? 22.0
+            : 20.0;
+    final subtitleFontSize =
+        isDesktop
+            ? 16.0
+            : isTablet
+            ? 15.0
+            : 14.0;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -761,8 +995,8 @@ class _LaporanKaprogState extends State<LaporanKaprog>
           top: false,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              double maxWidth =
-                  constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
+              double maxWidth = isDesktop ? 1200 : constraints.maxWidth;
+
               return Center(
                 child: SizedBox(
                   width: maxWidth,
@@ -792,9 +1026,9 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                             ),
                             child: Padding(
                               padding: EdgeInsets.fromLTRB(
-                                24,
+                                horizontalPadding,
                                 MediaQuery.of(context).padding.top + 20,
-                                24,
+                                horizontalPadding,
                                 32,
                               ),
                               child: Column(
@@ -806,8 +1040,8 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                       GestureDetector(
                                         onTap: () => Navigator.pop(context),
                                         child: Container(
-                                          width: 40,
-                                          height: 40,
+                                          width: isTablet ? 48 : 40,
+                                          height: isTablet ? 48 : 40,
                                           decoration: BoxDecoration(
                                             color: Colors.white.withOpacity(
                                               0.2,
@@ -816,83 +1050,53 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                               12,
                                             ),
                                           ),
-                                          child: const Icon(
+                                          child: Icon(
                                             Icons.arrow_back_ios_new_rounded,
                                             color: Colors.white,
-                                            size: 18,
+                                            size: isTablet ? 20 : 18,
                                           ),
                                         ),
                                       ),
-                                      Row(
-                                        children: [
-                                          GestureDetector(
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder:
-                                                      (context) =>
-                                                          const NotifikasiScreen(),
-                                                ),
-                                              );
-                                            },
-                                            child: Container(
-                                              width: 40,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(
-                                                  0.2,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                              child: const Icon(
-                                                Icons.notifications_rounded,
-                                                color: Colors.white,
-                                                size: 24,
-                                              ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      const ProfileScreen(),
                                             ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          GestureDetector(
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder:
-                                                      (context) =>
-                                                          const ProfileScreen(),
-                                                ),
-                                              );
-                                            },
-                                            child: Container(
-                                              width: 40,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(30),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withOpacity(0.1),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: const Icon(
-                                                Icons.person_rounded,
-                                                color: Color(0xFF0083EE),
-                                                size: 24,
-                                              ),
+                                          );
+                                        },
+                                        child: Container(
+                                          width: isTablet ? 48 : 40,
+                                          height: isTablet ? 48 : 40,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              30,
                                             ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(
+                                                  0.1,
+                                                ),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
                                           ),
-                                        ],
+                                          child: Icon(
+                                            Icons.person_rounded,
+                                            color: const Color(0xFF0083EE),
+                                            size: isTablet ? 26 : 24,
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 24),
+
                                   Align(
                                     alignment: Alignment.centerLeft,
                                     child: Column(
@@ -903,7 +1107,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                           'Laporan Rekap Siswa',
                                           style: GoogleFonts.poppins(
                                             color: Colors.white,
-                                            fontSize: 20,
+                                            fontSize: titleFontSize,
                                             fontWeight: FontWeight.w700,
                                             height: 1.2,
                                           ),
@@ -915,7 +1119,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                             color: Colors.white.withOpacity(
                                               0.9,
                                             ),
-                                            fontSize: 14,
+                                            fontSize: subtitleFontSize,
                                             fontWeight: FontWeight.w400,
                                           ),
                                         ),
@@ -923,10 +1127,11 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                     ),
                                   ),
                                   const SizedBox(height: 24),
+
                                   Container(
-                                    height: 50,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
+                                    height: isTablet ? 56 : 50,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: isTablet ? 24 : 20,
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
@@ -942,7 +1147,9 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                     child: Row(
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.all(8),
+                                          padding: EdgeInsets.all(
+                                            isTablet ? 10 : 8,
+                                          ),
                                           decoration: BoxDecoration(
                                             gradient: const LinearGradient(
                                               colors: [
@@ -954,10 +1161,10 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                               30,
                                             ),
                                           ),
-                                          child: const Icon(
+                                          child: Icon(
                                             Icons.search,
                                             color: Colors.white,
-                                            size: 18,
+                                            size: isTablet ? 20 : 18,
                                           ),
                                         ),
                                         const SizedBox(width: 16),
@@ -973,14 +1180,14 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                               hintText: 'Cari nama siswa...',
                                               hintStyle: GoogleFonts.poppins(
                                                 color: const Color(0xFF9CA3AF),
-                                                fontSize: 15,
+                                                fontSize: isTablet ? 16 : 15,
                                                 fontWeight: FontWeight.w400,
                                               ),
                                               border: InputBorder.none,
                                               contentPadding: EdgeInsets.zero,
                                             ),
                                             style: GoogleFonts.poppins(
-                                              fontSize: 15,
+                                              fontSize: isTablet ? 16 : 15,
                                               color: const Color(0xFF1F2937),
                                             ),
                                           ),
@@ -995,10 +1202,10 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                             },
                                             child: Container(
                                               padding: const EdgeInsets.all(4),
-                                              child: const Icon(
+                                              child: Icon(
                                                 Icons.clear,
-                                                color: Color(0xFF9CA3AF),
-                                                size: 20,
+                                                color: const Color(0xFF9CA3AF),
+                                                size: isTablet ? 22 : 20,
                                               ),
                                             ),
                                           ),
@@ -1009,121 +1216,150 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                               ),
                             ),
                           ),
+
                           Padding(
-                            padding: const EdgeInsets.all(20),
+                            padding: EdgeInsets.all(horizontalPadding),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Statistik Keseluruhan
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildStatCard(
-                                        '${_currentStudentsData.length}',
-                                        'Total Siswa',
-                                        Icons.people_outline,
-                                        const LinearGradient(
-                                          colors: [
-                                            Color(0xFF61B8FF),
-                                            Color(0xFF0083EE),
-                                          ],
+                                if (isDesktop)
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildStatCard(
+                                          '${_currentStudentsData.length}',
+                                          'Total Siswa',
+                                          Icons.people_outline,
+                                          const LinearGradient(
+                                            colors: [
+                                              Color(0xFF61B8FF),
+                                              Color(0xFF0083EE),
+                                            ],
+                                          ),
+                                          isTablet,
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: _buildStatCard(
-                                        '${_averageApresiasi.toInt()}',
-                                        'Rata-rata\nApresiasi',
-                                        Icons.check_circle_outline,
-                                        const LinearGradient(
-                                          colors: [
-                                            Color(0xFF10B981),
-                                            Color(0xFF34D399),
-                                          ],
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: _buildStatCard(
+                                          '${_averageApresiasi.toInt()}',
+                                          'Rata-rata\nApresiasi',
+                                          Icons.check_circle_outline,
+                                          const LinearGradient(
+                                            colors: [
+                                              Color(0xFF10B981),
+                                              Color(0xFF34D399),
+                                            ],
+                                          ),
+                                          isTablet,
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildProgressCard(
-                                        'Apresiasi',
-                                        '${(_apresiasiPercentage * 100).toInt()}%',
-                                        _apresiasiPercentage,
-                                        const LinearGradient(
-                                          colors: [
-                                            Color(0xFF10B981),
-                                            Color(0xFF34D399),
-                                          ],
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: _buildProgressCard(
+                                          'Apresiasi Tinggi',
+                                          '${(_apresiasiPercentage * 100).toInt()}%',
+                                          _apresiasiPercentage,
+                                          const LinearGradient(
+                                            colors: [
+                                              Color(0xFF10B981),
+                                              Color(0xFF34D399),
+                                            ],
+                                          ),
+                                          isTablet,
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: _buildProgressCard(
-                                        'Pelanggaran Rendah',
-                                        '${(_pelanggaranPercentage * 100).toInt()}%',
-                                        _pelanggaranPercentage,
-                                        const LinearGradient(
-                                          colors: [
-                                            Color(0xFFFF6B6D),
-                                            Color(0xFFFF8E8F),
-                                          ],
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: _buildProgressCard(
+                                          'Pelanggaran Rendah',
+                                          '${(_pelanggaranPercentage * 100).toInt()}%',
+                                          _pelanggaranPercentage,
+                                          const LinearGradient(
+                                            colors: [
+                                              Color(0xFFFF6B6D),
+                                              Color(0xFFFF8E8F),
+                                            ],
+                                          ),
+                                          isTablet,
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
+                                    ],
+                                  )
+                                else ...[
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildStatCard(
+                                          '${_currentStudentsData.length}',
+                                          'Total Siswa',
+                                          Icons.people_outline,
+                                          const LinearGradient(
+                                            colors: [
+                                              Color(0xFF61B8FF),
+                                              Color(0xFF0083EE),
+                                            ],
+                                          ),
+                                          isTablet,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _buildStatCard(
+                                          '${_averageApresiasi.toInt()}',
+                                          'Rata-rata\nApresiasi',
+                                          Icons.check_circle_outline,
+                                          const LinearGradient(
+                                            colors: [
+                                              Color(0xFF10B981),
+                                              Color(0xFF34D399),
+                                            ],
+                                          ),
+                                          isTablet,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildProgressCard(
+                                          'Apresiasi Tinggi',
+                                          '${(_apresiasiPercentage * 100).toInt()}%',
+                                          _apresiasiPercentage,
+                                          const LinearGradient(
+                                            colors: [
+                                              Color(0xFF10B981),
+                                              Color(0xFF34D399),
+                                            ],
+                                          ),
+                                          isTablet,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _buildProgressCard(
+                                          'Pelanggaran Rendah',
+                                          '${(_pelanggaranPercentage * 100).toInt()}%',
+                                          _pelanggaranPercentage,
+                                          const LinearGradient(
+                                            colors: [
+                                              Color(0xFFFF6B6D),
+                                              Color(0xFFFF8E8F),
+                                            ],
+                                          ),
+                                          isTablet,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                                 const SizedBox(height: 20),
 
-                                if (_selectedJurusan == 'Semua') ...[
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(20),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.06),
-                                          blurRadius: 15,
-                                          offset: const Offset(0, 5),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Ringkasan Per Jurusan',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color(0xFF1F2937),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        ..._jurusanSummary.entries.map(
-                                          (entry) => _buildJurusanSummaryCard(
-                                            entry.key,
-                                            entry.value,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                ],
-
-                                // Header Hasil Filter
                                 Container(
                                   width: double.infinity,
-                                  padding: const EdgeInsets.all(20),
+                                  padding: EdgeInsets.all(cardPadding),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(20),
@@ -1143,12 +1379,50 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(
-                                            'Hasil Filter',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w700,
-                                              color: const Color(0xFF1F2937),
+                                          Expanded(
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  padding: EdgeInsets.all(
+                                                    isTablet ? 10 : 8,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    gradient:
+                                                        const LinearGradient(
+                                                          colors: [
+                                                            Color(0xFF61B8FF),
+                                                            Color(0xFF0083EE),
+                                                          ],
+                                                        ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.filter_list,
+                                                    color: Colors.white,
+                                                    size: isTablet ? 22 : 20,
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  width: isTablet ? 16 : 12,
+                                                ),
+                                                Expanded(
+                                                  child: Text(
+                                                    'Hasil Filter',
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize:
+                                                          isTablet ? 20 : 18,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: const Color(
+                                                        0xFF1F2937,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                           Row(
@@ -1156,11 +1430,11 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                               GestureDetector(
                                                 onTap: _showFilterBottomSheet,
                                                 child: Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 16,
-                                                        vertical: 8,
-                                                      ),
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal:
+                                                        isTablet ? 20 : 16,
+                                                    vertical: isTablet ? 12 : 8,
+                                                  ),
                                                   decoration: BoxDecoration(
                                                     color: const Color(
                                                       0xFFF3F4F6,
@@ -1179,10 +1453,11 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                                     mainAxisSize:
                                                         MainAxisSize.min,
                                                     children: [
-                                                      const Icon(
+                                                      Icon(
                                                         Icons.tune,
-                                                        size: 16,
-                                                        color: Color(
+                                                        size:
+                                                            isTablet ? 18 : 16,
+                                                        color: const Color(
                                                           0xFF6B7280,
                                                         ),
                                                       ),
@@ -1191,7 +1466,10 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                                         'Filter',
                                                         style:
                                                             GoogleFonts.poppins(
-                                                              fontSize: 13,
+                                                              fontSize:
+                                                                  isTablet
+                                                                      ? 15
+                                                                      : 13,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .w600,
@@ -1209,8 +1487,8 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                               GestureDetector(
                                                 onTap: _showExportDialog,
                                                 child: Container(
-                                                  padding: const EdgeInsets.all(
-                                                    8,
+                                                  padding: EdgeInsets.all(
+                                                    isTablet ? 12 : 8,
                                                   ),
                                                   decoration: BoxDecoration(
                                                     color: const Color(
@@ -1226,10 +1504,12 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                                       ),
                                                     ),
                                                   ),
-                                                  child: const Icon(
+                                                  child: Icon(
                                                     Icons.download_rounded,
-                                                    color: Color(0xFF374151),
-                                                    size: 20,
+                                                    color: const Color(
+                                                      0xFF374151,
+                                                    ),
+                                                    size: isTablet ? 22 : 20,
                                                   ),
                                                 ),
                                               ),
@@ -1244,12 +1524,15 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                         children: [
                                           _buildFilterChip(
                                             'Jurusan: $_selectedJurusan',
+                                            isTablet,
                                           ),
                                           _buildFilterChip(
                                             'Kelas: $_selectedKelas',
+                                            isTablet,
                                           ),
                                           _buildFilterChip(
                                             'Poin: $_selectedFilter',
+                                            isTablet,
                                           ),
                                         ],
                                       ),
@@ -1258,67 +1541,34 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                 ),
                                 const SizedBox(height: 16),
 
-                                // Daftar Siswa
                                 if (_filteredAndSortedStudents.isEmpty &&
                                     _searchQuery.isNotEmpty)
-                                  Container(
-                                    padding: const EdgeInsets.all(40),
-                                    child: Column(
-                                      children: [
-                                        Icon(
-                                          Icons.search_off,
-                                          size: 64,
-                                          color: Colors.grey[400],
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          'Tidak ada siswa ditemukan',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Coba ubah kata kunci pencarian atau filter',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            color: Colors.grey[500],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
+                                  _buildEmptySearchState(isTablet)
                                 else if (_filteredAndSortedStudents.isEmpty)
-                                  Container(
-                                    padding: const EdgeInsets.all(40),
-                                    child: Column(
-                                      children: [
-                                        Icon(
-                                          Icons.filter_list_off,
-                                          size: 64,
-                                          color: Colors.grey[400],
+                                  _buildEmptyFilterState(isTablet)
+                                else if (isDesktop &&
+                                    _filteredAndSortedStudents.length > 1)
+                                  GridView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2,
+                                          crossAxisSpacing: 16,
+                                          mainAxisSpacing: 16,
+                                          childAspectRatio: 3.5,
                                         ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          'Tidak ada siswa dalam filter ini',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Coba pilih filter lain',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            color: Colors.grey[500],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    itemCount:
+                                        _filteredAndSortedStudents.length,
+                                    itemBuilder: (context, index) {
+                                      return _buildStudentCard(
+                                        _filteredAndSortedStudents[index],
+                                        index,
+                                        isTablet,
+                                        isGrid: true,
+                                      );
+                                    },
                                   )
                                 else
                                   ...List.generate(
@@ -1327,6 +1577,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                       return _buildStudentCard(
                                         _filteredAndSortedStudents[index],
                                         index,
+                                        isTablet,
                                       );
                                     },
                                   ),
@@ -1346,101 +1597,114 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     );
   }
 
-  Widget _buildJurusanSummaryCard(String jurusan, Map<String, dynamic> data) {
+  Widget _buildEmptySearchState(bool isTablet) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isTablet ? 48 : 40),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
         children: [
           Container(
-            width: 50,
-            height: 50,
+            padding: EdgeInsets.all(isTablet ? 20 : 16),
             decoration: BoxDecoration(
-              color: _getJurusanColor(jurusan).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey[100],
+              shape: BoxShape.circle,
             ),
-            child: Center(
-              child: Text(
-                jurusan,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: _getJurusanColor(jurusan),
-                ),
-              ),
+            child: Icon(
+              Icons.search_off,
+              size: isTablet ? 56 : 48,
+              color: Colors.grey[400],
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${data['totalStudents']} siswa',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1F2937),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      'Positif: ${data['positiveStudents']} ',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: const Color(0xFF10B981),
-                      ),
-                    ),
-                    Text(
-                      '| Negatif: ${data['negativeStudents']}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: const Color(0xFFFF6B6D),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+          SizedBox(height: isTablet ? 20 : 16),
+          Text(
+            'Tidak ada siswa ditemukan',
+            style: GoogleFonts.poppins(
+              fontSize: isTablet ? 18 : 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${data['avgPoints'].toInt()}',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color:
-                      data['avgPoints'] > 0
-                          ? const Color(0xFF10B981)
-                          : const Color(0xFFFF6B6D),
-                ),
-              ),
-              Text(
-                'Rata-rata',
-                style: GoogleFonts.poppins(
-                  fontSize: 10,
-                  color: const Color(0xFF6B7280),
-                ),
-              ),
-            ],
+          SizedBox(height: isTablet ? 12 : 8),
+          Text(
+            'Coba ubah kata kunci pencarian atau filter',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: isTablet ? 16 : 14,
+              color: Colors.grey[500],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChip(String label) {
+  Widget _buildEmptyFilterState(bool isTablet) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.all(isTablet ? 48 : 40),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(isTablet ? 20 : 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.filter_list_off,
+              size: isTablet ? 56 : 48,
+              color: Colors.grey[400],
+            ),
+          ),
+          SizedBox(height: isTablet ? 20 : 16),
+          Text(
+            'Tidak ada siswa dalam filter ini',
+            style: GoogleFonts.poppins(
+              fontSize: isTablet ? 18 : 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: isTablet ? 12 : 8),
+          Text(
+            'Coba pilih filter lain',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: isTablet ? 16 : 14,
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, bool isTablet) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 16 : 12,
+        vertical: isTablet ? 8 : 6,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF0083EE).withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
@@ -1449,7 +1713,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
       child: Text(
         label,
         style: GoogleFonts.poppins(
-          fontSize: 12,
+          fontSize: isTablet ? 14 : 12,
           fontWeight: FontWeight.w600,
           color: const Color(0xFF0083EE),
         ),
@@ -1457,35 +1721,15 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     );
   }
 
-  Color _getJurusanColor(String jurusan) {
-    switch (jurusan) {
-      case 'RPL':
-        return const Color(0xFF4CAF50);
-      case 'DKV':
-        return const Color(0xFF9C27B0);
-      case 'TKJ':
-        return const Color(0xFF757575);
-      case 'MP':
-        return const Color(0xFF2196F3);
-      case 'AKL':
-        return const Color(0xFFFFEB3B);
-      case 'MLOG':
-        return const Color(0xFFFF9800);
-      case 'PM':
-        return const Color(0xFFF44336);
-      default:
-        return const Color(0xFF0083EE);
-    }
-  }
-
   Widget _buildStatCard(
     String value,
     String label,
     IconData icon,
     Gradient gradient,
+    bool isTablet,
   ) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isTablet ? 24 : 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -1506,26 +1750,30 @@ class _LaporanKaprogState extends State<LaporanKaprog>
               Text(
                 value,
                 style: GoogleFonts.poppins(
-                  fontSize: 28,
+                  fontSize: isTablet ? 32 : 28,
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFF1F2937),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(isTablet ? 12 : 10),
                 decoration: BoxDecoration(
                   gradient: gradient,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: Colors.white, size: 20),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: isTablet ? 24 : 20,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: isTablet ? 12 : 8),
           Text(
             label,
             style: GoogleFonts.poppins(
-              fontSize: 12,
+              fontSize: isTablet ? 14 : 12,
               fontWeight: FontWeight.w500,
               color: const Color(0xFF6B7280),
             ),
@@ -1540,9 +1788,10 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     String percentage,
     double progress,
     Gradient gradient,
+    bool isTablet,
   ) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isTablet ? 24 : 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -1560,27 +1809,29 @@ class _LaporanKaprogState extends State<LaporanKaprog>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1F2937),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: isTablet ? 16 : 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1F2937),
+                  ),
                 ),
               ),
               Text(
                 percentage,
                 style: GoogleFonts.poppins(
-                  fontSize: 14,
+                  fontSize: isTablet ? 16 : 14,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF1F2937),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isTablet ? 16 : 12),
           Container(
-            height: 8,
+            height: isTablet ? 10 : 8,
             decoration: BoxDecoration(
               color: const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(4),
@@ -1601,7 +1852,12 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     );
   }
 
-  Widget _buildStudentCard(Map<String, dynamic> student, int index) {
+  Widget _buildStudentCard(
+    Map<String, dynamic> student,
+    int index,
+    bool isTablet, {
+    bool isGrid = false,
+  }) {
     double totalPoints =
         (student['apresiasi'] + student['pelanggaran']).toDouble();
     double apresiasiRatio =
@@ -1610,10 +1866,13 @@ class _LaporanKaprogState extends State<LaporanKaprog>
         totalPoints > 0 ? student['pelanggaran'] / totalPoints : 0;
 
     return GestureDetector(
-      onTap: () => _showStudentDetail(student),
+      onTap: () => _showStudentDetail(student, isTablet),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(20),
+        margin:
+            isGrid
+                ? EdgeInsets.zero
+                : EdgeInsets.only(bottom: isTablet ? 16 : 12),
+        padding: EdgeInsets.all(isTablet ? 24 : 20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -1632,121 +1891,116 @@ class _LaporanKaprogState extends State<LaporanKaprog>
             ),
           ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: _getJurusanColor(
-                  student['jurusan'] ?? 'RPL',
-                ).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Center(
-                child: Text(
-                  student['jurusan'] ?? 'RPL',
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: _getJurusanColor(student['jurusan'] ?? 'RPL'),
+            Row(
+              children: [
+                Container(
+                  width: isTablet ? 60 : 50,
+                  height: isTablet ? 60 : 50,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEDBCC),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    student['name'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1F2937),
+                  child: Center(
+                    child: Text(
+                      student['name'][0].toUpperCase(),
+                      style: GoogleFonts.poppins(
+                        fontSize: isTablet ? 20 : 16,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFEA580C),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Row(
+                ),
+                SizedBox(width: isTablet ? 20 : 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${student['jurusan']} ${student['kelas']} | ',
+                        student['name'],
                         style: GoogleFonts.poppins(
-                          fontSize: 11,
+                          fontSize: isTablet ? 18 : 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1F2937),
+                        ),
+                        maxLines: isGrid ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: isTablet ? 6 : 4),
+                      Text(
+                        '${student['jurusan']} ${student['kelas']} | A: ${student['apresiasi']} | P: ${student['pelanggaran']}',
+                        style: GoogleFonts.poppins(
+                          fontSize: isTablet ? 13 : 11,
                           fontWeight: FontWeight.w500,
                           color: const Color(0xFF6B7280),
                         ),
-                      ),
-                      Text(
-                        'A: ${student['apresiasi']} | P: ${student['pelanggaran']}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF0083EE),
-                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Container(
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.circular(3),
+                ),
+                SizedBox(width: isTablet ? 20 : 16),
+                Column(
+                  children: [
+                    Text(
+                      '${student['totalPoin']}',
+                      style: GoogleFonts.poppins(
+                        fontSize: isTablet ? 24 : 20,
+                        fontWeight: FontWeight.w800,
+                        color: student['color'],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: (apresiasiRatio * 100).toInt(),
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF10B981),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(3),
-                                bottomLeft: Radius.circular(3),
-                              ),
-                            ),
-                          ),
+                    Text(
+                      'Total Poin',
+                      style: GoogleFonts.poppins(
+                        fontSize: isTablet ? 12 : 10,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: isTablet ? 12 : 8),
+            Container(
+              height: isTablet ? 8 : 6,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: (apresiasiRatio * 100).toInt(),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF10B981),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(3),
+                          bottomLeft: Radius.circular(3),
                         ),
-                        Expanded(
-                          flex: (pelanggaranRatio * 100).toInt(),
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFFF6B6D),
-                              borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(3),
-                                bottomRight: Radius.circular(3),
-                              ),
-                            ),
-                          ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: (pelanggaranRatio * 100).toInt(),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFF6B6D),
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(3),
+                          bottomRight: Radius.circular(3),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 16),
-            Column(
-              children: [
-                Text(
-                  '${student['totalPoin']}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: student['color'],
-                  ),
-                ),
-                Text(
-                  'Total Poin',
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF6B7280),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -1754,7 +2008,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     );
   }
 
-  void _showStudentDetail(Map<String, dynamic> student) {
+  void _showStudentDetail(Map<String, dynamic> student, bool isTablet) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1763,7 +2017,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
       ),
       builder: (context) {
         return Container(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(isTablet ? 32 : 24),
           height: MediaQuery.of(context).size.height * 0.8,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1771,26 +2025,24 @@ class _LaporanKaprogState extends State<LaporanKaprog>
               Row(
                 children: [
                   Container(
-                    width: 60,
-                    height: 60,
+                    width: isTablet ? 80 : 60,
+                    height: isTablet ? 80 : 60,
                     decoration: BoxDecoration(
-                      color: _getJurusanColor(
-                        student['jurusan'] ?? 'RPL',
-                      ).withOpacity(0.1),
+                      color: const Color(0xFFFEDBCC),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Center(
                       child: Text(
-                        student['jurusan'] ?? 'RPL',
+                        student['name'][0].toUpperCase(),
                         style: GoogleFonts.poppins(
-                          fontSize: 14,
+                          fontSize: isTablet ? 28 : 20,
                           fontWeight: FontWeight.w700,
-                          color: _getJurusanColor(student['jurusan'] ?? 'RPL'),
+                          color: const Color(0xFFEA580C),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: isTablet ? 20 : 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1798,7 +2050,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                         Text(
                           student['name'],
                           style: GoogleFonts.poppins(
-                            fontSize: 20,
+                            fontSize: isTablet ? 24 : 20,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF1F2937),
                           ),
@@ -1806,7 +2058,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                         Text(
                           '${student['jurusan']} ${student['kelas']}',
                           style: GoogleFonts.poppins(
-                            fontSize: 14,
+                            fontSize: isTablet ? 16 : 14,
                             color: const Color(0xFF6B7280),
                           ),
                         ),
@@ -1815,13 +2067,13 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close, size: isTablet ? 28 : 24),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: isTablet ? 32 : 24),
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(isTablet ? 24 : 20),
                 decoration: BoxDecoration(
                   gradient:
                       student['isPositive']
@@ -1841,7 +2093,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                         Text(
                           '${student['totalPoin']}',
                           style: GoogleFonts.poppins(
-                            fontSize: 28,
+                            fontSize: isTablet ? 32 : 28,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                           ),
@@ -1849,7 +2101,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                         Text(
                           'Total Poin',
                           style: GoogleFonts.poppins(
-                            fontSize: 12,
+                            fontSize: isTablet ? 14 : 12,
                             color: Colors.white.withOpacity(0.9),
                           ),
                         ),
@@ -1857,7 +2109,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                     ),
                     Container(
                       width: 1,
-                      height: 40,
+                      height: isTablet ? 48 : 40,
                       color: Colors.white.withOpacity(0.3),
                     ),
                     Column(
@@ -1865,7 +2117,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                         Text(
                           '${student['apresiasi']}',
                           style: GoogleFonts.poppins(
-                            fontSize: 28,
+                            fontSize: isTablet ? 32 : 28,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                           ),
@@ -1873,7 +2125,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                         Text(
                           'Apresiasi',
                           style: GoogleFonts.poppins(
-                            fontSize: 12,
+                            fontSize: isTablet ? 14 : 12,
                             color: Colors.white.withOpacity(0.9),
                           ),
                         ),
@@ -1881,7 +2133,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                     ),
                     Container(
                       width: 1,
-                      height: 40,
+                      height: isTablet ? 48 : 40,
                       color: Colors.white.withOpacity(0.3),
                     ),
                     Column(
@@ -1889,7 +2141,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                         Text(
                           '${student['pelanggaran']}',
                           style: GoogleFonts.poppins(
-                            fontSize: 28,
+                            fontSize: isTablet ? 32 : 28,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                           ),
@@ -1897,7 +2149,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                         Text(
                           'Pelanggaran',
                           style: GoogleFonts.poppins(
-                            fontSize: 12,
+                            fontSize: isTablet ? 14 : 12,
                             color: Colors.white.withOpacity(0.9),
                           ),
                         ),
@@ -1906,20 +2158,20 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: isTablet ? 24 : 20),
               Text(
                 'Daftar Nilai',
                 style: GoogleFonts.poppins(
-                  fontSize: 16,
+                  fontSize: isTablet ? 20 : 16,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF1F2937),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: isTablet ? 16 : 12),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isTablet ? 20 : 16,
+                  vertical: isTablet ? 16 : 12,
                 ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9FAFB),
@@ -1933,7 +2185,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                       child: Text(
                         'Keterangan',
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
+                          fontSize: isTablet ? 14 : 12,
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFF6B7280),
                         ),
@@ -1944,7 +2196,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                       child: Text(
                         'Tanggal',
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
+                          fontSize: isTablet ? 14 : 12,
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFF6B7280),
                         ),
@@ -1956,7 +2208,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                         'Poin',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
+                          fontSize: isTablet ? 14 : 12,
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFF6B7280),
                         ),
@@ -1965,17 +2217,17 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: isTablet ? 12 : 8),
               Expanded(
                 child: ListView.builder(
                   itemCount: student['scores'].length,
                   itemBuilder: (context, index) {
                     final score = student['scores'][index];
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                      margin: EdgeInsets.only(bottom: isTablet ? 12 : 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 20 : 16,
+                        vertical: isTablet ? 16 : 12,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -1994,7 +2246,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                             child: Text(
                               score['keterangan'],
                               style: GoogleFonts.poppins(
-                                fontSize: 13,
+                                fontSize: isTablet ? 15 : 13,
                                 fontWeight: FontWeight.w500,
                                 color: const Color(0xFF1F2937),
                               ),
@@ -2005,7 +2257,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                             child: Text(
                               score['tanggal'],
                               style: GoogleFonts.poppins(
-                                fontSize: 12,
+                                fontSize: isTablet ? 14 : 12,
                                 color: const Color(0xFF0083EE),
                               ),
                             ),
@@ -2013,9 +2265,9 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                           Expanded(
                             flex: 1,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isTablet ? 12 : 8,
+                                vertical: isTablet ? 6 : 4,
                               ),
                               decoration: BoxDecoration(
                                 color:
@@ -2032,7 +2284,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                 '${score['poin']}',
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.poppins(
-                                  fontSize: 12,
+                                  fontSize: isTablet ? 14 : 12,
                                   fontWeight: FontWeight.w600,
                                   color:
                                       score['type'] == 'apresiasi'

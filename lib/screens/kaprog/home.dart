@@ -365,7 +365,6 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                         ),
                                       ),
                                     ),
-                                    // Profile button only (no notification button for Kaprog)
                                     GestureDetector(
                                       onTap: () {
                                         Navigator.push(

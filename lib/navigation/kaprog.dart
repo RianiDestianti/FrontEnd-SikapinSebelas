@@ -61,11 +61,16 @@ class _KaprogNavigationState extends State<KaprogNavigation> {
         ],
       ),
       child: Row(
-        children: _items.map((item) => NavigationItem(
-          item: item,
-          currentIndex: widget.currentIndex,
-          onTap: widget.onTap,
-        )).toList(),
+        children:
+            _items
+                .map(
+                  (item) => NavigationItem(
+                    item: item,
+                    currentIndex: widget.currentIndex,
+                    onTap: widget.onTap,
+                  ),
+                )
+                .toList(),
       ),
     );
   }
@@ -165,10 +170,7 @@ class NavItemContent extends StatelessWidget {
               activeIcon: activeIcon,
             ),
             const SizedBox(height: 6),
-            AnimatedLabel(
-              isActive: isActive,
-              label: label,
-            ),
+            AnimatedLabel(isActive: isActive, label: label),
           ],
         ),
       ),
@@ -206,11 +208,8 @@ class AnimatedLabel extends StatelessWidget {
   final bool isActive;
   final String label;
 
-  const AnimatedLabel({
-    Key? key,
-    required this.isActive,
-    required this.label,
-  }) : super(key: key);
+  const AnimatedLabel({Key? key, required this.isActive, required this.label})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {

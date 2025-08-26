@@ -220,7 +220,6 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Header dengan gradient sampai ke atas
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -244,12 +243,10 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
                     child: Column(
                       children: [
-                        // Status bar padding
                         SizedBox(
                           height: MediaQuery.of(context).padding.top + 20,
                         ),
 
-                        // Header bar
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -282,7 +279,6 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                         ),
                         const SizedBox(height: 32),
 
-                        // Student profile card
                         SlideTransition(
                           position: _slideAnimation,
                           child: Container(
@@ -301,7 +297,6 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                             ),
                             child: Column(
                               children: [
-                                // Avatar
                                 Container(
                                   width: 80,
                                   height: 80,
@@ -331,7 +326,6 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                                 ),
                                 const SizedBox(height: 20),
 
-                                // Student name
                                 Text(
                                   detailedStudent['name'],
                                   style: GoogleFonts.poppins(
@@ -342,7 +336,6 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                                 ),
                                 const SizedBox(height: 8),
 
-                                // Class and program
                                 Text(
                                   '${detailedStudent['kelas']} - ${detailedStudent['program_keahlian']}',
                                   style: GoogleFonts.poppins(
@@ -353,7 +346,6 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                                 ),
                                 const SizedBox(height: 16),
 
-                                // Status badge
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.symmetric(
@@ -407,17 +399,14 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                   ),
                 ),
 
-                // Biodata Section
                 BiodataSection(student: detailedStudent),
 
-                // Tab Section
                 TabSection(
                   selectedTab: _selectedTab,
                   onTabSelected:
                       (index) => setState(() => _selectedTab = index),
                 ),
 
-                // Tab Content Section
                 TabContentSection(
                   selectedTab: _selectedTab,
                   pelanggaranHistory: pelanggaranHistory,
@@ -434,7 +423,6 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
   }
 }
 
-// History Item class
 class HistoryItem {
   final String type;
   final String description;
@@ -459,7 +447,6 @@ class HistoryItem {
   });
 }
 
-// Akumulasi Item class
 class AkumulasiItem {
   final String periode;
   final int pelanggaran;
@@ -478,7 +465,6 @@ class AkumulasiItem {
   });
 }
 
-// Biodata Section Widget
 class BiodataSection extends StatelessWidget {
   final Map<String, dynamic> student;
 
@@ -576,7 +562,6 @@ class BiodataSection extends StatelessWidget {
   }
 }
 
-// Biodata Row Widget
 class BiodataRow extends StatelessWidget {
   final String label;
   final String value;
@@ -636,7 +621,6 @@ class BiodataRow extends StatelessWidget {
   }
 }
 
-// Tab Section Widget
 class TabSection extends StatelessWidget {
   final int selectedTab;
   final Function(int) onTabSelected;
@@ -691,7 +675,6 @@ class TabSection extends StatelessWidget {
   }
 }
 
-// Tab Button Widget
 class TabButton extends StatelessWidget {
   final String text;
   final int index;
@@ -734,7 +717,6 @@ class TabButton extends StatelessWidget {
   }
 }
 
-// Tab Content Section Widget
 class TabContentSection extends StatelessWidget {
   final int selectedTab;
   final List<HistoryItem> pelanggaranHistory;
@@ -768,7 +750,6 @@ class TabContentSection extends StatelessWidget {
   }
 }
 
-// Pelanggaran Content Widget
 class PelanggaranContent extends StatelessWidget {
   final List<HistoryItem> history;
   final Map<String, dynamic> student;
@@ -815,7 +796,6 @@ class PelanggaranContent extends StatelessWidget {
   }
 }
 
-// Apresiasi Content Widget
 class ApresiasiContent extends StatelessWidget {
   final List<HistoryItem> history;
   final Map<String, dynamic> student;
@@ -862,7 +842,6 @@ class ApresiasiContent extends StatelessWidget {
   }
 }
 
-// History Card untuk Kaprog (tanpa kemampuan edit/delete)
 class KaprogHistoryCard extends StatelessWidget {
   final HistoryItem item;
   final bool isPelanggaran;
@@ -879,7 +858,6 @@ class KaprogHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Navigate to history screen saat card diklik
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -966,7 +944,6 @@ class KaprogHistoryCard extends StatelessWidget {
   }
 }
 
-// History Details Widget
 class HistoryDetails extends StatelessWidget {
   final String date;
   final String time;
@@ -1036,7 +1013,6 @@ class HistoryDetails extends StatelessWidget {
   }
 }
 
-// Akumulasi Content Widget
 class AkumulasiContent extends StatelessWidget {
   final List<AkumulasiItem> history;
 
@@ -1064,7 +1040,6 @@ class AkumulasiContent extends StatelessWidget {
   }
 }
 
-// Akumulasi Card Widget
 class AkumulasiCard extends StatelessWidget {
   final AkumulasiItem item;
 
@@ -1151,7 +1126,6 @@ class AkumulasiCard extends StatelessWidget {
   }
 }
 
-// Status Tag Widget
 class StatusTag extends StatelessWidget {
   final String status;
   final Color statusColor;
@@ -1179,7 +1153,6 @@ class StatusTag extends StatelessWidget {
   }
 }
 
-// Point Summary Widget
 class PointSummary extends StatelessWidget {
   final int pelanggaran;
   final int apresiasi;
@@ -1221,7 +1194,6 @@ class PointSummary extends StatelessWidget {
   }
 }
 
-// Point Card Widget
 class PointCard extends StatelessWidget {
   final String title;
   final String value;
@@ -1273,7 +1245,6 @@ class PointCard extends StatelessWidget {
   }
 }
 
-// Point Progress Bar Widget
 class PointProgressBar extends StatelessWidget {
   final int pelanggaran;
   final int apresiasi;
@@ -1331,7 +1302,6 @@ class PointProgressBar extends StatelessWidget {
   }
 }
 
-// Empty State Widget
 class EmptyState extends StatelessWidget {
   final String message;
   final IconData icon;

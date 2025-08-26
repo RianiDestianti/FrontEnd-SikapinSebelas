@@ -52,7 +52,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
   String _selectedTimeFilter = 'Semua';
   bool _showOnlyNew = false;
 
-  // Add TextEditingController for search
   final TextEditingController searchController = TextEditingController();
   List<HistoryItem> searchResults = [];
 
@@ -1222,7 +1221,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
     );
   }
 
-  // Kaprog History Card - TANPA TOMBOL EDIT/DELETE
   Widget _buildKaprogHistoryCard(HistoryItem item) {
     bool isPelanggaran = item.isPelanggaran;
 
@@ -1360,8 +1358,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
               ],
             ),
 
-            // TIDAK ADA TOMBOL EDIT/DELETE UNTUK KAPROG
-            // Hanya menampilkan informasi view-only
             const SizedBox(height: 16),
             
             Container(
