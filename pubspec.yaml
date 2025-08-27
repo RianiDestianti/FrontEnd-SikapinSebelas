@@ -46,6 +46,7 @@ dependencies:
   share_plus: ^7.2.1
   open_file: ^3.3.2
   device_info_plus: ^9.1.0
+  http: ^1.2.2
 
 
 dev_dependencies:

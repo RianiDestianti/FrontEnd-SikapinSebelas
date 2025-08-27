@@ -1052,7 +1052,6 @@ class NotificationDetailWidget extends StatelessWidget {
                   ),
                   SizedBox(height: padding),
 
-                  // Student and Action Info
                   Row(
                     children: [
                       Expanded(
@@ -1123,7 +1122,6 @@ class NotificationDetailWidget extends StatelessWidget {
                     ],
                   ),
 
-                  // Conditional Information based on notification type
                   SizedBox(height: padding),
                   if (notification['type'] == 'violation' ||
                       notification['type'] == 'violation_repeat') ...[

@@ -338,7 +338,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 'nama_ortu': siswa.namaOrtu,
                 'no_hp_ortu': siswa.noHpOrtu,
               },
-              // initialTab: siswa.poin < 0 ? 'pelanggaran' : 'apresiasi',
             ),
       ),
     );

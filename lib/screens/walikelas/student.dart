@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'detail.dart';
 import 'package:skoring/screens/walikelas/notification.dart';
 import 'package:skoring/screens/profile.dart';
+import 'package:skoring/models/api_kelas.dart';
 
 class Student {
   final String name;
@@ -30,24 +33,98 @@ class SiswaScreen extends StatefulWidget {
   State<SiswaScreen> createState() => _SiswaScreenState();
 }
 
-class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin {
+class _SiswaScreenState extends State<SiswaScreen>
+    with TickerProviderStateMixin {
   int _selectedFilter = 0;
   String _searchQuery = '';
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   TextEditingController _searchController = TextEditingController();
+  Kelas? selectedKelas;
+  bool isLoadingKelas = true;
+  String? errorMessageKelas;
 
   final List<Student> students = [
-    Student(name: "Ahmad Sudarji", nisn: "23000001", status: "Aman", points: 20, absent: 2, absen: 1),
-    Student(name: "Agus Berto", nisn: "23000002", status: "Aman", points: 0, absent: 0, absen: 2),
-    Student(name: "Bobby Dasta", nisn: "23000003", status: "Bermasalah", points: -15, absent: 5, absen: 3),
-    Student(name: "Berto", nisn: "23000004", status: "Prioritas", points: -25, absent: 8, absen: 4),
-    Student(name: "Celine Agustinus", nisn: "23000006", status: "Aman", points: 10, absent: 1, absen: 5),
-    Student(name: "Diana Sari", nisn: "23000007", status: "Aman", points: 15, absent: 1, absen: 6),
-    Student(name: "Eko Prasetyo", nisn: "23000008", status: "Bermasalah", points: -10, absent: 7, absen: 7),
-    Student(name: "Fitri Handayani", nisn: "23000009", status: "Aman", points: 25, absent: 0, absen: 8),
-    Student(name: "Gilang Ramadan", nisn: "23000010", status: "Prioritas", points: -30, absent: 10, absen: 9),
-    Student(name: "Haniatul Kamilah", nisn: "23000011", status: "Aman", points: 18, absent: 2, absen: 10),
+    Student(
+      name: "Ahmad Sudarji",
+      nisn: "23000001",
+      status: "Aman",
+      points: 20,
+      absent: 2,
+      absen: 1,
+    ),
+    Student(
+      name: "Agus Berto",
+      nisn: "23000002",
+      status: "Aman",
+      points: 0,
+      absent: 0,
+      absen: 2,
+    ),
+    Student(
+      name: "Bobby Dasta",
+      nisn: "23000003",
+      status: "Bermasalah",
+      points: -15,
+      absent: 5,
+      absen: 3,
+    ),
+    Student(
+      name: "Berto",
+      nisn: "23000004",
+      status: "Prioritas",
+      points: -25,
+      absent: 8,
+      absen: 4,
+    ),
+    Student(
+      name: "Celine Agustinus",
+      nisn: "23000006",
+      status: "Aman",
+      points: 10,
+      absent: 1,
+      absen: 5,
+    ),
+    Student(
+      name: "Diana Sari",
+      nisn: "23000007",
+      status: "Aman",
+      points: 15,
+      absent: 1,
+      absen: 6,
+    ),
+    Student(
+      name: "Eko Prasetyo",
+      nisn: "23000008",
+      status: "Bermasalah",
+      points: -10,
+      absent: 7,
+      absen: 7,
+    ),
+    Student(
+      name: "Fitri Handayani",
+      nisn: "23000009",
+      status: "Aman",
+      points: 25,
+      absent: 0,
+      absen: 8,
+    ),
+    Student(
+      name: "Gilang Ramadan",
+      nisn: "23000010",
+      status: "Prioritas",
+      points: -30,
+      absent: 10,
+      absen: 9,
+    ),
+    Student(
+      name: "Haniatul Kamilah",
+      nisn: "23000011",
+      status: "Aman",
+      points: 18,
+      absent: 2,
+      absen: 10,
+    ),
   ];
 
   @override
@@ -61,6 +138,55 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
+    fetchKelas();
+  }
+
+  Future<void> fetchKelas() async {
+    setState(() {
+      isLoadingKelas = true;
+      errorMessageKelas = null;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/kelas'),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['success']) {
+          List<dynamic> data = jsonData['data'];
+          if (data.isNotEmpty) {
+            setState(() {
+              selectedKelas = Kelas.fromJson(
+                data[0],
+              ); // Use first class for now
+              isLoadingKelas = false;
+            });
+          } else {
+            setState(() {
+              errorMessageKelas = 'Tidak ada data kelas ditemukan';
+              isLoadingKelas = false;
+            });
+          }
+        } else {
+          setState(() {
+            errorMessageKelas = jsonData['message'];
+            isLoadingKelas = false;
+          });
+        }
+      } else {
+        setState(() {
+          errorMessageKelas = 'Gagal mengambil data kelas dari server';
+          isLoadingKelas = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessageKelas = 'Terjadi kesalahan: $e';
+        isLoadingKelas = false;
+      });
+    }
   }
 
   @override
@@ -76,16 +202,21 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
     if (_selectedFilter == 1) {
       filtered = filtered.where((s) => s.status == 'Aman').toList();
     } else if (_selectedFilter == 2) {
-      filtered = filtered.where((s) =>
-        s.status == 'Bermasalah' || s.status == 'Prioritas'
-      ).toList();
+      filtered =
+          filtered
+              .where((s) => s.status == 'Bermasalah' || s.status == 'Prioritas')
+              .toList();
     }
 
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((s) =>
-        s.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-        s.nisn.contains(_searchQuery)
-      ).toList();
+      filtered =
+          filtered
+              .where(
+                (s) =>
+                    s.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                    s.nisn.contains(_searchQuery),
+              )
+              .toList();
     }
 
     return filtered;
@@ -95,14 +226,17 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DetailScreen(student: {
-          'name': student.name,
-          'nisn': student.nisn,
-          'status': student.status,
-          'points': student.points,
-          'absent': student.absent,
-          'absen': student.absen,
-        }),
+        builder:
+            (context) => DetailScreen(
+              student: {
+                'name': student.name,
+                'nisn': student.nisn,
+                'status': student.status,
+                'points': student.points,
+                'absent': student.absent,
+                'absen': student.absen,
+              },
+            ),
       ),
     );
   }
@@ -120,7 +254,8 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
         backgroundColor: const Color(0xFFF8FAFC),
         body: LayoutBuilder(
           builder: (context, constraints) {
-            double maxWidth = constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
+            double maxWidth =
+                constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
             return Center(
               child: SizedBox(
                 width: maxWidth,
@@ -149,11 +284,17 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                             ],
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(24, MediaQuery.of(context).padding.top + 20, 24, 32),
+                            padding: EdgeInsets.fromLTRB(
+                              24,
+                              MediaQuery.of(context).padding.top + 20,
+                              24,
+                              32,
+                            ),
                             child: Column(
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     GestureDetector(
                                       onTap: () {
@@ -164,7 +305,9 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                                         height: 40,
                                         decoration: BoxDecoration(
                                           color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: const Icon(
                                           Icons.arrow_back_ios_new_rounded,
@@ -180,7 +323,9 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (context) => const NotifikasiScreen(),
+                                                builder:
+                                                    (context) =>
+                                                        const NotifikasiScreen(),
                                               ),
                                             );
                                           },
@@ -188,8 +333,11 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                                             width: 40,
                                             height: 40,
                                             decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.2),
-                                              borderRadius: BorderRadius.circular(12),
+                                              color: Colors.white.withOpacity(
+                                                0.2,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
                                             child: const Icon(
                                               Icons.notifications_rounded,
@@ -204,7 +352,9 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (context) => const ProfileScreen(),
+                                                builder:
+                                                    (context) =>
+                                                        const ProfileScreen(),
                                               ),
                                             );
                                           },
@@ -213,10 +363,12 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                                             height: 40,
                                             decoration: BoxDecoration(
                                               color: Colors.white,
-                                              borderRadius: BorderRadius.circular(30),
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black.withOpacity(0.1),
+                                                  color: Colors.black
+                                                      .withOpacity(0.1),
                                                   blurRadius: 8,
                                                   offset: const Offset(0, 2),
                                                 ),
@@ -234,38 +386,57 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                                   ],
                                 ),
                                 const SizedBox(height: 24),
-
                                 Align(
                                   alignment: Alignment.centerLeft,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Daftar Siswa XI RPL 2',
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700,
-                                          height: 1.2,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        'Semester Ganjil 2025/2026',
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.white.withOpacity(0.9),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                  child:
+                                      isLoadingKelas
+                                          ? const CircularProgressIndicator(
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
+                                          )
+                                          : errorMessageKelas != null
+                                          ? Text(
+                                            errorMessageKelas!,
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          )
+                                          : Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Daftar Siswa ${selectedKelas!.namaKelas}',
+                                                style: GoogleFonts.poppins(
+                                                  color: Colors.white,
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w700,
+                                                  height: 1.2,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                'Jurusan: ${selectedKelas!.jurusan.toUpperCase()} - Semester Ganjil 2025/2026',
+                                                style: GoogleFonts.poppins(
+                                                  color: Colors.white
+                                                      .withOpacity(0.9),
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w400,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                 ),
                                 const SizedBox(height: 24),
-
                                 Container(
                                   height: 50,
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(25),
@@ -283,11 +454,20 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           gradient: const LinearGradient(
-                                            colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                            colors: [
+                                              Color(0xFF61B8FF),
+                                              Color(0xFF0083EE),
+                                            ],
                                           ),
-                                          borderRadius: BorderRadius.circular(30),
+                                          borderRadius: BorderRadius.circular(
+                                            30,
+                                          ),
                                         ),
-                                        child: const Icon(Icons.search, color: Colors.white, size: 18),
+                                        child: const Icon(
+                                          Icons.search,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
                                       ),
                                       const SizedBox(width: 16),
                                       Expanded(
@@ -334,7 +514,6 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                                     ],
                                   ),
                                 ),
-
                                 const SizedBox(height: 20),
                                 Row(
                                   children: [
@@ -349,12 +528,12 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                             ),
                           ),
                         ),
-
                         Padding(
                           padding: const EdgeInsets.all(20),
                           child: Column(
                             children: [
-                              if (_searchQuery.isNotEmpty || _selectedFilter != 0)
+                              if (_searchQuery.isNotEmpty ||
+                                  _selectedFilter != 0)
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(16),
@@ -389,14 +568,19 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                                     ],
                                   ),
                                 ),
-
                               filteredStudents.isEmpty
                                   ? _buildEmptyState()
                                   : Column(
-                                      children: filteredStudents.asMap().entries.map((entry) {
-                                        return _buildStudentCard(entry.value, entry.key);
-                                      }).toList(),
-                                    ),
+                                    children:
+                                        filteredStudents.asMap().entries.map((
+                                          entry,
+                                        ) {
+                                          return _buildStudentCard(
+                                            entry.value,
+                                            entry.key,
+                                          );
+                                        }).toList(),
+                                  ),
                             ],
                           ),
                         ),
@@ -423,13 +607,16 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
           decoration: BoxDecoration(
             color: isActive ? Colors.white : Colors.white.withOpacity(0.2),
             borderRadius: BorderRadius.circular(20),
-            boxShadow: isActive ? [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ] : null,
+            boxShadow:
+                isActive
+                    ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                    : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -440,7 +627,9 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                   height: 8,
                   margin: const EdgeInsets.only(right: 8),
                   decoration: const BoxDecoration(
-                    gradient: LinearGradient(colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)]),
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                    ),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -450,7 +639,9 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                   height: 8,
                   margin: const EdgeInsets.only(right: 8),
                   decoration: const BoxDecoration(
-                    gradient: LinearGradient(colors: [Color(0xFF10B981), Color(0xFF34D399)]),
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                    ),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -460,17 +651,23 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
                   height: 8,
                   margin: const EdgeInsets.only(right: 8),
                   decoration: const BoxDecoration(
-                    gradient: LinearGradient(colors: [Color(0xFFEA580C), Color(0xFFFF6B6D)]),
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFEA580C), Color(0xFFFF6B6D)],
+                    ),
                     shape: BoxShape.circle,
                   ),
                 ),
               Text(
                 text,
                 style: GoogleFonts.poppins(
-                  color: isActive
-                    ? (index == 0 ? const Color(0xFF1F2937) :
-                      index == 1 ? const Color(0xFF10B981) : const Color(0xFFEA580C))
-                    : Colors.white,
+                  color:
+                      isActive
+                          ? (index == 0
+                              ? const Color(0xFF1F2937)
+                              : index == 1
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFEA580C))
+                          : Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -524,7 +721,6 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
               ),
             ),
             const SizedBox(width: 16),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -550,7 +746,6 @@ class _SiswaScreenState extends State<SiswaScreen> with TickerProviderStateMixin
               ),
             ),
             const SizedBox(width: 16),
-
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [

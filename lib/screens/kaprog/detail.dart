@@ -1257,6 +1257,7 @@ class PointProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     final total = pelanggaran.abs() + apresiasi;
     final pelanggaranWidth =
         total > 0

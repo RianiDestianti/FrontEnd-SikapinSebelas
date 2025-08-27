@@ -83,7 +83,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // Add the logout handler method
   void _handleLogout() {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(

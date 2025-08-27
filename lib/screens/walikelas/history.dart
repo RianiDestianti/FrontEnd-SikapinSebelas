@@ -52,7 +52,6 @@ class _HistoryScreenState extends State<HistoryScreen>
   String _selectedTimeFilter = 'Semua';
   bool _showOnlyNew = false;
 
-  // Data kategori berdasarkan FAQ
   final Map<String, List<Map<String, String>>> _categories = {
     'Prestasi': [
       {'value': 'R1', 'title': 'Pengembangan Keagamaan'},
@@ -746,7 +745,6 @@ class _HistoryScreenState extends State<HistoryScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Header Section
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
@@ -821,7 +819,6 @@ class _HistoryScreenState extends State<HistoryScreen>
                       ),
                     ),
 
-                    // Form Section
                     Flexible(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(24),
@@ -863,7 +860,6 @@ class _HistoryScreenState extends State<HistoryScreen>
                             ),
                             const SizedBox(height: 16),
 
-                            // Description Field
                             _buildCustomTextField(
                               controller: descriptionController,
                               hint:
@@ -873,7 +869,6 @@ class _HistoryScreenState extends State<HistoryScreen>
                             ),
                             const SizedBox(height: 16),
 
-                            // Date Field
                             _buildCustomTextField(
                               controller: dateController,
                               hint: 'Tanggal',
@@ -910,7 +905,6 @@ class _HistoryScreenState extends State<HistoryScreen>
                             ),
                             const SizedBox(height: 16),
 
-                            // Reporter Field
                             _buildCustomTextField(
                               controller: reporterController,
                               hint: isPelanggaran ? 'Pelapor' : 'Pemberi',
@@ -918,7 +912,6 @@ class _HistoryScreenState extends State<HistoryScreen>
                             ),
                             const SizedBox(height: 16),
 
-                            // Points Field
                             _buildCustomTextField(
                               controller: pointsController,
                               hint: 'Poin',
@@ -938,7 +931,6 @@ class _HistoryScreenState extends State<HistoryScreen>
                       ),
                     ),
 
-                    // Action Buttons
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                       child: Row(
@@ -973,7 +965,6 @@ class _HistoryScreenState extends State<HistoryScreen>
                           Expanded(
                             child: GestureDetector(
                               onTap: () {
-                                // Validate points input
                                 if (pointsController.text.isEmpty ||
                                     int.tryParse(pointsController.text) ==
                                         null) {

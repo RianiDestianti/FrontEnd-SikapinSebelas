@@ -55,7 +55,8 @@ class KaprogHomeScreen extends StatefulWidget {
   State<KaprogHomeScreen> createState() => _KaprogHomeScreenState();
 }
 
-class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProviderStateMixin {
+class _KaprogHomeScreenState extends State<KaprogHomeScreen>
+    with TickerProviderStateMixin {
   int _selectedTab = 0;
   int _apresiasiChartTab = 0;
   int _pelanggaranChartTab = 0;
@@ -252,22 +253,24 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
         _filteredSiswaBerat = _siswaBerat;
       } else {
         final searchLower = query.toLowerCase();
-        _filteredSiswaTerbaik = _siswaTerbaik.where((siswa) {
-          final namaLower = siswa.name.toLowerCase();
-          final kelasLower = siswa.kelas.toLowerCase();
-          final prestasiLower = siswa.prestasi.toLowerCase();
-          return namaLower.contains(searchLower) ||
-              kelasLower.contains(searchLower) ||
-              prestasiLower.contains(searchLower);
-        }).toList();
-        _filteredSiswaBerat = _siswaBerat.where((siswa) {
-          final namaLower = siswa.name.toLowerCase();
-          final kelasLower = siswa.kelas.toLowerCase();
-          final prestasiLower = siswa.prestasi.toLowerCase();
-          return namaLower.contains(searchLower) ||
-              kelasLower.contains(searchLower) ||
-              prestasiLower.contains(searchLower);
-        }).toList();
+        _filteredSiswaTerbaik =
+            _siswaTerbaik.where((siswa) {
+              final namaLower = siswa.name.toLowerCase();
+              final kelasLower = siswa.kelas.toLowerCase();
+              final prestasiLower = siswa.prestasi.toLowerCase();
+              return namaLower.contains(searchLower) ||
+                  kelasLower.contains(searchLower) ||
+                  prestasiLower.contains(searchLower);
+            }).toList();
+        _filteredSiswaBerat =
+            _siswaBerat.where((siswa) {
+              final namaLower = siswa.name.toLowerCase();
+              final kelasLower = siswa.kelas.toLowerCase();
+              final prestasiLower = siswa.prestasi.toLowerCase();
+              return namaLower.contains(searchLower) ||
+                  kelasLower.contains(searchLower) ||
+                  prestasiLower.contains(searchLower);
+            }).toList();
       }
     });
   }
@@ -276,23 +279,24 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => KaprogDetailScreen(
-          student: {
-            'name': siswa.name,
-            'status': siswa.status,
-            'nis': siswa.nis,
-            'ttl': siswa.ttl,
-            'jenkel': siswa.jenkel,
-            'alamat': siswa.alamat,
-            'program_keahlian': siswa.programKeahlian,
-            'kelas': siswa.kelas,
-            'tahun_masuk': siswa.tahunMasuk,
-            'no_hp': siswa.noHp,
-            'email': siswa.email,
-            'nama_ortu': siswa.namaOrtu,
-            'no_hp_ortu': siswa.noHpOrtu,
-          },
-        ),
+        builder:
+            (context) => KaprogDetailScreen(
+              student: {
+                'name': siswa.name,
+                'status': siswa.status,
+                'nis': siswa.nis,
+                'ttl': siswa.ttl,
+                'jenkel': siswa.jenkel,
+                'alamat': siswa.alamat,
+                'program_keahlian': siswa.programKeahlian,
+                'kelas': siswa.kelas,
+                'tahun_masuk': siswa.tahunMasuk,
+                'no_hp': siswa.noHp,
+                'email': siswa.email,
+                'nama_ortu': siswa.namaOrtu,
+                'no_hp_ortu': siswa.noHpOrtu,
+              },
+            ),
       ),
     );
   }
@@ -347,7 +351,8 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                             child: Column(
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     GestureDetector(
                                       onTap: () => Navigator.pop(context),
@@ -356,7 +361,9 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                         height: 40,
                                         decoration: BoxDecoration(
                                           color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: const Icon(
                                           Icons.arrow_back_ios_new_rounded,
@@ -370,7 +377,9 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => const ProfileScreen(),
+                                            builder:
+                                                (context) =>
+                                                    const ProfileScreen(),
                                           ),
                                         );
                                       },
@@ -379,10 +388,14 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                         height: 40,
                                         decoration: BoxDecoration(
                                           color: Colors.white,
-                                          borderRadius: BorderRadius.circular(30),
+                                          borderRadius: BorderRadius.circular(
+                                            30,
+                                          ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.black.withOpacity(0.1),
+                                              color: Colors.black.withOpacity(
+                                                0.1,
+                                              ),
                                               blurRadius: 8,
                                               offset: const Offset(0, 2),
                                             ),
@@ -401,7 +414,8 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Hello, Pak Budi! 👋',
@@ -427,7 +441,9 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                 const SizedBox(height: 24),
                                 Container(
                                   height: 50,
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(25),
@@ -445,9 +461,14 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           gradient: const LinearGradient(
-                                            colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                            colors: [
+                                              Color(0xFF61B8FF),
+                                              Color(0xFF0083EE),
+                                            ],
                                           ),
-                                          borderRadius: BorderRadius.circular(30),
+                                          borderRadius: BorderRadius.circular(
+                                            30,
+                                          ),
                                         ),
                                         child: const Icon(
                                           Icons.search,
@@ -460,7 +481,8 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                         child: TextField(
                                           onChanged: _filterSiswa,
                                           decoration: InputDecoration(
-                                            hintText: 'Cari siswa, kelas, atau aktivitas...',
+                                            hintText:
+                                                'Cari siswa, kelas, atau aktivitas...',
                                             hintStyle: GoogleFonts.poppins(
                                               color: const Color(0xFF9CA3AF),
                                               fontSize: 15,
@@ -508,30 +530,38 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                   'Pencapaian positif minggu ini',
                                   Icons.trending_up,
                                   const LinearGradient(
-                                    colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                    colors: [
+                                      Color(0xFF61B8FF),
+                                      Color(0xFF0083EE),
+                                    ],
                                   ),
                                   _buildBarChart(
                                     _apresiasiChartTab == 0
                                         ? [
-                                            {'value': 80.0, 'label': 'Sen'},
-                                            {'value': 120.0, 'label': 'Sel'},
-                                            {'value': 90.0, 'label': 'Rab'},
-                                            {'value': 40.0, 'label': 'Kam'},
-                                            {'value': 100.0, 'label': 'Jum'},
-                                          ]
+                                          {'value': 80.0, 'label': 'Sen'},
+                                          {'value': 120.0, 'label': 'Sel'},
+                                          {'value': 90.0, 'label': 'Rab'},
+                                          {'value': 40.0, 'label': 'Kam'},
+                                          {'value': 100.0, 'label': 'Jum'},
+                                        ]
                                         : [
-                                            {'value': 320.0, 'label': 'Jan'},
-                                            {'value': 480.0, 'label': 'Feb'},
-                                            {'value': 360.0, 'label': 'Mar'},
-                                            {'value': 160.0, 'label': 'Apr'},
-                                            {'value': 400.0, 'label': 'May'},
-                                          ],
+                                          {'value': 320.0, 'label': 'Jan'},
+                                          {'value': 480.0, 'label': 'Feb'},
+                                          {'value': 360.0, 'label': 'Mar'},
+                                          {'value': 160.0, 'label': 'Apr'},
+                                          {'value': 400.0, 'label': 'May'},
+                                        ],
                                     const LinearGradient(
-                                      colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                      colors: [
+                                        Color(0xFF61B8FF),
+                                        Color(0xFF0083EE),
+                                      ],
                                     ),
                                   ),
                                   _apresiasiChartTab,
-                                  (index) => setState(() => _apresiasiChartTab = index),
+                                  (index) => setState(
+                                    () => _apresiasiChartTab = index,
+                                  ),
                                   true,
                                 ),
                                 const SizedBox(height: 20),
@@ -540,30 +570,38 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                   'Monitoring pelanggaran minggu ini',
                                   Icons.warning_amber_rounded,
                                   const LinearGradient(
-                                    colors: [Color(0xFFF2D6D7), Color(0xFFFF6B6D)],
+                                    colors: [
+                                      Color(0xFFF2D6D7),
+                                      Color(0xFFFF6B6D),
+                                    ],
                                   ),
                                   _buildBarChart(
                                     _pelanggaranChartTab == 0
                                         ? [
-                                            {'value': 60.0, 'label': 'Sen'},
-                                            {'value': 25.0, 'label': 'Sel'},
-                                            {'value': 15.0, 'label': 'Rab'},
-                                            {'value': 10.0, 'label': 'Kam'},
-                                            {'value': 20.0, 'label': 'Jum'},
-                                          ]
+                                          {'value': 60.0, 'label': 'Sen'},
+                                          {'value': 25.0, 'label': 'Sel'},
+                                          {'value': 15.0, 'label': 'Rab'},
+                                          {'value': 10.0, 'label': 'Kam'},
+                                          {'value': 20.0, 'label': 'Jum'},
+                                        ]
                                         : [
-                                            {'value': 240.0, 'label': 'Jan'},
-                                            {'value': 100.0, 'label': 'Feb'},
-                                            {'value': 60.0, 'label': 'Mar'},
-                                            {'value': 40.0, 'label': 'Apr'},
-                                            {'value': 80.0, 'label': 'May'},
-                                          ],
+                                          {'value': 240.0, 'label': 'Jan'},
+                                          {'value': 100.0, 'label': 'Feb'},
+                                          {'value': 60.0, 'label': 'Mar'},
+                                          {'value': 40.0, 'label': 'Apr'},
+                                          {'value': 80.0, 'label': 'May'},
+                                        ],
                                     const LinearGradient(
-                                      colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                                      colors: [
+                                        Color(0xFFFF6B6D),
+                                        Color(0xFFFF8E8F),
+                                      ],
                                     ),
                                   ),
                                   _pelanggaranChartTab,
-                                  (index) => setState(() => _pelanggaranChartTab = index),
+                                  (index) => setState(
+                                    () => _pelanggaranChartTab = index,
+                                  ),
                                   false,
                                 ),
                                 const SizedBox(height: 20),
@@ -572,7 +610,8 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => const ActivityScreen(),
+                                        builder:
+                                            (context) => const ActivityScreen(),
                                       ),
                                     );
                                   },
@@ -591,7 +630,8 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                       ],
                                     ),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           children: [
@@ -599,9 +639,13 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                               padding: const EdgeInsets.all(12),
                                               decoration: BoxDecoration(
                                                 gradient: const LinearGradient(
-                                                  colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                                  colors: [
+                                                    Color(0xFF61B8FF),
+                                                    Color(0xFF0083EE),
+                                                  ],
                                                 ),
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                               child: const Icon(
                                                 Icons.history,
@@ -612,21 +656,27 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
                                                     'Aktivitas Terkini',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 18,
-                                                      fontWeight: FontWeight.w700,
-                                                      color: const Color(0xFF1F2937),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: const Color(
+                                                        0xFF1F2937,
+                                                      ),
                                                     ),
                                                   ),
                                                   Text(
                                                     'Update terbaru dari sistem',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 12,
-                                                      color: const Color(0xFF6B7280),
+                                                      color: const Color(
+                                                        0xFF6B7280,
+                                                      ),
                                                     ),
                                                   ),
                                                 ],
@@ -636,7 +686,8 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                               padding: const EdgeInsets.all(8),
                                               decoration: BoxDecoration(
                                                 color: const Color(0xFFF8FAFC),
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                               child: const Icon(
                                                 Icons.arrow_forward_ios,
@@ -650,7 +701,10 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                         _buildEnhancedActivityItem(
                                           Icons.assessment_outlined,
                                           const LinearGradient(
-                                            colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                                            colors: [
+                                              Color(0xFF61B8FF),
+                                              Color(0xFF0083EE),
+                                            ],
                                           ),
                                           'Laporan Bulanan',
                                           'Laporan evaluasi siswa telah selesai dibuat',
@@ -662,7 +716,10 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                         _buildEnhancedActivityItem(
                                           Icons.emoji_events_outlined,
                                           const LinearGradient(
-                                            colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                                            colors: [
+                                              Color(0xFF10B981),
+                                              Color(0xFF34D399),
+                                            ],
                                           ),
                                           'Laporan Apresiasi',
                                           'Rekap berhasil dalam kategori apresiasi',
@@ -674,7 +731,10 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                                         _buildEnhancedActivityItem(
                                           Icons.report_problem_outlined,
                                           const LinearGradient(
-                                            colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                                            colors: [
+                                              Color(0xFFFF6B6D),
+                                              Color(0xFFFF8E8F),
+                                            ],
                                           ),
                                           'Laporan Pelanggaran',
                                           'Rekap berhasil dalam kategori pelanggaran',
@@ -775,26 +835,30 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
-              children: _filteredSiswaTerbaik.isEmpty
-                  ? [
-                      Text(
-                        'Tidak ada hasil ditemukan',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: const Color(0xFF6B7280),
+              children:
+                  _filteredSiswaTerbaik.isEmpty
+                      ? [
+                        Text(
+                          'Tidak ada hasil ditemukan',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: const Color(0xFF6B7280),
+                          ),
                         ),
-                      ),
-                    ]
-                  : _filteredSiswaTerbaik.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      Student siswa = entry.value;
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom: index < _filteredSiswaTerbaik.length - 1 ? 16 : 0,
-                        ),
-                        child: _buildSiswaTerbaikItem(siswa),
-                      );
-                    }).toList(),
+                      ]
+                      : _filteredSiswaTerbaik.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        Student siswa = entry.value;
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom:
+                                index < _filteredSiswaTerbaik.length - 1
+                                    ? 16
+                                    : 0,
+                          ),
+                          child: _buildSiswaTerbaikItem(siswa),
+                        );
+                      }).toList(),
             ),
           ),
         ],
@@ -875,26 +939,28 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
-              children: _filteredSiswaBerat.isEmpty
-                  ? [
-                      Text(
-                        'Tidak ada hasil ditemukan',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: const Color(0xFF6B7280),
+              children:
+                  _filteredSiswaBerat.isEmpty
+                      ? [
+                        Text(
+                          'Tidak ada hasil ditemukan',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: const Color(0xFF6B7280),
+                          ),
                         ),
-                      ),
-                    ]
-                  : _filteredSiswaBerat.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      Student siswa = entry.value;
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom: index < _filteredSiswaBerat.length - 1 ? 16 : 0,
-                        ),
-                        child: _buildSiswaBeratItem(siswa),
-                      );
-                    }).toList(),
+                      ]
+                      : _filteredSiswaBerat.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        Student siswa = entry.value;
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom:
+                                index < _filteredSiswaBerat.length - 1 ? 16 : 0,
+                          ),
+                          child: _buildSiswaBeratItem(siswa),
+                        );
+                      }).toList(),
             ),
           ),
         ],
@@ -902,7 +968,6 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
     );
   }
 
- 
   Widget _buildSiswaBeratItem(Student siswa) {
     Color rankColor = _getRankColor(siswa.rank);
 
@@ -1103,9 +1168,10 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
               height: 50,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: siswa.rank <= 3
-                      ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
-                      : [const Color(0xFF61B8FF), const Color(0xFF0083EE)],
+                  colors:
+                      siswa.rank <= 3
+                          ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
+                          : [const Color(0xFF61B8FF), const Color(0xFF0083EE)],
                 ),
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
@@ -1146,11 +1212,17 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: rankColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: rankColor.withOpacity(0.3), width: 1),
+                          border: Border.all(
+                            color: rankColor.withOpacity(0.3),
+                            width: 1,
+                          ),
                         ),
                         child: Text(
                           '#${siswa.rank}',
@@ -1178,7 +1250,10 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0083EE).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
@@ -1193,7 +1268,11 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.star, color: Color(0xFFFFD700), size: 14),
+                      const Icon(
+                        Icons.star,
+                        color: Color(0xFFFFD700),
+                        size: 14,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${siswa.poin} poin',
@@ -1235,7 +1314,6 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
     );
   }
 
-  
   Color _getRankColor(int rank) {
     switch (rank) {
       case 1:
@@ -1273,15 +1351,16 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
           decoration: BoxDecoration(
             color: isActive ? Colors.white : Colors.white.withOpacity(0.2),
             borderRadius: BorderRadius.circular(20),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
+            boxShadow:
+                isActive
+                    ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                    : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1416,11 +1495,12 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => GrafikScreen(
-                      chartType: isFirst ? 'apresiasi' : 'pelanggaran',
-                      title: title,
-                      subtitle: subtitle,
-                    ),
+                    builder:
+                        (context) => GrafikScreen(
+                          chartType: isFirst ? 'apresiasi' : 'pelanggaran',
+                          title: title,
+                          subtitle: subtitle,
+                        ),
                   ),
                 );
               },
@@ -1432,7 +1512,10 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
     );
   }
 
-  Widget _buildSwipeableChartButtons(int selectedTab, Function(int) onTabChanged) {
+  Widget _buildSwipeableChartButtons(
+    int selectedTab,
+    Function(int) onTabChanged,
+  ) {
     return GestureDetector(
       onPanUpdate: (details) {
         if (details.delta.dx > 5) {
@@ -1455,7 +1538,11 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildChartButton('Minggu', selectedTab == 0, () => onTabChanged(0)),
+            _buildChartButton(
+              'Minggu',
+              selectedTab == 0,
+              () => onTabChanged(0),
+            ),
             _buildChartButton('Bulan', selectedTab == 1, () => onTabChanged(1)),
           ],
         ),
@@ -1474,15 +1561,16 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
         decoration: BoxDecoration(
           color: isActive ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          boxShadow:
+              isActive
+                  ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                  : null,
         ),
         child: Center(
           child: Text(
@@ -1565,25 +1653,27 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: data.map((item) {
-                      double value = (item['value'] as double?) ?? 0.0;
-                      double height = maxValue > 0 ? (value / maxValue) * 120 : 0;
-                      return Container(
-                        width: 24,
-                        height: height,
-                        decoration: BoxDecoration(
-                          gradient: gradient,
-                          borderRadius: BorderRadius.circular(6),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
+                    children:
+                        data.map((item) {
+                          double value = (item['value'] as double?) ?? 0.0;
+                          double height =
+                              maxValue > 0 ? (value / maxValue) * 120 : 0;
+                          return Container(
+                            width: 24,
+                            height: height,
+                            decoration: BoxDecoration(
+                              gradient: gradient,
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+                          );
+                        }).toList(),
                   ),
                 ),
               ],
@@ -1596,16 +1686,17 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: data.map((item) {
-                    return Text(
-                      (item['label'] as String?) ?? '',
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    );
-                  }).toList(),
+                  children:
+                      data.map((item) {
+                        return Text(
+                          (item['label'] as String?) ?? '',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: const Color(0xFF6B7280),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        );
+                      }).toList(),
                 ),
               ),
             ],
@@ -1698,11 +1789,17 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen> with TickerProvider
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: badgeColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: badgeColor.withOpacity(0.3), width: 1),
+                    border: Border.all(
+                      color: badgeColor.withOpacity(0.3),
+                      width: 1,
+                    ),
                   ),
                   child: Text(
                     badge,

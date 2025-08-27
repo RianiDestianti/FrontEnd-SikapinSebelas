@@ -1,9 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'point.dart';
 import 'note.dart';
 import 'history.dart';
+import 'package:skoring/models/api_violation.dart';
+import 'package:skoring/models/api_appreciation.dart';
 
 class Student {
   final String name;
@@ -108,129 +112,26 @@ class DetailScreen extends StatefulWidget {
   State<DetailScreen> createState() => _DetailScreenState();
 }
 
-class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMixin {
+class _DetailScreenState extends State<DetailScreen>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   int _selectedTab = 0;
 
   late Student detailedStudent;
-
-  final List<ViolationHistory> pelanggaranHistory = [
-    ViolationHistory(
-      type: "Pelanggaran Kedisiplinan",
-      description: "Terlambat masuk kelas lebih dari 15 menit",
-      date: "20 Jul 2025",
-      time: "07:30",
-      points: -10,
-      icon: Icons.access_time,
-      color: Color(0xFFFF6B6D),
-      pelapor: "Pak Budi (Guru Piket)",
-    ),
-    ViolationHistory(
-      type: "Pelanggaran Pakaian",
-      description: "Tidak memakai seragam sesuai ketentuan",
-      date: "18 Jul 2025",
-      time: "07:00",
-      points: -5,
-      icon: Icons.checkroom,
-      color: Color(0xFFEA580C),
-      pelapor: "Bu Sari (Guru BK)",
-    ),
-    ViolationHistory(
-      type: "Pelanggaran Tugas",
-      description: "Tidak mengumpulkan tugas matematika",
-      date: "15 Jul 2025",
-      time: "10:30",
-      points: -8,
-      icon: Icons.assignment_late,
-      color: Color(0xFFFF6B6D),
-      pelapor: "Bu Ani (Guru Matematika)",
-    ),
-  ];
-
-  final List<AppreciationHistory> apresiasiHistory = [
-    AppreciationHistory(
-      type: "Prestasi Akademik",
-      description: "Juara 1 Olimpiade Matematika Tingkat Kota",
-      date: "22 Jul 2025",
-      time: "14:00",
-      points: 30,
-      icon: Icons.emoji_events,
-      color: Color(0xFFFFD700),
-      pemberi: "Kepala Sekolah",
-    ),
-    AppreciationHistory(
-      type: "Prestasi Non-Akademik",
-      description: "Juara 2 Lomba Coding Regional",
-      date: "19 Jul 2025",
-      time: "16:30",
-      points: 25,
-      icon: Icons.code,
-      color: Color(0xFF10B981),
-      pemberi: "Pak Dedi (Guru Produktif)",
-    ),
-    AppreciationHistory(
-      type: "Kegiatan Sosial",
-      description: "Membantu kegiatan bakti sosial sekolah",
-      date: "16 Jul 2025",
-      time: "08:00",
-      points: 15,
-      icon: Icons.volunteer_activism,
-      color: Color(0xFF0EA5E9),
-      pemberi: "Bu Lisa (Guru OSIS)",
-    ),
-    AppreciationHistory(
-      type: "Sikap Positif",
-      description: "Membantu teman yang kesulitan belajar",
-      date: "14 Jul 2025",
-      time: "13:15",
-      points: 10,
-      icon: Icons.people_alt,
-      color: Color(0xFF8B5CF6),
-      pemberi: "Pak Rahman (Wali Kelas)",
-    ),
-  ];
-
-  final List<AccumulationHistory> akumulasiHistory = [
-    AccumulationHistory(
-      periode: "Minggu ke-4 Juli 2025",
-      pelanggaran: -23,
-      apresiasi: 80,
-      total: 57,
-      status: "Aman",
-      date: "21-27 Jul 2025",
-    ),
-    AccumulationHistory(
-      periode: "Minggu ke-3 Juli 2025",
-      pelanggaran: -15,
-      apresiasi: 25,
-      total: 10,
-      status: "Aman",
-      date: "14-20 Jul 2025",
-    ),
-    AccumulationHistory(
-      periode: "Minggu ke-2 Juli 2025",
-      pelanggaran: -10,
-      apresiasi: 15,
-      total: 5,
-      status: "Aman",
-      date: "7-13 Jul 2025",
-    ),
-    AccumulationHistory(
-      periode: "Minggu ke-1 Juli 2025",
-      pelanggaran: -8,
-      apresiasi: 20,
-      total: 12,
-      status: "Aman",
-      date: "30 Jun - 6 Jul 2025",
-    ),
-  ];
+  List<ViolationHistory> pelanggaranHistory = [];
+  List<AppreciationHistory> apresiasiHistory = [];
+  List<AccumulationHistory> akumulasiHistory = [];
+  bool isLoadingViolations = true;
+  bool isLoadingAppreciations = true;
+  String? errorMessageViolations;
+  String? errorMessageAppreciations;
 
   @override
   void initState() {
     super.initState();
-    
+
     detailedStudent = Student(
       name: widget.student['name'],
       status: widget.student['status'],
@@ -257,9 +158,221 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack));
-    
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
+    );
+
     _animationController.forward();
+    fetchViolations();
+    fetchAppreciations();
+  }
+
+  Future<void> fetchViolations() async {
+    setState(() {
+      isLoadingViolations = true;
+      errorMessageViolations = null;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/peringatan'),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['success']) {
+          List<dynamic> data = jsonData['data'];
+          setState(() {
+            pelanggaranHistory =
+                data.map((item) {
+                  final apiViolation = ApiViolation.fromJson(item);
+                  return ViolationHistory(
+                    type: apiViolation.levelSp,
+                    description: apiViolation.alasan,
+                    date: apiViolation.tanggalSp,
+                    time: "00:00",
+                    points: apiViolation.levelSp == 'SP1' ? -5 : -10,
+                    icon: Icons.warning,
+                    color: const Color(0xFFFF6B6D),
+                    pelapor: "Tidak diketahui",
+                  );
+                }).toList();
+            isLoadingViolations = false;
+            calculateAccumulations();
+          });
+        } else {
+          setState(() {
+            errorMessageViolations = jsonData['message'];
+            isLoadingViolations = false;
+            calculateAccumulations();
+          });
+        }
+      } else {
+        setState(() {
+          errorMessageViolations =
+              'Gagal mengambil data pelanggaran dari server';
+          isLoadingViolations = false;
+          calculateAccumulations();
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessageViolations = 'Terjadi kesalahan: $e';
+        isLoadingViolations = false;
+        calculateAccumulations();
+      });
+    }
+  }
+
+  Future<void> fetchAppreciations() async {
+    setState(() {
+      isLoadingAppreciations = true;
+      errorMessageAppreciations = null;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/Penghargaan'),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['success']) {
+          List<dynamic> data = jsonData['data'];
+          setState(() {
+            apresiasiHistory =
+                data.map((item) {
+                  final apiAppreciation = ApiAppreciation.fromJson(item);
+                  return AppreciationHistory(
+                    type: apiAppreciation.levelPenghargaan,
+                    description: apiAppreciation.alasan,
+                    date: apiAppreciation.tanggalPenghargaan,
+                    time: "00:00",
+                    points: apiAppreciation.levelPenghargaan == 'PH1' ? 10 : 20,
+                    icon: Icons.star,
+                    color: const Color(0xFF10B981),
+                    pemberi: "Tidak diketahui",
+                  );
+                }).toList();
+            isLoadingAppreciations = false;
+            calculateAccumulations();
+          });
+        } else {
+          setState(() {
+            errorMessageAppreciations = jsonData['message'];
+            isLoadingAppreciations = false;
+            calculateAccumulations();
+          });
+        }
+      } else {
+        setState(() {
+          errorMessageAppreciations =
+              'Gagal mengambil data penghargaan dari server';
+          isLoadingAppreciations = false;
+          calculateAccumulations();
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessageAppreciations = 'Terjadi kesalahan: $e';
+        isLoadingAppreciations = false;
+        calculateAccumulations();
+      });
+    }
+  }
+
+  void calculateAccumulations() {
+    final periods = [
+      {
+        'periode': 'Minggu ke-1 Juli 2025',
+        'startDate': DateTime(2025, 6, 30),
+        'endDate': DateTime(2025, 7, 6),
+        'date': '30 Jun - 6 Jul 2025',
+      },
+      {
+        'periode': 'Minggu ke-2 Juli 2025',
+        'startDate': DateTime(2025, 7, 7),
+        'endDate': DateTime(2025, 7, 13),
+        'date': '7-13 Jul 2025',
+      },
+      {
+        'periode': 'Minggu ke-3 Juli 2025',
+        'startDate': DateTime(2025, 7, 14),
+        'endDate': DateTime(2025, 7, 20),
+        'date': '14-20 Jul 2025',
+      },
+      {
+        'periode': 'Minggu ke-4 Juli 2025',
+        'startDate': DateTime(2025, 7, 21),
+        'endDate': DateTime(2025, 7, 27),
+        'date': '21-27 Jul 2025',
+      },
+    ];
+
+    List<AccumulationHistory> tempAccumulations = [];
+
+    for (var period in periods) {
+      final startDate = period['startDate'] as DateTime;
+      final endDate = period['endDate'] as DateTime;
+      final periode = period['periode'] as String;
+      final date = period['date'] as String;
+
+      int pelanggaranPoints = pelanggaranHistory
+          .where((item) {
+            try {
+              final itemDate = DateTime.parse(item.date);
+              return itemDate.isAfter(
+                    startDate.subtract(const Duration(days: 1)),
+                  ) &&
+                  itemDate.isBefore(endDate.add(const Duration(days: 1)));
+            } catch (e) {
+              return false; 
+            }
+          })
+          .fold(0, (sum, item) => sum + item.points);
+
+      int apresiasiPoints = apresiasiHistory
+          .where((item) {
+            try {
+              final itemDate = DateTime.parse(item.date);
+              return itemDate.isAfter(
+                    startDate.subtract(const Duration(days: 1)),
+                  ) &&
+                  itemDate.isBefore(endDate.add(const Duration(days: 1)));
+            } catch (e) {
+              return false;
+            }
+          })
+          .fold(0, (sum, item) => sum + item.points);
+
+      int total = pelanggaranPoints + apresiasiPoints;
+
+      String status;
+      if (total >= 0) {
+        status = 'Aman';
+      } else if (total >= -20) {
+        status = 'Bermasalah';
+      } else {
+        status = 'Prioritas';
+      }
+
+      if (pelanggaranPoints != 0 || apresiasiPoints != 0) {
+        tempAccumulations.add(
+          AccumulationHistory(
+            periode: periode,
+            pelanggaran: pelanggaranPoints,
+            apresiasi: apresiasiPoints,
+            total: total,
+            status: status,
+            date: date,
+          ),
+        );
+      }
+    }
+
+    setState(() {
+      akumulasiHistory = tempAccumulations;
+    });
   }
 
   @override
@@ -344,9 +457,12 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                             padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
                             child: Column(
                               children: [
-                                SizedBox(height: MediaQuery.of(context).padding.top),
+                                SizedBox(
+                                  height: MediaQuery.of(context).padding.top,
+                                ),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     GestureDetector(
                                       onTap: () => Navigator.pop(context),
@@ -355,7 +471,9 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                         height: 40,
                                         decoration: BoxDecoration(
                                           color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: const Icon(
                                           Icons.arrow_back_ios_new,
@@ -399,10 +517,14 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                           height: 80,
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFFEDBCC),
-                                            borderRadius: BorderRadius.circular(24),
+                                            borderRadius: BorderRadius.circular(
+                                              24,
+                                            ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: const Color(0xFFEA580C).withOpacity(0.2),
+                                                color: const Color(
+                                                  0xFFEA580C,
+                                                ).withOpacity(0.2),
                                                 blurRadius: 15,
                                                 offset: const Offset(0, 5),
                                               ),
@@ -410,7 +532,8 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                           ),
                                           child: Center(
                                             child: Text(
-                                              detailedStudent.name[0].toUpperCase(),
+                                              detailedStudent.name[0]
+                                                  .toUpperCase(),
                                               style: GoogleFonts.poppins(
                                                 fontSize: 32,
                                                 fontWeight: FontWeight.w800,
@@ -440,22 +563,33 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                         const SizedBox(height: 16),
                                         Container(
                                           width: double.infinity,
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: _getStatusColor(detailedStudent.status).withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(16),
+                                            color: _getStatusColor(
+                                              detailedStudent.status,
+                                            ).withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
                                             border: Border.all(
-                                              color: _getStatusColor(detailedStudent.status).withOpacity(0.3),
+                                              color: _getStatusColor(
+                                                detailedStudent.status,
+                                              ).withOpacity(0.3),
                                             ),
                                           ),
                                           child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               Container(
                                                 width: 8,
                                                 height: 8,
                                                 decoration: BoxDecoration(
-                                                  color: _getStatusColor(detailedStudent.status),
+                                                  color: _getStatusColor(
+                                                    detailedStudent.status,
+                                                  ),
                                                   shape: BoxShape.circle,
                                                 ),
                                               ),
@@ -466,7 +600,9 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                                 style: GoogleFonts.poppins(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w700,
-                                                  color: _getStatusColor(detailedStudent.status),
+                                                  color: _getStatusColor(
+                                                    detailedStudent.status,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -478,25 +614,45 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                             Expanded(
                                               child: GestureDetector(
                                                 onTap: () {
-                                                  showPointPopup(context, detailedStudent.name);
+                                                  showPointPopup(
+                                                    context,
+                                                    detailedStudent.name,
+                                                  );
                                                 },
                                                 child: Container(
-                                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 14,
+                                                      ),
                                                   decoration: BoxDecoration(
-                                                    gradient: const LinearGradient(
-                                                      colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-                                                    ),
-                                                    borderRadius: BorderRadius.circular(16),
+                                                    gradient:
+                                                        const LinearGradient(
+                                                          colors: [
+                                                            Color(0xFF61B8FF),
+                                                            Color(0xFF0083EE),
+                                                          ],
+                                                        ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          16,
+                                                        ),
                                                     boxShadow: [
                                                       BoxShadow(
-                                                        color: const Color(0xFF0083EE).withOpacity(0.3),
+                                                        color: const Color(
+                                                          0xFF0083EE,
+                                                        ).withOpacity(0.3),
                                                         blurRadius: 8,
-                                                        offset: const Offset(0, 4),
+                                                        offset: const Offset(
+                                                          0,
+                                                          4,
+                                                        ),
                                                       ),
                                                     ],
                                                   ),
                                                   child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
                                                     children: [
                                                       const Icon(
                                                         Icons.star_outline,
@@ -506,55 +662,88 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                                       const SizedBox(width: 8),
                                                       Text(
                                                         'Berikan Poin',
-                                                        style: GoogleFonts.poppins(
-                                                          fontSize: 14,
-                                                          fontWeight: FontWeight.w600,
-                                                          color: Colors.white,
-                                                        ),
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
                                                       ),
                                                     ],
                                                   ),
                                                 ),
                                               ),
                                             ),
-                                            if (detailedStudent.status != 'Aman') ...[
+                                            if (detailedStudent.status !=
+                                                'Aman') ...[
                                               const SizedBox(width: 12),
                                               Expanded(
                                                 child: GestureDetector(
                                                   onTap: () {
-                                                    showBKNotePopup(context, detailedStudent.name);
+                                                    showBKNotePopup(
+                                                      context,
+                                                      detailedStudent.name,
+                                                    );
                                                   },
                                                   child: Container(
-                                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 14,
+                                                        ),
                                                     decoration: BoxDecoration(
-                                                      gradient: const LinearGradient(
-                                                        colors: [Color(0xFFFF6B6D), Color(0xFFEA580C)],
-                                                      ),
-                                                      borderRadius: BorderRadius.circular(16),
+                                                      gradient:
+                                                          const LinearGradient(
+                                                            colors: [
+                                                              Color(0xFFFF6B6D),
+                                                              Color(0xFFEA580C),
+                                                            ],
+                                                          ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            16,
+                                                          ),
                                                       boxShadow: [
                                                         BoxShadow(
-                                                          color: const Color(0xFFFF6B6D).withOpacity(0.3),
+                                                          color: const Color(
+                                                            0xFFFF6B6D,
+                                                          ).withOpacity(0.3),
                                                           blurRadius: 8,
-                                                          offset: const Offset(0, 4),
+                                                          offset: const Offset(
+                                                            0,
+                                                            4,
+                                                          ),
                                                         ),
                                                       ],
                                                     ),
                                                     child: Row(
-                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
                                                       children: [
                                                         const Icon(
-                                                          Icons.note_add_outlined,
+                                                          Icons
+                                                              .note_add_outlined,
                                                           color: Colors.white,
                                                           size: 18,
                                                         ),
-                                                        const SizedBox(width: 8),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
                                                         Text(
                                                           'Catatan BK',
-                                                          style: GoogleFonts.poppins(
-                                                            fontSize: 14,
-                                                            fontWeight: FontWeight.w600,
-                                                            color: Colors.white,
-                                                          ),
+                                                          style:
+                                                              GoogleFonts.poppins(
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                color:
+                                                                    Colors
+                                                                        .white,
+                                                              ),
                                                         ),
                                                       ],
                                                     ),
@@ -600,17 +789,61 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                _buildBiodataRow('NIS/NISN', detailedStudent.nis, Icons.badge),
-                                _buildBiodataRow('Tempat, Tanggal Lahir', detailedStudent.ttl, Icons.cake),
-                                _buildBiodataRow('Jenis Kelamin', detailedStudent.jenkel, Icons.person),
-                                _buildBiodataRow('Alamat', detailedStudent.alamat, Icons.home),
-                                _buildBiodataRow('Program Keahlian', detailedStudent.programKeahlian, Icons.school),
-                                _buildBiodataRow('Kelas', detailedStudent.kelas, Icons.class_),
-                                _buildBiodataRow('Tahun Masuk', detailedStudent.tahunMasuk, Icons.calendar_today),
-                                _buildBiodataRow('No. HP Siswa', detailedStudent.noHp, Icons.phone),
-                                _buildBiodataRow('Email', detailedStudent.email, Icons.email),
-                                _buildBiodataRow('Nama Orang Tua', detailedStudent.namaOrtu, Icons.family_restroom),
-                                _buildBiodataRow('No. HP Orang Tua', detailedStudent.noHpOrtu, Icons.phone_android),
+                                _buildBiodataRow(
+                                  'NIS/NISN',
+                                  detailedStudent.nis,
+                                  Icons.badge,
+                                ),
+                                _buildBiodataRow(
+                                  'Tempat, Tanggal Lahir',
+                                  detailedStudent.ttl,
+                                  Icons.cake,
+                                ),
+                                _buildBiodataRow(
+                                  'Jenis Kelamin',
+                                  detailedStudent.jenkel,
+                                  Icons.person,
+                                ),
+                                _buildBiodataRow(
+                                  'Alamat',
+                                  detailedStudent.alamat,
+                                  Icons.home,
+                                ),
+                                _buildBiodataRow(
+                                  'Program Keahlian',
+                                  detailedStudent.programKeahlian,
+                                  Icons.school,
+                                ),
+                                _buildBiodataRow(
+                                  'Kelas',
+                                  detailedStudent.kelas,
+                                  Icons.class_,
+                                ),
+                                _buildBiodataRow(
+                                  'Tahun Masuk',
+                                  detailedStudent.tahunMasuk,
+                                  Icons.calendar_today,
+                                ),
+                                _buildBiodataRow(
+                                  'No. HP Siswa',
+                                  detailedStudent.noHp,
+                                  Icons.phone,
+                                ),
+                                _buildBiodataRow(
+                                  'Email',
+                                  detailedStudent.email,
+                                  Icons.email,
+                                ),
+                                _buildBiodataRow(
+                                  'Nama Orang Tua',
+                                  detailedStudent.namaOrtu,
+                                  Icons.family_restroom,
+                                ),
+                                _buildBiodataRow(
+                                  'No. HP Orang Tua',
+                                  detailedStudent.noHpOrtu,
+                                  Icons.phone_android,
+                                ),
                               ],
                             ),
                           ),
@@ -668,11 +901,7 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
               color: const Color(0xFF0083EE).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              size: 16,
-              color: const Color(0xFF0083EE),
-            ),
+            child: Icon(icon, size: 16, color: const Color(0xFF0083EE)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -757,10 +986,16 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
           ),
         ),
         const SizedBox(height: 16),
-        if (pelanggaranHistory.isEmpty)
+        if (isLoadingViolations)
+          const Center(child: CircularProgressIndicator())
+        else if (errorMessageViolations != null)
+          _buildEmptyState(errorMessageViolations!, Icons.error)
+        else if (pelanggaranHistory.isEmpty)
           _buildEmptyState('Belum ada riwayat pelanggaran', Icons.check_circle)
         else
-          ...pelanggaranHistory.map((item) => _buildHistoryCard(item, isPelanggaran: true)).toList(),
+          ...pelanggaranHistory
+              .map((item) => _buildHistoryCard(item, isPelanggaran: true))
+              .toList(),
       ],
     );
   }
@@ -778,10 +1013,16 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
           ),
         ),
         const SizedBox(height: 16),
-        if (apresiasiHistory.isEmpty)
+        if (isLoadingAppreciations)
+          const Center(child: CircularProgressIndicator())
+        else if (errorMessageAppreciations != null)
+          _buildEmptyState(errorMessageAppreciations!, Icons.error)
+        else if (apresiasiHistory.isEmpty)
           _buildEmptyState('Belum ada riwayat apresiasi', Icons.star)
         else
-          ...apresiasiHistory.map((item) => _buildHistoryCard(item, isPelanggaran: false)).toList(),
+          ...apresiasiHistory
+              .map((item) => _buildHistoryCard(item, isPelanggaran: false))
+              .toList(),
       ],
     );
   }
@@ -799,7 +1040,18 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
           ),
         ),
         const SizedBox(height: 16),
-        ...akumulasiHistory.map((item) => _buildAkumulasiCard(item)).toList(),
+        if (isLoadingViolations || isLoadingAppreciations)
+          const Center(child: CircularProgressIndicator())
+        else if (errorMessageViolations != null &&
+            errorMessageAppreciations != null)
+          _buildEmptyState(
+            'Gagal mengambil data pelanggaran dan apresiasi',
+            Icons.error,
+          )
+        else if (akumulasiHistory.isEmpty)
+          _buildEmptyState('Belum ada riwayat akumulasi', Icons.calculate)
+        else
+          ...akumulasiHistory.map((item) => _buildAkumulasiCard(item)).toList(),
       ],
     );
   }
@@ -820,10 +1072,7 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: item.color.withOpacity(0.2),
-            width: 2,
-          ),
+          border: Border.all(color: item.color.withOpacity(0.2), width: 2),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
@@ -844,11 +1093,7 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                     color: item.color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(
-                    item.icon,
-                    color: item.color,
-                    size: 24,
-                  ),
+                  child: Icon(item.icon, color: item.color, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -898,7 +1143,11 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 16, color: const Color(0xFF6B7280)),
+                      Icon(
+                        Icons.calendar_today,
+                        size: 16,
+                        color: const Color(0xFF6B7280),
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         '${item.date} • ${item.time}',
@@ -913,10 +1162,16 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.person, size: 16, color: const Color(0xFF6B7280)),
+                      Icon(
+                        Icons.person,
+                        size: 16,
+                        color: const Color(0xFF6B7280),
+                      ),
                       const SizedBox(width: 8),
                       Text(
-                        isPelanggaran ? 'Pelapor: ${item.pelapor}' : 'Pemberi: ${item.pemberi}',
+                        isPelanggaran
+                            ? 'Pelapor: ${item.pelapor}'
+                            : 'Pemberi: ${item.pemberi}',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -984,7 +1239,10 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: _getStatusColor(item.status).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -1026,7 +1284,7 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                         style: GoogleFonts.poppins(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFFFF6B6D),
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                       Text(
@@ -1065,7 +1323,7 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                         style: GoogleFonts.poppins(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF10B981),
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                       Text(
@@ -1104,7 +1362,7 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                         style: GoogleFonts.poppins(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF0083EE),
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                       Text(
@@ -1131,9 +1389,12 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
             ),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                double totalPoints = item.apresiasi + item.pelanggaran.abs().toDouble();
-                double redFraction = totalPoints > 0 ? item.pelanggaran.abs() / totalPoints : 0;
-                double greenFraction = totalPoints > 0 ? item.apresiasi / totalPoints : 0;
+                double totalPoints =
+                    item.apresiasi + item.pelanggaran.abs().toDouble();
+                double redFraction =
+                    totalPoints > 0 ? item.pelanggaran.abs() / totalPoints : 0;
+                double greenFraction =
+                    totalPoints > 0 ? item.apresiasi / totalPoints : 0;
                 return Stack(
                   children: [
                     if (item.pelanggaran < 0)

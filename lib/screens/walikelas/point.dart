@@ -149,7 +149,7 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
     super.initState();
     _initializeAnimations();
     _nameController.text = widget.studentName;
-    _classController.text = 'XII RPL 2'; // Set default class
+    _classController.text = 'XII RPL 2'; 
     _dateController.text = DateTime.now().toString().split(' ')[0];
     _selectedCategory = _categories[_selectedPointType]?.first['value'] ?? '';
   }

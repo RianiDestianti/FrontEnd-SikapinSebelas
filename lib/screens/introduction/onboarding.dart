@@ -157,7 +157,6 @@ class _IntroductionScreenState extends State<IntroductionScreen> with TickerProv
 
   @override
   Widget build(BuildContext context) {
-    // Set status bar style
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,

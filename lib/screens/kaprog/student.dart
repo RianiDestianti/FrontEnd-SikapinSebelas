@@ -396,7 +396,7 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                     ],
                   ),
                 )
-                : const LaporanKaprog(), // Navigate to LaporanKaprog when index is 2
+                : const LaporanKaprog(),
       ),
       bottomNavigationBar: KaprogNavigation(
         currentIndex: _currentIndex,
@@ -939,7 +939,6 @@ class _SiswaScreenState extends State<SiswaScreen>
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      // Header info
                       if (_searchQuery.isNotEmpty || _selectedFilter != 0)
                         Container(
                           width: double.infinity,
@@ -1150,13 +1149,12 @@ class _SiswaScreenState extends State<SiswaScreen>
             ),
             const SizedBox(width: 16),
 
-            // Fixed status badge with consistent sizing like walikelas
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
-                  width: 85, // Fixed width like walikelas
-                  height: 28, // Fixed height like walikelas
+                  width: 85,
+                  height: 28,
                   decoration: BoxDecoration(
                     color: _getStatusColor(student['status']).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -1165,7 +1163,7 @@ class _SiswaScreenState extends State<SiswaScreen>
                     child: Text(
                       student['status'],
                       style: GoogleFonts.poppins(
-                        fontSize: 11, // Same font size as walikelas
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: _getStatusColor(student['status']),
                       ),

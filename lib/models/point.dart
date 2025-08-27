@@ -1,4 +1,3 @@
-// Di file models/point.dart
 class Point {
   final String type;
   final String studentName;
