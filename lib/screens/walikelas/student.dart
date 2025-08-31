@@ -9,26 +9,55 @@ import 'package:skoring/screens/profile.dart';
 import 'package:skoring/models/api_kelas.dart';
 
 class Student {
-  final String name;
-  final String nisn;
-  final String status;
-  final int points;
-  final int absent;
-  final int absen;
+  final int nis;
+  final String idKelas;
+  final String namaSiswa;
+  final int? poinApresiasi;
+  final int? poinPelanggaran;
+  final int? poinTotal;
+  final String createdAt;
+  final String updatedAt;
 
   Student({
-    required this.name,
-    required this.nisn,
-    required this.status,
-    required this.points,
-    required this.absent,
-    required this.absen,
+    required this.nis,
+    required this.idKelas,
+    required this.namaSiswa,
+    this.poinApresiasi,
+    this.poinPelanggaran,
+    this.poinTotal,
+    required this.createdAt,
+    required this.updatedAt,
   });
+
+  factory Student.fromJson(Map<String, dynamic> json) {
+    return Student(
+      nis: json['nis'],
+      idKelas: json['id_kelas'],
+      namaSiswa: json['nama_siswa'],
+      poinApresiasi: json['poin_apresiasi'],
+      poinPelanggaran: json['poin_pelanggaran'],
+      poinTotal: json['poin_total'],
+      createdAt: json['created_at'],
+      updatedAt: json['updated_at'],
+    );
+  }
+
+  String get status {
+    int totalPoints = poinTotal ?? 0;
+    if (totalPoints >= 0) {
+      return 'Aman';
+    } else if (totalPoints >= -20) {
+      return 'Bermasalah';
+    } else {
+      return 'Prioritas';
+    }
+  }
+
+  int get points => poinTotal ?? 0;
 }
 
 class SiswaScreen extends StatefulWidget {
   const SiswaScreen({Key? key}) : super(key: key);
-
   @override
   State<SiswaScreen> createState() => _SiswaScreenState();
 }
@@ -40,92 +69,13 @@ class _SiswaScreenState extends State<SiswaScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   TextEditingController _searchController = TextEditingController();
+  List<Kelas> kelasList = [];
+  List<Student> studentsList = [];
   Kelas? selectedKelas;
   bool isLoadingKelas = true;
+  bool isLoadingSiswa = true;
   String? errorMessageKelas;
-
-  final List<Student> students = [
-    Student(
-      name: "Ahmad Sudarji",
-      nisn: "23000001",
-      status: "Aman",
-      points: 20,
-      absent: 2,
-      absen: 1,
-    ),
-    Student(
-      name: "Agus Berto",
-      nisn: "23000002",
-      status: "Aman",
-      points: 0,
-      absent: 0,
-      absen: 2,
-    ),
-    Student(
-      name: "Bobby Dasta",
-      nisn: "23000003",
-      status: "Bermasalah",
-      points: -15,
-      absent: 5,
-      absen: 3,
-    ),
-    Student(
-      name: "Berto",
-      nisn: "23000004",
-      status: "Prioritas",
-      points: -25,
-      absent: 8,
-      absen: 4,
-    ),
-    Student(
-      name: "Celine Agustinus",
-      nisn: "23000006",
-      status: "Aman",
-      points: 10,
-      absent: 1,
-      absen: 5,
-    ),
-    Student(
-      name: "Diana Sari",
-      nisn: "23000007",
-      status: "Aman",
-      points: 15,
-      absent: 1,
-      absen: 6,
-    ),
-    Student(
-      name: "Eko Prasetyo",
-      nisn: "23000008",
-      status: "Bermasalah",
-      points: -10,
-      absent: 7,
-      absen: 7,
-    ),
-    Student(
-      name: "Fitri Handayani",
-      nisn: "23000009",
-      status: "Aman",
-      points: 25,
-      absent: 0,
-      absen: 8,
-    ),
-    Student(
-      name: "Gilang Ramadan",
-      nisn: "23000010",
-      status: "Prioritas",
-      points: -30,
-      absent: 10,
-      absen: 9,
-    ),
-    Student(
-      name: "Haniatul Kamilah",
-      nisn: "23000011",
-      status: "Aman",
-      points: 18,
-      absent: 2,
-      absen: 10,
-    ),
-  ];
+  String? errorMessageSiswa;
 
   @override
   void initState() {
@@ -138,7 +88,9 @@ class _SiswaScreenState extends State<SiswaScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
+
     fetchKelas();
+    fetchSiswa();
   }
 
   Future<void> fetchKelas() async {
@@ -158,9 +110,8 @@ class _SiswaScreenState extends State<SiswaScreen>
           List<dynamic> data = jsonData['data'];
           if (data.isNotEmpty) {
             setState(() {
-              selectedKelas = Kelas.fromJson(
-                data[0],
-              ); // Use first class for now
+              kelasList = data.map((json) => Kelas.fromJson(json)).toList();
+              selectedKelas = kelasList.first;
               isLoadingKelas = false;
             });
           } else {
@@ -189,6 +140,45 @@ class _SiswaScreenState extends State<SiswaScreen>
     }
   }
 
+  Future<void> fetchSiswa() async {
+    setState(() {
+      isLoadingSiswa = true;
+      errorMessageSiswa = null;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/siswa'),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['success']) {
+          List<dynamic> data = jsonData['data'];
+          setState(() {
+            studentsList = data.map((json) => Student.fromJson(json)).toList();
+            isLoadingSiswa = false;
+          });
+        } else {
+          setState(() {
+            errorMessageSiswa = jsonData['message'];
+            isLoadingSiswa = false;
+          });
+        }
+      } else {
+        setState(() {
+          errorMessageSiswa = 'Gagal mengambil data siswa dari server';
+          isLoadingSiswa = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessageSiswa = 'Terjadi kesalahan: $e';
+        isLoadingSiswa = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -197,7 +187,12 @@ class _SiswaScreenState extends State<SiswaScreen>
   }
 
   List<Student> getFilteredStudents() {
-    List<Student> filtered = List.from(students);
+    if (selectedKelas == null) return [];
+
+    List<Student> filtered =
+        studentsList
+            .where((student) => student.idKelas == selectedKelas!.idKelas)
+            .toList();
 
     if (_selectedFilter == 1) {
       filtered = filtered.where((s) => s.status == 'Aman').toList();
@@ -213,12 +208,13 @@ class _SiswaScreenState extends State<SiswaScreen>
           filtered
               .where(
                 (s) =>
-                    s.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                    s.nisn.contains(_searchQuery),
+                    s.namaSiswa.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ||
+                    s.nis.toString().contains(_searchQuery),
               )
               .toList();
     }
-
     return filtered;
   }
 
@@ -229,14 +225,121 @@ class _SiswaScreenState extends State<SiswaScreen>
         builder:
             (context) => DetailScreen(
               student: {
-                'name': student.name,
-                'nisn': student.nisn,
+                'name': student.namaSiswa,
+                'nisn': student.nis.toString(),
                 'status': student.status,
                 'points': student.points,
-                'absent': student.absent,
-                'absen': student.absen,
+                'absent': 0,
+                'absen': student.nis,
               },
             ),
+      ),
+    );
+  }
+
+  void _refreshData() {
+    fetchKelas();
+    fetchSiswa();
+  }
+
+  Widget _buildHeaderContent() {
+    final bool isLoading = isLoadingKelas || isLoadingSiswa;
+    final bool hasError =
+        errorMessageKelas != null || errorMessageSiswa != null;
+    if (isLoading) {
+      return Row(
+        children: [
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Text(
+            'Memuat data...',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (hasError) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Terjadi Kesalahan',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Gagal memuat data dari server',
+            style: GoogleFonts.poppins(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (selectedKelas != null) {
+      final studentsInClass =
+          studentsList
+              .where((student) => student.idKelas == selectedKelas!.idKelas)
+              .length;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Daftar Siswa ${selectedKelas!.namaKelas}',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Jurusan: ${selectedKelas!.jurusan.toUpperCase()}',
+            style: GoogleFonts.poppins(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Total Siswa: $studentsInClass • Semester Ganjil 2025/2026',
+            style: GoogleFonts.poppins(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Text(
+      'Pilih Kelas',
+      style: GoogleFonts.poppins(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
       ),
     );
   }
@@ -244,7 +347,9 @@ class _SiswaScreenState extends State<SiswaScreen>
   @override
   Widget build(BuildContext context) {
     final filteredStudents = getFilteredStudents();
-
+    final bool isLoading = isLoadingKelas || isLoadingSiswa;
+    final bool hasError =
+        errorMessageKelas != null || errorMessageSiswa != null;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -283,304 +388,308 @@ class _SiswaScreenState extends State<SiswaScreen>
                               ),
                             ],
                           ),
-                          child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              24,
-                              MediaQuery.of(context).padding.top + 20,
-                              24,
-                              32,
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
+                          child: SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                24,
+                                20,
+                                24,
+                                32,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Container(
+                                          width: 40,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(
+                                              0.2,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                           ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.arrow_back_ios_new_rounded,
-                                          color: Colors.white,
-                                          size: 18,
+                                          child: const Icon(
+                                            Icons.arrow_back_ios_new_rounded,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    Row(
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (context) =>
-                                                        const NotifikasiScreen(),
+                                      Row(
+                                        children: [
+                                          GestureDetector(
+                                            onTap: _refreshData,
+                                            child: Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(
+                                                  0.2,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
-                                            );
-                                          },
-                                          child: Container(
-                                            width: 40,
-                                            height: 40,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(
-                                                0.2,
+                                              child: const Icon(
+                                                Icons.refresh_rounded,
+                                                color: Colors.white,
+                                                size: 24,
                                               ),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: const Icon(
-                                              Icons.notifications_rounded,
-                                              color: Colors.white,
-                                              size: 24,
                                             ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (context) =>
-                                                        const ProfileScreen(),
+                                          const SizedBox(width: 8),
+                                          GestureDetector(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (context) =>
+                                                          const NotifikasiScreen(),
+                                                ),
+                                              );
+                                            },
+                                            child: Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(
+                                                  0.2,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
-                                            );
-                                          },
-                                          child: Container(
-                                            width: 40,
-                                            height: 40,
+                                              child: const Icon(
+                                                Icons.notifications_rounded,
+                                                color: Colors.white,
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          GestureDetector(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (context) =>
+                                                          const ProfileScreen(),
+                                                ),
+                                              );
+                                            },
+                                            child: Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.1),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: const Icon(
+                                                Icons.person_rounded,
+                                                color: Color(0xFF0083EE),
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 24),
+
+                                  Container(
+                                    width: double.infinity,
+                                    child: _buildHeaderContent(),
+                                  ),
+                                  if (!isLoading && !hasError) ...[
+                                    const SizedBox(height: 24),
+                                    Container(
+                                      height: 50,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(25),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.08,
+                                            ),
+                                            blurRadius: 15,
+                                            offset: const Offset(0, 5),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
                                             decoration: BoxDecoration(
-                                              color: Colors.white,
+                                              gradient: const LinearGradient(
+                                                colors: [
+                                                  Color(0xFF61B8FF),
+                                                  Color(0xFF0083EE),
+                                                ],
+                                              ),
                                               borderRadius:
                                                   BorderRadius.circular(30),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.1),
-                                                  blurRadius: 8,
-                                                  offset: const Offset(0, 2),
-                                                ),
-                                              ],
                                             ),
                                             child: const Icon(
-                                              Icons.person_rounded,
-                                              color: Color(0xFF0083EE),
-                                              size: 24,
+                                              Icons.search,
+                                              color: Colors.white,
+                                              size: 18,
                                             ),
                                           ),
-                                        ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: TextField(
+                                              controller: _searchController,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _searchQuery = value;
+                                                });
+                                              },
+                                              decoration: InputDecoration(
+                                                hintText:
+                                                    'Cari nama siswa atau NIS...',
+                                                hintStyle: GoogleFonts.poppins(
+                                                  color: const Color(
+                                                    0xFF9CA3AF,
+                                                  ),
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w400,
+                                                ),
+                                                border: InputBorder.none,
+                                                contentPadding: EdgeInsets.zero,
+                                              ),
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 15,
+                                                color: const Color(0xFF1F2937),
+                                              ),
+                                            ),
+                                          ),
+                                          if (_searchQuery.isNotEmpty)
+                                            GestureDetector(
+                                              onTap: () {
+                                                setState(() {
+                                                  _searchQuery = '';
+                                                  _searchController.clear();
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  4,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.clear,
+                                                  color: Color(0xFF6B7280),
+                                                  size: 16,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Row(
+                                      children: [
+                                        _buildActionButton('Semua', 0),
+                                        const SizedBox(width: 10),
+                                        _buildActionButton('Aman', 1),
+                                        const SizedBox(width: 10),
+                                        _buildActionButton('Bermasalah', 2),
                                       ],
                                     ),
                                   ],
-                                ),
-                                const SizedBox(height: 24),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child:
-                                      isLoadingKelas
-                                          ? const CircularProgressIndicator(
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                  Colors.white,
-                                                ),
-                                          )
-                                          : errorMessageKelas != null
-                                          ? Text(
-                                            errorMessageKelas!,
-                                            style: GoogleFonts.poppins(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                          )
-                                          : Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Daftar Siswa ${selectedKelas!.namaKelas}',
-                                                style: GoogleFonts.poppins(
-                                                  color: Colors.white,
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.w700,
-                                                  height: 1.2,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 6),
-                                              Text(
-                                                'Jurusan: ${selectedKelas!.jurusan.toUpperCase()} - Semester Ganjil 2025/2026',
-                                                style: GoogleFonts.poppins(
-                                                  color: Colors.white
-                                                      .withOpacity(0.9),
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w400,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                ),
-                                const SizedBox(height: 24),
-                                Container(
-                                  height: 50,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(25),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.08),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color(0xFF61B8FF),
-                                              Color(0xFF0083EE),
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            30,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.search,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: TextField(
-                                          controller: _searchController,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _searchQuery = value;
-                                            });
-                                          },
-                                          decoration: InputDecoration(
-                                            hintText: 'Cari nama siswa...',
-                                            hintStyle: GoogleFonts.poppins(
-                                              color: const Color(0xFF9CA3AF),
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                            border: InputBorder.none,
-                                            contentPadding: EdgeInsets.zero,
-                                          ),
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 15,
-                                            color: const Color(0xFF1F2937),
-                                          ),
-                                        ),
-                                      ),
-                                      if (_searchQuery.isNotEmpty)
-                                        GestureDetector(
-                                          onTap: () {
-                                            setState(() {
-                                              _searchQuery = '';
-                                              _searchController.clear();
-                                            });
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.all(4),
-                                            child: const Icon(
-                                              Icons.clear,
-                                              color: Color(0xFF6B7280),
-                                              size: 16,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                Row(
-                                  children: [
-                                    _buildActionButton('Semua', 0),
-                                    const SizedBox(width: 10),
-                                    _buildActionButton('Aman', 1),
-                                    const SizedBox(width: 10),
-                                    _buildActionButton('Bermasalah', 2),
-                                  ],
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
+
                         Padding(
                           padding: const EdgeInsets.all(20),
                           child: Column(
                             children: [
-                              if (_searchQuery.isNotEmpty ||
-                                  _selectedFilter != 0)
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(16),
-                                  margin: const EdgeInsets.only(bottom: 16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.06),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.info_outline,
-                                        color: const Color(0xFF0083EE),
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        'Ditemukan ${filteredStudents.length} siswa',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF1F2937),
+                              if (hasError)
+                                _buildErrorState()
+                              else if (isLoading)
+                                _buildLoadingState()
+                              else ...[
+                                if (kelasList.length > 1) _buildClassSelector(),
+                                if ((_searchQuery.isNotEmpty ||
+                                        _selectedFilter != 0) &&
+                                    selectedKelas != null)
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(16),
+                                    margin: const EdgeInsets.only(bottom: 16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.06),
+                                          blurRadius: 15,
+                                          offset: const Offset(0, 5),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.info_outline,
+                                          color: const Color(0xFF0083EE),
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'Ditemukan ${filteredStudents.length} siswa',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF1F2937),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              filteredStudents.isEmpty
-                                  ? _buildEmptyState()
-                                  : Column(
-                                    children:
-                                        filteredStudents.asMap().entries.map((
-                                          entry,
-                                        ) {
-                                          return _buildStudentCard(
-                                            entry.value,
-                                            entry.key,
-                                          );
-                                        }).toList(),
-                                  ),
+                                filteredStudents.isEmpty &&
+                                        selectedKelas != null
+                                    ? _buildEmptyState()
+                                    : Column(
+                                      children:
+                                          filteredStudents.asMap().entries.map((
+                                            entry,
+                                          ) {
+                                            return _buildStudentCard(
+                                              entry.value,
+                                              entry.key,
+                                            );
+                                          }).toList(),
+                                    ),
+                              ],
                             ],
                           ),
                         ),
@@ -592,6 +701,178 @@ class _SiswaScreenState extends State<SiswaScreen>
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildClassSelector() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Pilih Kelas',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<Kelas>(
+            value: selectedKelas,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF0083EE)),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+            ),
+            items:
+                kelasList.map((kelas) {
+                  return DropdownMenuItem<Kelas>(
+                    value: kelas,
+                    child: Text(
+                      '${kelas.namaKelas} - ${kelas.jurusan.toUpperCase()}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  );
+                }).toList(),
+            onChanged: (Kelas? newValue) {
+              setState(() {
+                selectedKelas = newValue;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0083EE)),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Memuat data siswa...',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1F2937),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF6B6D).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(50),
+            ),
+            child: const Icon(
+              Icons.error_outline,
+              color: Color(0xFFFF6B6D),
+              size: 50,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Gagal memuat data',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            errorMessageKelas ??
+                errorMessageSiswa ??
+                'Terjadi kesalahan tidak diketahui',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: const Color(0xFF9CA3AF),
+            ),
+          ),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: _refreshData,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0083EE).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.refresh, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Coba Lagi',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -711,7 +992,7 @@ class _SiswaScreenState extends State<SiswaScreen>
               ),
               child: Center(
                 child: Text(
-                  student.name[0].toUpperCase(),
+                  student.namaSiswa[0].toUpperCase(),
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -726,7 +1007,7 @@ class _SiswaScreenState extends State<SiswaScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    student.name,
+                    student.namaSiswa,
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -735,11 +1016,23 @@ class _SiswaScreenState extends State<SiswaScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Absen: ${student.absen}',
+                    'NIS: ${student.nis}',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Poin: ${student.points}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          student.points >= 0
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFFF6B6D),
                     ),
                   ),
                 ],
