@@ -6,38 +6,84 @@ import 'package:http/http.dart' as http;
 import 'point.dart';
 import 'note.dart';
 import 'history.dart';
-import 'package:skoring/models/api_violation.dart';
-import 'package:skoring/models/api_appreciation.dart';
+
+class ApiViolation {
+  final int idSp;
+  final String tanggalSp;
+  final String levelSp;
+  final String alasan;
+  final String? createdAt;
+  final String? updatedAt;
+
+  ApiViolation({
+    required this.idSp,
+    required this.tanggalSp,
+    required this.levelSp,
+    required this.alasan,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory ApiViolation.fromJson(Map<String, dynamic> json) {
+    return ApiViolation(
+      idSp: json['id_sp'],
+      tanggalSp: json['tanggal_sp'],
+      levelSp: json['level_sp'],
+      alasan: json['alasan'],
+      createdAt: json['created_at'],
+      updatedAt: json['updated_at'],
+    );
+  }
+}
+
+class ApiAppreciation {
+  final int idPenghargaan;
+  final String tanggalPenghargaan;
+  final String levelPenghargaan;
+  final String alasan;
+  final String? createdAt;
+  final String? updatedAt;
+
+  ApiAppreciation({
+    required this.idPenghargaan,
+    required this.tanggalPenghargaan,
+    required this.levelPenghargaan,
+    required this.alasan,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory ApiAppreciation.fromJson(Map<String, dynamic> json) {
+    return ApiAppreciation(
+      idPenghargaan: json['id_penghargaan'],
+      tanggalPenghargaan: json['tanggal_penghargaan'],
+      levelPenghargaan: json['level_penghargaan'],
+      alasan: json['alasan'],
+      createdAt: json['created_at'],
+      updatedAt: json['updated_at'],
+    );
+  }
+}
 
 class Student {
   final String name;
   final String status;
   final String nis;
-  final String ttl;
-  final String jenkel;
-  final String alamat;
   final String programKeahlian;
   final String kelas;
-  final String tahunMasuk;
-  final String noHp;
-  final String email;
-  final String namaOrtu;
-  final String noHpOrtu;
+  final int poinApresiasi;
+  final int poinPelanggaran;
+  final int poinTotal;
 
   Student({
     required this.name,
     required this.status,
     required this.nis,
-    required this.ttl,
-    required this.jenkel,
-    required this.alamat,
     required this.programKeahlian,
     required this.kelas,
-    required this.tahunMasuk,
-    required this.noHp,
-    required this.email,
-    required this.namaOrtu,
-    required this.noHpOrtu,
+    required this.poinApresiasi,
+    required this.poinPelanggaran,
+    required this.poinTotal,
   });
 }
 
@@ -49,7 +95,8 @@ class ViolationHistory {
   final int points;
   final IconData icon;
   final Color color;
-  final String pelapor;
+  final String? pelanggaranKe;
+  final String kategori;
 
   ViolationHistory({
     required this.type,
@@ -59,7 +106,8 @@ class ViolationHistory {
     required this.points,
     required this.icon,
     required this.color,
-    required this.pelapor,
+    this.pelanggaranKe,
+    required this.kategori,
   });
 }
 
@@ -71,7 +119,7 @@ class AppreciationHistory {
   final int points;
   final IconData icon;
   final Color color;
-  final String pemberi;
+  final String kategori;
 
   AppreciationHistory({
     required this.type,
@@ -81,7 +129,7 @@ class AppreciationHistory {
     required this.points,
     required this.icon,
     required this.color,
-    required this.pemberi,
+    required this.kategori,
   });
 }
 
@@ -125,28 +173,16 @@ class _DetailScreenState extends State<DetailScreen>
   List<AccumulationHistory> akumulasiHistory = [];
   bool isLoadingViolations = true;
   bool isLoadingAppreciations = true;
+  bool isLoadingStudent = true;
   String? errorMessageViolations;
   String? errorMessageAppreciations;
+  String? errorMessageStudent;
+  Map<String, dynamic>? kelasData;
+  List<dynamic> aspekPenilaianData = [];
 
   @override
   void initState() {
     super.initState();
-
-    detailedStudent = Student(
-      name: widget.student['name'],
-      status: widget.student['status'],
-      nis: "2023001",
-      ttl: "Bandung, 15 Mei 2007",
-      jenkel: "Laki-laki",
-      alamat: "Jl. Merdeka No. 123, Cimahi, Jawa Barat",
-      programKeahlian: "Rekayasa Perangkat Lunak",
-      kelas: "XI RPL 2",
-      tahunMasuk: "2023",
-      noHp: "08123456789",
-      email: "ahmad.sudarji@smk.sch.id",
-      namaOrtu: "Budi Sudarji",
-      noHpOrtu: "08129876543",
-    );
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -163,11 +199,107 @@ class _DetailScreenState extends State<DetailScreen>
     );
 
     _animationController.forward();
-    fetchViolations();
-    fetchAppreciations();
+    fetchStudentData(widget.student['nisn']);
+    fetchAspekPenilaian();
   }
 
-  Future<void> fetchViolations() async {
+  Future<void> fetchStudentData(String nis) async {
+    setState(() {
+      isLoadingStudent = true;
+      errorMessageStudent = null;
+    });
+
+    try {
+      final siswaResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/siswa?nis=$nis'),
+      );
+      final kelasResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/kelas'),
+      );
+
+      if (siswaResponse.statusCode == 200 && kelasResponse.statusCode == 200) {
+        final siswaJson = jsonDecode(siswaResponse.body);
+        final kelasJson = jsonDecode(kelasResponse.body);
+
+        if (siswaJson['success'] && kelasJson['success']) {
+          final siswaData = siswaJson['data'].firstWhere(
+            (s) => s['nis'].toString() == nis,
+            orElse: () => null,
+          );
+          final kelas = kelasJson['data'].firstWhere(
+            (k) => k['id_kelas'] == siswaData['id_kelas'],
+            orElse: () => null,
+          );
+
+          if (siswaData != null && kelas != null) {
+            setState(() {
+              detailedStudent = Student(
+                name: siswaData['nama_siswa'],
+                status:
+                    siswaData['poin_total'] >= 0
+                        ? 'Aman'
+                        : siswaData['poin_total'] >= -20
+                        ? 'Bermasalah'
+                        : 'Prioritas',
+                nis: siswaData['nis'].toString(),
+                programKeahlian: kelas['jurusan'].toUpperCase(),
+                kelas: kelas['nama_kelas'],
+                poinApresiasi: siswaData['poin_apresiasi'],
+                poinPelanggaran: siswaData['poin_pelanggaran'],
+                poinTotal: siswaData['poin_total'],
+              );
+              kelasData = kelas;
+              isLoadingStudent = false;
+            });
+            fetchViolations(nis);
+            fetchAppreciations(nis);
+          } else {
+            setState(() {
+              errorMessageStudent = 'Data siswa atau kelas tidak ditemukan';
+              isLoadingStudent = false;
+            });
+          }
+        } else {
+          setState(() {
+            errorMessageStudent =
+                siswaJson['message'] ??
+                kelasJson['message'] ??
+                'Gagal mengambil data siswa/kelas';
+            isLoadingStudent = false;
+          });
+        }
+      } else {
+        setState(() {
+          errorMessageStudent = 'Gagal mengambil data dari server';
+          isLoadingStudent = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessageStudent = 'Terjadi kesalahan: $e';
+        isLoadingStudent = false;
+      });
+    }
+  }
+
+  Future<void> fetchAspekPenilaian() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/aspekpenilaian'),
+      );
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['success']) {
+          setState(() {
+            aspekPenilaianData = jsonData['data'];
+          });
+        }
+      }
+    } catch (e) {
+    }
+  }
+
+  Future<void> fetchViolations(String nis) async {
     setState(() {
       isLoadingViolations = true;
       errorMessageViolations = null;
@@ -177,7 +309,6 @@ class _DetailScreenState extends State<DetailScreen>
       final response = await http.get(
         Uri.parse('http://10.0.2.2:8000/api/peringatan'),
       );
-
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         if (jsonData['success']) {
@@ -186,15 +317,41 @@ class _DetailScreenState extends State<DetailScreen>
             pelanggaranHistory =
                 data.map((item) {
                   final apiViolation = ApiViolation.fromJson(item);
+                  final aspek = aspekPenilaianData.firstWhere(
+                    (a) =>
+                        a['pelanggaran_ke'] ==
+                            (apiViolation.levelSp == 'SP1' ? '1' : '2') &&
+                        a['jenis_poin'] == 'Pelanggaran',
+                    orElse:
+                        () => {
+                          'indikator_poin':
+                              apiViolation.levelSp == 'SP1' ? 5 : 10,
+                          'uraian': apiViolation.alasan,
+                          'kategori':
+                              apiViolation.levelSp == 'SP1'
+                                  ? 'Ringan'
+                                  : 'Terlambat',
+                          'pelanggaran_ke':
+                              apiViolation.levelSp == 'SP1' ? '1' : '2',
+                        },
+                  );
                   return ViolationHistory(
                     type: apiViolation.levelSp,
-                    description: apiViolation.alasan,
+                    description: aspek['uraian'],
                     date: apiViolation.tanggalSp,
-                    time: "00:00",
-                    points: apiViolation.levelSp == 'SP1' ? -5 : -10,
+                    time:
+                        apiViolation.createdAt != null
+                            ? DateTime.parse(
+                              apiViolation.createdAt!,
+                            ).toLocal().toString().substring(11, 16)
+                            : "00:00",
+                    points:
+                        aspek['indikator_poin'] ??
+                        (apiViolation.levelSp == 'SP1' ? 5 : 10),
                     icon: Icons.warning,
                     color: const Color(0xFFFF6B6D),
-                    pelapor: "Tidak diketahui",
+                    pelanggaranKe: aspek['pelanggaran_ke'],
+                    kategori: aspek['kategori'],
                   );
                 }).toList();
             isLoadingViolations = false;
@@ -224,7 +381,7 @@ class _DetailScreenState extends State<DetailScreen>
     }
   }
 
-  Future<void> fetchAppreciations() async {
+  Future<void> fetchAppreciations(String nis) async {
     setState(() {
       isLoadingAppreciations = true;
       errorMessageAppreciations = null;
@@ -234,7 +391,6 @@ class _DetailScreenState extends State<DetailScreen>
       final response = await http.get(
         Uri.parse('http://10.0.2.2:8000/api/Penghargaan'),
       );
-
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         if (jsonData['success']) {
@@ -243,15 +399,36 @@ class _DetailScreenState extends State<DetailScreen>
             apresiasiHistory =
                 data.map((item) {
                   final apiAppreciation = ApiAppreciation.fromJson(item);
+                  final aspek = aspekPenilaianData.firstWhere(
+                    (a) =>
+                        a['jenis_poin'] == 'Apresiasi' &&
+                        a['kategori'] == 'Tepat waktu',
+                    orElse:
+                        () => {
+                          'indikator_poin':
+                              apiAppreciation.levelPenghargaan == 'PH1'
+                                  ? 10
+                                  : 20,
+                          'uraian': apiAppreciation.alasan,
+                          'kategori': 'Tepat waktu',
+                        },
+                  );
                   return AppreciationHistory(
                     type: apiAppreciation.levelPenghargaan,
-                    description: apiAppreciation.alasan,
+                    description: aspek['uraian'],
                     date: apiAppreciation.tanggalPenghargaan,
-                    time: "00:00",
-                    points: apiAppreciation.levelPenghargaan == 'PH1' ? 10 : 20,
+                    time:
+                        apiAppreciation.createdAt != null
+                            ? DateTime.parse(
+                              apiAppreciation.createdAt!,
+                            ).toLocal().toString().substring(11, 16)
+                            : "00:00",
+                    points:
+                        aspek['indikator_poin'] ??
+                        (apiAppreciation.levelPenghargaan == 'PH1' ? 10 : 20),
                     icon: Icons.star,
                     color: const Color(0xFF10B981),
-                    pemberi: "Tidak diketahui",
+                    kategori: aspek['kategori'],
                   );
                 }).toList();
             isLoadingAppreciations = false;
@@ -326,7 +503,7 @@ class _DetailScreenState extends State<DetailScreen>
                   ) &&
                   itemDate.isBefore(endDate.add(const Duration(days: 1)));
             } catch (e) {
-              return false; 
+              return false;
             }
           })
           .fold(0, (sum, item) => sum + item.points);
@@ -345,7 +522,7 @@ class _DetailScreenState extends State<DetailScreen>
           })
           .fold(0, (sum, item) => sum + item.points);
 
-      int total = pelanggaranPoints + apresiasiPoints;
+      int total = apresiasiPoints - pelanggaranPoints;
 
       String status;
       if (total >= 0) {
@@ -412,6 +589,30 @@ class _DetailScreenState extends State<DetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (isLoadingStudent) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (errorMessageStudent != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                errorMessageStudent!,
+                style: GoogleFonts.poppins(color: Colors.red),
+              ),
+              ElevatedButton(
+                onPressed: () => fetchStudentData(widget.student['nisn']),
+                child: Text('Coba Lagi', style: GoogleFonts.poppins()),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final backgroundGradient = _getBackgroundGradient(detailedStudent.status);
     final shadowColor = _getBackgroundShadowColor(detailedStudent.status);
 
@@ -795,21 +996,6 @@ class _DetailScreenState extends State<DetailScreen>
                                   Icons.badge,
                                 ),
                                 _buildBiodataRow(
-                                  'Tempat, Tanggal Lahir',
-                                  detailedStudent.ttl,
-                                  Icons.cake,
-                                ),
-                                _buildBiodataRow(
-                                  'Jenis Kelamin',
-                                  detailedStudent.jenkel,
-                                  Icons.person,
-                                ),
-                                _buildBiodataRow(
-                                  'Alamat',
-                                  detailedStudent.alamat,
-                                  Icons.home,
-                                ),
-                                _buildBiodataRow(
                                   'Program Keahlian',
                                   detailedStudent.programKeahlian,
                                   Icons.school,
@@ -820,29 +1006,19 @@ class _DetailScreenState extends State<DetailScreen>
                                   Icons.class_,
                                 ),
                                 _buildBiodataRow(
-                                  'Tahun Masuk',
-                                  detailedStudent.tahunMasuk,
-                                  Icons.calendar_today,
+                                  'Poin Apresiasi',
+                                  '+${detailedStudent.poinApresiasi}',
+                                  Icons.star,
                                 ),
                                 _buildBiodataRow(
-                                  'No. HP Siswa',
-                                  detailedStudent.noHp,
-                                  Icons.phone,
+                                  'Poin Pelanggaran',
+                                  '+${detailedStudent.poinPelanggaran}',
+                                  Icons.warning,
                                 ),
                                 _buildBiodataRow(
-                                  'Email',
-                                  detailedStudent.email,
-                                  Icons.email,
-                                ),
-                                _buildBiodataRow(
-                                  'Nama Orang Tua',
-                                  detailedStudent.namaOrtu,
-                                  Icons.family_restroom,
-                                ),
-                                _buildBiodataRow(
-                                  'No. HP Orang Tua',
-                                  detailedStudent.noHpOrtu,
-                                  Icons.phone_android,
+                                  'Poin Total',
+                                  '${detailedStudent.poinTotal > 0 ? '+' : ''}${detailedStudent.poinTotal}',
+                                  Icons.calculate,
                                 ),
                               ],
                             ),
@@ -1117,11 +1293,28 @@ class _DetailScreenState extends State<DetailScreen>
                           color: const Color(0xFF6B7280),
                         ),
                       ),
+                      Text(
+                        'Kategori: ${item.kategori}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                      if (isPelanggaran && item.pelanggaranKe != null)
+                        Text(
+                          'Pelanggaran ke: ${item.pelanggaranKe}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF6B7280),
+                          ),
+                        ),
                     ],
                   ),
                 ),
                 Text(
-                  '${item.points > 0 ? '+' : ''}${item.points}',
+                  '+${item.points}',
                   style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
@@ -1151,27 +1344,6 @@ class _DetailScreenState extends State<DetailScreen>
                       const SizedBox(width: 8),
                       Text(
                         '${item.date} • ${item.time}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF6B7280),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.person,
-                        size: 16,
-                        color: const Color(0xFF6B7280),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        isPelanggaran
-                            ? 'Pelapor: ${item.pelapor}'
-                            : 'Pemberi: ${item.pemberi}',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1288,7 +1460,7 @@ class _DetailScreenState extends State<DetailScreen>
                         ),
                       ),
                       Text(
-                        '${item.pelanggaran}',
+                        '+${item.pelanggaran}',
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -1389,23 +1561,21 @@ class _DetailScreenState extends State<DetailScreen>
             ),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                double totalPoints =
-                    item.apresiasi + item.pelanggaran.abs().toDouble();
+                int totalPoints = item.apresiasi + item.pelanggaran;
                 double redFraction =
-                    totalPoints > 0 ? item.pelanggaran.abs() / totalPoints : 0;
+                    totalPoints > 0 ? item.pelanggaran / totalPoints : 0;
                 double greenFraction =
                     totalPoints > 0 ? item.apresiasi / totalPoints : 0;
                 return Stack(
                   children: [
-                    if (item.pelanggaran < 0)
-                      Container(
-                        width: redFraction * constraints.maxWidth,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF6B6D),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
+                    Container(
+                      width: redFraction * constraints.maxWidth,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF6B6D),
+                        borderRadius: BorderRadius.circular(4),
                       ),
+                    ),
                     Align(
                       alignment: Alignment.centerRight,
                       child: Container(
