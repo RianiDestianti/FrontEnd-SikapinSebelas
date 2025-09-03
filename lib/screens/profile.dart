@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/models/profile.dart';
-import 'package:skoring/screens/introduction/onboarding.dart'; 
+import 'package:skoring/screens/introduction/onboarding.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -77,19 +79,22 @@ class _ProfileScreenState extends State<ProfileScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => LogoutDialog(
-        onLogout: _handleLogout, 
-      ),
+      builder: (BuildContext context) => LogoutDialog(onLogout: _handleLogout),
     );
   }
 
-  void _handleLogout() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (context) => const IntroductionScreen(),
-      ),
-      (route) => false, 
+  void _handleLogout() async {
+    final response = await http.post(
+      Uri.parse("http://10.0.2.2:8000/api/logout"),
     );
+
+    final data = jsonDecode(response.body);
+    if (data['status'] == true) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const IntroductionScreen()),
+        (route) => false,
+      );
+    }
   }
 
   @override
@@ -640,10 +645,7 @@ class LogoutButton extends StatelessWidget {
 class LogoutDialog extends StatelessWidget {
   final VoidCallback onLogout;
 
-  const LogoutDialog({
-    super.key,
-    required this.onLogout, 
-  });
+  const LogoutDialog({super.key, required this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -730,8 +732,8 @@ class LogoutDialog extends StatelessWidget {
             Expanded(
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); 
-                  onLogout(); 
+                  Navigator.pop(context);
+                  onLogout();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF6B6B),
