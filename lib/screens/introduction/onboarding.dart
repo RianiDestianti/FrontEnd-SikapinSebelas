@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/models/introduction.dart';
 import 'package:skoring/screens/introduction/swipeup.dart';
 import 'package:skoring/screens/kaprog/student.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
@@ -671,22 +673,46 @@ class _LoginFormState extends State<_LoginForm> {
     );
   }
 
-  void _handleLogin() {
-    String nip = _nipController.text.trim();
-    String password = _passwordController.text.trim();
+  void _handleLogin() async {
+  String nip = _nipController.text.trim();
+  String password = _passwordController.text.trim();
 
-    if (nip == '12345678' && password == 'walikelas') {
-      Navigator.pushNamed(context, '/walikelas');
-    } else if (nip == '87654321' && password == 'kaprog') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ProgramKeahlianScreen()),
-      );
-    } else {
-      _showSnackBar(context, 'NIP atau password salah');
-    }
-    widget.onLogin();
+  if (nip.isEmpty || password.isEmpty) {
+    _showSnackBar(context, "Harap isi NIP dan password");
+    return;
   }
+
+  try {
+    final response = await http.post(
+      Uri.parse("http://10.0.2.2:8000/api/login"), // ganti sesuai API kamu
+      body: {
+        "nip": nip,
+        "password": password,
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['status'] == true) {
+      String role = data['role'];
+
+      if (role == 'wali_kelas') {
+        Navigator.pushNamed(context, '/walikelas');
+      } else if (role == 'guru_bk') {
+        Navigator.pushNamed(context, '/gurubk');
+      } else {
+        _showSnackBar(context, "Role tidak dikenali");
+      }
+    } else {
+      _showSnackBar(context, data['message'] ?? 'Login gagal');
+    }
+  } catch (e) {
+    _showSnackBar(context, "Terjadi kesalahan: $e");
+  }
+
+  widget.onLogin();
+}
+
 
   @override
   void dispose() {
