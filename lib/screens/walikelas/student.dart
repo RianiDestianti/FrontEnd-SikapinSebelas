@@ -7,7 +7,7 @@ import 'detail.dart';
 import 'package:skoring/screens/walikelas/notification.dart';
 import 'package:skoring/screens/profile.dart';
 import 'package:skoring/models/api_kelas.dart';
-import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Student {
   final int nis;
@@ -79,7 +79,7 @@ class _SiswaScreenState extends State<SiswaScreen>
   String? errorMessageKelas;
   String? errorMessageSiswa;
   String? walikelasId;
-  String? idKelas; 
+  String? idKelas;
 
   @override
   void initState() {
@@ -103,10 +103,8 @@ class _SiswaScreenState extends State<SiswaScreen>
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       walikelasId = prefs.getString('walikelas_id');
-      idKelas = prefs.getString('id_kelas'); 
-      print(
-        'Loaded walikelasId: $walikelasId, id_kelas: $idKelas',
-      ); 
+      idKelas = prefs.getString('id_kelas');
+      print('Loaded walikelasId: $walikelasId, id_kelas: $idKelas');
     });
   }
 
@@ -264,11 +262,19 @@ class _SiswaScreenState extends State<SiswaScreen>
             (context) => DetailScreen(
               student: {
                 'name': student.namaSiswa,
-                'nisn': student.nis.toString(),
+                'nis':
+                    student.nis
+                        .toString(), 
                 'status': student.status,
                 'points': student.points,
                 'absent': 0,
                 'absen': student.nis,
+                'idKelas': student.idKelas, 
+                'programKeahlian':
+                    selectedKelas?.jurusan.toUpperCase() ?? 'Tidak Diketahui',
+                'kelas': selectedKelas?.namaKelas ?? 'Tidak Diketahui',
+                'poinApresiasi': student.poinApresiasi ?? 0,
+                'poinPelanggaran': student.poinPelanggaran ?? 0,
               },
             ),
       ),

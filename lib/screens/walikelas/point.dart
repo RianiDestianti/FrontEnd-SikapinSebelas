@@ -12,7 +12,10 @@ class PointUtils {
     required String category,
     required BuildContext context,
   }) async {
-    if (studentName.isEmpty || className.isEmpty || date.isEmpty || category.isEmpty) {
+    if (studentName.isEmpty ||
+        className.isEmpty ||
+        date.isEmpty ||
+        category.isEmpty) {
       _showErrorSnackBar(context, 'Mohon lengkapi semua field yang diperlukan');
       return null;
     }
@@ -25,7 +28,7 @@ class PointUtils {
       className: className,
       date: date,
       description: description,
-      category: category, 
+      category: category,
     );
 
     print(
@@ -149,7 +152,7 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
     super.initState();
     _initializeAnimations();
     _nameController.text = widget.studentName;
-    _classController.text = 'XII RPL 2'; 
+    _classController.text = 'XII RPL 2';
     _dateController.text = DateTime.now().toString().split(' ')[0];
     _selectedCategory = _categories[_selectedPointType]?.first['value'] ?? '';
   }
@@ -267,7 +270,8 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
                     selectedCategory: _selectedCategory,
                     categories: _categories,
                     onPointTypeChanged: _onPointTypeChanged,
-                    onCategoryChanged: (value) => setState(() => _selectedCategory = value),
+                    onCategoryChanged:
+                        (value) => setState(() => _selectedCategory = value),
                     isSubmitting: _isSubmitting,
                     onClose: _closeDialog,
                     onSubmit: _submitPoint,
@@ -632,19 +636,20 @@ class PointTypeDropdown extends StatelessWidget {
                     Icons.keyboard_arrow_down,
                     color: Color(0xFF6B7280),
                   ),
-                  items: pointTypes.map((String type) {
-                    return DropdownMenuItem<String>(
-                      value: type,
-                      child: Text(
-                        type,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF374151),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                  items:
+                      pointTypes.map((String type) {
+                        return DropdownMenuItem<String>(
+                          value: type,
+                          child: Text(
+                            type,
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF374151),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                   onChanged: (String? newValue) {
                     if (newValue != null) {
                       onChanged(newValue);
@@ -716,19 +721,20 @@ class CategoryDropdown extends StatelessWidget {
                     Icons.keyboard_arrow_down,
                     color: Color(0xFF6B7280),
                   ),
-                  items: categories.map((Map<String, String> category) {
-                    return DropdownMenuItem<String>(
-                      value: category['value'],
-                      child: Text(
-                        '${category['value']} - ${category['title']}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF374151),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                  items:
+                      categories.map((Map<String, String> category) {
+                        return DropdownMenuItem<String>(
+                          value: category['value'],
+                          child: Text(
+                            '${category['value']} - ${category['title']}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF374151),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                   onChanged: (String? newValue) {
                     if (newValue != null) {
                       onChanged(newValue);

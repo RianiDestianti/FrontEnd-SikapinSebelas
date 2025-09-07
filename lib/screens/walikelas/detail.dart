@@ -199,81 +199,30 @@ class _DetailScreenState extends State<DetailScreen>
     );
 
     _animationController.forward();
-    fetchStudentData(widget.student['nisn']);
+    initializeStudentData();
     fetchAspekPenilaian();
   }
 
-  Future<void> fetchStudentData(String nis) async {
+  void initializeStudentData() {
     setState(() {
       isLoadingStudent = true;
       errorMessageStudent = null;
     });
 
     try {
-      final siswaResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/siswa?nis=$nis'),
+      detailedStudent = Student(
+        name: widget.student['name'],
+        status: widget.student['status'],
+        nis: widget.student['nis'],
+        programKeahlian: widget.student['programKeahlian'],
+        kelas: widget.student['kelas'],
+        poinApresiasi: widget.student['poinApresiasi'],
+        poinPelanggaran: widget.student['poinPelanggaran'],
+        poinTotal: widget.student['points'],
       );
-      final kelasResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/kelas'),
-      );
-
-      if (siswaResponse.statusCode == 200 && kelasResponse.statusCode == 200) {
-        final siswaJson = jsonDecode(siswaResponse.body);
-        final kelasJson = jsonDecode(kelasResponse.body);
-
-        if (siswaJson['success'] && kelasJson['success']) {
-          final siswaData = siswaJson['data'].firstWhere(
-            (s) => s['nis'].toString() == nis,
-            orElse: () => null,
-          );
-          final kelas = kelasJson['data'].firstWhere(
-            (k) => k['id_kelas'] == siswaData['id_kelas'],
-            orElse: () => null,
-          );
-
-          if (siswaData != null && kelas != null) {
-            setState(() {
-              detailedStudent = Student(
-                name: siswaData['nama_siswa'],
-                status:
-                    siswaData['poin_total'] >= 0
-                        ? 'Aman'
-                        : siswaData['poin_total'] >= -20
-                        ? 'Bermasalah'
-                        : 'Prioritas',
-                nis: siswaData['nis'].toString(),
-                programKeahlian: kelas['jurusan'].toUpperCase(),
-                kelas: kelas['nama_kelas'],
-                poinApresiasi: siswaData['poin_apresiasi'],
-                poinPelanggaran: siswaData['poin_pelanggaran'],
-                poinTotal: siswaData['poin_total'],
-              );
-              kelasData = kelas;
-              isLoadingStudent = false;
-            });
-            fetchViolations(nis);
-            fetchAppreciations(nis);
-          } else {
-            setState(() {
-              errorMessageStudent = 'Data siswa atau kelas tidak ditemukan';
-              isLoadingStudent = false;
-            });
-          }
-        } else {
-          setState(() {
-            errorMessageStudent =
-                siswaJson['message'] ??
-                kelasJson['message'] ??
-                'Gagal mengambil data siswa/kelas';
-            isLoadingStudent = false;
-          });
-        }
-      } else {
-        setState(() {
-          errorMessageStudent = 'Gagal mengambil data dari server';
-          isLoadingStudent = false;
-        });
-      }
+      isLoadingStudent = false;
+      fetchViolations(widget.student['nis']);
+      fetchAppreciations(widget.student['nis']);
     } catch (e) {
       setState(() {
         errorMessageStudent = 'Terjadi kesalahan: $e';
@@ -306,7 +255,7 @@ class _DetailScreenState extends State<DetailScreen>
 
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/peringatan'),
+        Uri.parse('http://10.0.2.2:8000/api/peringatan?nis=$nis'),
       );
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -388,7 +337,7 @@ class _DetailScreenState extends State<DetailScreen>
 
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/Penghargaan'),
+        Uri.parse('http://10.0.2.2:8000/api/Penghargaan?nis=$nis'),
       );
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -603,7 +552,7 @@ class _DetailScreenState extends State<DetailScreen>
                 style: GoogleFonts.poppins(color: Colors.red),
               ),
               ElevatedButton(
-                onPressed: () => fetchStudentData(widget.student['nisn']),
+                onPressed: () => initializeStudentData(),
                 child: Text('Coba Lagi', style: GoogleFonts.poppins()),
               ),
             ],
@@ -990,7 +939,7 @@ class _DetailScreenState extends State<DetailScreen>
                                 ),
                                 const SizedBox(height: 16),
                                 _buildBiodataRow(
-                                  'NIS/NISN',
+                                  'NIS',
                                   detailedStudent.nis,
                                   Icons.badge,
                                 ),
@@ -1011,7 +960,7 @@ class _DetailScreenState extends State<DetailScreen>
                                 ),
                                 _buildBiodataRow(
                                   'Poin Pelanggaran',
-                                  '+${detailedStudent.poinPelanggaran}',
+                                  '-${detailedStudent.poinPelanggaran.abs()}',
                                   Icons.warning,
                                 ),
                                 _buildBiodataRow(
