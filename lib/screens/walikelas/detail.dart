@@ -295,8 +295,7 @@ class _DetailScreenState extends State<DetailScreen>
           });
         }
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Future<void> fetchViolations(String nis) async {

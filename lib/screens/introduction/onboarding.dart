@@ -6,6 +6,7 @@ import 'package:skoring/screens/introduction/swipeup.dart';
 import 'package:skoring/screens/kaprog/student.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
@@ -662,7 +663,7 @@ class _LoginForm extends StatefulWidget {
 class _LoginFormState extends State<_LoginForm> {
   final TextEditingController _nipController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isPasswordVisible = false; // Tambahkan ini
+  bool _isPasswordVisible = false; 
 
   void _showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(
@@ -670,43 +671,45 @@ class _LoginFormState extends State<_LoginForm> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _handleLogin() async {
-    String nip = _nipController.text.trim();
-    String password = _passwordController.text.trim();
+void _handleLogin() async {
+  String nip = _nipController.text.trim();
+  String password = _passwordController.text.trim();
 
-    if (nip.isEmpty || password.isEmpty) {
-      _showSnackBar(context, "Harap isi NIP dan password");
-      return;
-    }
-
-    try {
-      final response = await http.post(
-        Uri.parse("http://10.0.2.2:8000/api/login"), // ganti sesuai API kamu
-        body: {"nip": nip, "password": password},
-      );
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200 && data['status'] == true) {
-        String role = data['role'].toString();
-
-        if (role == '3') {
-          Navigator.pushNamed(context, '/walikelas');
-        } else if (role == '4') {
-          Navigator.pushNamed(context, '/kaprog');
-        } else {
-          _showSnackBar(context, "Role tidak dikenali");
-        }
-      } else {
-        _showSnackBar(context, data['message'] ?? 'Login gagal');
-      }
-    } catch (e) {
-      _showSnackBar(context, "Terjadi kesalahan: $e");
-    }
-
-    widget.onLogin();
+  if (nip.isEmpty || password.isEmpty) {
+    _showSnackBar(context, "Harap isi NIP dan password");
+    return;
   }
 
+  try {
+    final response = await http.post(
+      Uri.parse("http://10.0.2.2:8000/api/login"),
+      body: {"nip": nip, "password": password},
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['status'] == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('id_kelas', data['detail']['id_kelas']);
+      await prefs.setString('walikelas_id', data['detail']['nip_walikelas']?.toString() ?? nip);
+      String role = data['role'].toString();
+
+      if (role == '3') {
+        Navigator.pushNamed(context, '/walikelas');
+      } else if (role == '4') {
+        Navigator.pushNamed(context, '/kaprog');
+      } else {
+        _showSnackBar(context, "Role tidak dikenali");
+      }
+    } else {
+      _showSnackBar(context, data['message'] ?? 'Login gagal');
+    }
+  } catch (e) {
+    _showSnackBar(context, "Terjadi kesalahan: $e");
+  }
+
+  widget.onLogin();
+}
   @override
   void dispose() {
     _nipController.dispose();

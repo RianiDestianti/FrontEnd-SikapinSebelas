@@ -7,6 +7,7 @@ import 'detail.dart';
 import 'package:skoring/screens/walikelas/notification.dart';
 import 'package:skoring/screens/profile.dart';
 import 'package:skoring/models/api_kelas.dart';
+import 'package:shared_preferences/shared_preferences.dart'; 
 
 class Student {
   final int nis;
@@ -58,6 +59,7 @@ class Student {
 
 class SiswaScreen extends StatefulWidget {
   const SiswaScreen({Key? key}) : super(key: key);
+
   @override
   State<SiswaScreen> createState() => _SiswaScreenState();
 }
@@ -76,6 +78,8 @@ class _SiswaScreenState extends State<SiswaScreen>
   bool isLoadingSiswa = true;
   String? errorMessageKelas;
   String? errorMessageSiswa;
+  String? walikelasId;
+  String? idKelas; 
 
   @override
   void initState() {
@@ -89,11 +93,32 @@ class _SiswaScreenState extends State<SiswaScreen>
     );
     _animationController.forward();
 
-    fetchKelas();
-    fetchSiswa();
+    _loadWalikelasId().then((_) {
+      fetchKelas();
+      fetchSiswa();
+    });
+  }
+
+  Future<void> _loadWalikelasId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      walikelasId = prefs.getString('walikelas_id');
+      idKelas = prefs.getString('id_kelas'); 
+      print(
+        'Loaded walikelasId: $walikelasId, id_kelas: $idKelas',
+      ); 
+    });
   }
 
   Future<void> fetchKelas() async {
+    if (walikelasId == null) {
+      setState(() {
+        errorMessageKelas = 'ID walikelas tidak ditemukan';
+        isLoadingKelas = false;
+      });
+      return;
+    }
+
     setState(() {
       isLoadingKelas = true;
       errorMessageKelas = null;
@@ -111,8 +136,21 @@ class _SiswaScreenState extends State<SiswaScreen>
           if (data.isNotEmpty) {
             setState(() {
               kelasList = data.map((json) => Kelas.fromJson(json)).toList();
-              selectedKelas = kelasList.first;
+              selectedKelas =
+                  idKelas != null
+                      ? kelasList.firstWhere(
+                        (kelas) => kelas.idKelas == idKelas,
+                        orElse:
+                            () =>
+                                kelasList.isNotEmpty
+                                    ? kelasList.first
+                                    : throw Exception('No valid class found'),
+                      )
+                      : (kelasList.isNotEmpty ? kelasList.first : null);
               isLoadingKelas = false;
+              if (selectedKelas == null) {
+                errorMessageKelas = 'Kelas terkait tidak ditemukan';
+              }
             });
           } else {
             setState(() {
@@ -246,6 +284,7 @@ class _SiswaScreenState extends State<SiswaScreen>
     final bool isLoading = isLoadingKelas || isLoadingSiswa;
     final bool hasError =
         errorMessageKelas != null || errorMessageSiswa != null;
+
     if (isLoading) {
       return Row(
         children: [
@@ -284,7 +323,9 @@ class _SiswaScreenState extends State<SiswaScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Gagal memuat data dari server',
+            errorMessageKelas ??
+                errorMessageSiswa ??
+                'Gagal memuat data dari server',
             style: GoogleFonts.poppins(
               color: Colors.white.withOpacity(0.9),
               fontSize: 14,
@@ -335,7 +376,7 @@ class _SiswaScreenState extends State<SiswaScreen>
     }
 
     return Text(
-      'Pilih Kelas',
+      'Tidak ada kelas terkait',
       style: GoogleFonts.poppins(
         color: Colors.white,
         fontSize: 18,
@@ -350,6 +391,7 @@ class _SiswaScreenState extends State<SiswaScreen>
     final bool isLoading = isLoadingKelas || isLoadingSiswa;
     final bool hasError =
         errorMessageKelas != null || errorMessageSiswa != null;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -514,9 +556,7 @@ class _SiswaScreenState extends State<SiswaScreen>
                                       ),
                                     ],
                                   ),
-
                                   const SizedBox(height: 24),
-
                                   Container(
                                     width: double.infinity,
                                     child: _buildHeaderContent(),
@@ -627,7 +667,6 @@ class _SiswaScreenState extends State<SiswaScreen>
                             ),
                           ),
                         ),
-
                         Padding(
                           padding: const EdgeInsets.all(20),
                           child: Column(
@@ -637,58 +676,21 @@ class _SiswaScreenState extends State<SiswaScreen>
                               else if (isLoading)
                                 _buildLoadingState()
                               else ...[
-                                if (kelasList.length > 1) _buildClassSelector(),
-                                if ((_searchQuery.isNotEmpty ||
-                                        _selectedFilter != 0) &&
+                                if (filteredStudents.isEmpty &&
                                     selectedKelas != null)
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(16),
-                                    margin: const EdgeInsets.only(bottom: 16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.06),
-                                          blurRadius: 15,
-                                          offset: const Offset(0, 5),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.info_outline,
-                                          color: const Color(0xFF0083EE),
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          'Ditemukan ${filteredStudents.length} siswa',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF1F2937),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  _buildEmptyState()
+                                else
+                                  Column(
+                                    children:
+                                        filteredStudents.asMap().entries.map((
+                                          entry,
+                                        ) {
+                                          return _buildStudentCard(
+                                            entry.value,
+                                            entry.key,
+                                          );
+                                        }).toList(),
                                   ),
-                                filteredStudents.isEmpty &&
-                                        selectedKelas != null
-                                    ? _buildEmptyState()
-                                    : Column(
-                                      children:
-                                          filteredStudents.asMap().entries.map((
-                                            entry,
-                                          ) {
-                                            return _buildStudentCard(
-                                              entry.value,
-                                              entry.key,
-                                            );
-                                          }).toList(),
-                                    ),
                               ],
                             ],
                           ),
@@ -701,74 +703,6 @@ class _SiswaScreenState extends State<SiswaScreen>
             );
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildClassSelector() {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Pilih Kelas',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1F2937),
-            ),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<Kelas>(
-            value: selectedKelas,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF0083EE)),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
-            items:
-                kelasList.map((kelas) {
-                  return DropdownMenuItem<Kelas>(
-                    value: kelas,
-                    child: Text(
-                      '${kelas.namaKelas} - ${kelas.jurusan.toUpperCase()}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  );
-                }).toList(),
-            onChanged: (Kelas? newValue) {
-              setState(() {
-                selectedKelas = newValue;
-              });
-            },
-          ),
-        ],
       ),
     );
   }
