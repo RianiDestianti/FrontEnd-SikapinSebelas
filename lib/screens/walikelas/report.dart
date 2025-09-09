@@ -1,17 +1,32 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:skoring/screens/walikelas/notification.dart';
 import 'package:skoring/screens/profile.dart';
 import 'package:skoring/widgets/exports/excel.dart';
 import 'package:skoring/widgets/exports/pdf.dart';
 import 'package:skoring/widgets/faq.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FAQItem {
   final String title;
   final List<Map<String, String>> items;
 
   FAQItem({required this.title, required this.items});
+
+  factory FAQItem.fromJson(Map<String, dynamic> json) {
+    return FAQItem(
+      title: json['kategori'] ?? 'Unknown',
+      items: [
+        {
+          'text': json['uraian'] ?? 'No description',
+          'points': '${json['indikator_poin'] ?? 0} poin',
+        },
+      ],
+    );
+  }
 }
 
 class StudentScore {
@@ -26,6 +41,24 @@ class StudentScore {
     required this.poin,
     required this.type,
   });
+
+  factory StudentScore.fromPenghargaan(Map<String, dynamic> json) {
+    return StudentScore(
+      keterangan: json['alasan'] ?? 'Unknown',
+      tanggal: json['tanggal_penghargaan'] ?? 'Unknown',
+      poin: 0,
+      type: 'apresiasi',
+    );
+  }
+
+  factory StudentScore.fromPeringatan(Map<String, dynamic> json) {
+    return StudentScore(
+      keterangan: json['alasan'] ?? 'Unknown',
+      tanggal: json['tanggal_sp'] ?? 'Unknown',
+      poin: 0,
+      type: 'pelanggaran',
+    );
+  }
 }
 
 class Student {
@@ -48,6 +81,43 @@ class Student {
     required this.avatar,
     required this.scores,
   });
+
+  factory Student.fromJson(
+    Map<String, dynamic> json,
+    List<StudentScore> scores,
+  ) {
+    final totalPoin = json['poin_total'] ?? 0;
+    return Student(
+      name: json['nama_siswa'] ?? 'Unknown',
+      totalPoin: totalPoin,
+      apresiasi: json['poin_apresiasi'] ?? 0,
+      pelanggaran: json['poin_pelanggaran'] ?? 0,
+      isPositive: totalPoin >= 0,
+      color: totalPoin >= 0 ? const Color(0xFF10B981) : const Color(0xFFFF6B6D),
+      avatar: (json['nama_siswa'] ?? 'U').substring(0, 2).toUpperCase(),
+      scores: scores,
+    );
+  }
+}
+
+class Kelas {
+  final String idKelas;
+  final String namaKelas;
+  final String jurusan;
+
+  Kelas({
+    required this.idKelas,
+    required this.namaKelas,
+    required this.jurusan,
+  });
+
+  factory Kelas.fromJson(Map<String, dynamic> json) {
+    return Kelas(
+      idKelas: json['id_kelas'] ?? '',
+      namaKelas: json['nama_kelas'] ?? 'Unknown',
+      jurusan: json['jurusan'] ?? 'Unknown',
+    );
+  }
 }
 
 class LaporanScreen extends StatefulWidget {
@@ -61,543 +131,24 @@ class _LaporanScreenState extends State<LaporanScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  String _selectedFilter = '0-50';
+  String _selectedFilter = 'Semua';
   String _selectedView = 'Rekap';
   TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  List<Student> studentsList = [];
+  List<Kelas> kelasList = [];
+  Map<String, FAQItem> faqData = {};
+  Kelas? selectedKelas;
+  bool isLoadingStudents = true;
+  bool isLoadingKelas = true;
+  bool isLoadingAspek = true;
+  String? errorMessageStudents;
+  String? errorMessageKelas;
+  String? errorMessageAspek;
+  String? walikelasId;
+  String? idKelas;
 
-  final Map<String, bool> _expandedSections = {
-    'R1': false,
-    'R2': false,
-    'R3': false,
-    'R4': false,
-    'R5': false,
-    'R6': false,
-    'R7': false,
-    'R8': false,
-    'R9': false,
-    'R10': false,
-    'P1': false,
-    'P2': false,
-    'P3': false,
-    'P4': false,
-    'P5': false,
-    'Sanksi': false,
-  };
-
-  final Map<String, FAQItem> _faqData = {
-    'R1': FAQItem(
-      title: 'Pengembangan Keagamaan',
-      items: [
-        {
-          'text':
-              'Melaksanakan praktik-praktik keagamaan sesuai agama dan kepercayaannya masing-masing.',
-          'points': '20 poin',
-        },
-      ],
-    ),
-    'R2': FAQItem(
-      title: 'Kejujuran',
-      items: [
-        {
-          'text': 'Menyampaikan / melaporkan barang temuan.',
-          'points': '20 poin',
-        },
-        {'text': 'Berkata jujur dalam kesaksian.', 'points': '20 poin'},
-        {
-          'text':
-              'Melaporkan tindakan pelanggaran / negatif yang dilakukan orang lain kepada pihak sekolah / berwajib.',
-          'points': '20 poin',
-        },
-        {'text': 'Jujur dalam menyelesaikan ujian.', 'points': '10 poin'},
-      ],
-    ),
-    'R3': FAQItem(
-      title: 'Prestasi Akademis',
-      items: [
-        {
-          'text':
-              'Berhasil menjadi peringkat pertama di kelas setiap semester.',
-          'points': '20 poin',
-        },
-        {
-          'text':
-              'Berhasil menjadi peringkat 5 besar di kelas setiap semester.',
-          'points': '15 poin',
-        },
-        {
-          'text':
-              'Berhasil menjadi peringkat 10 besar di kelas setiap semester.',
-          'points': '10 poin',
-        },
-        {'text': 'Aktif dalam kegiatan belajar.', 'points': '10 poin'},
-        {
-          'text':
-              'Menghasilkan karya inovatif yang menunjang proses pembelajaran.',
-          'points': '20 poin',
-        },
-        {
-          'text': 'Menjadi peserta didik berprestasi di tingkat sekolah.',
-          'points': '10 poin',
-        },
-        {
-          'text': 'Menjadi peserta didik berprestasi di tingkat kota.',
-          'points': '20 poin',
-        },
-        {
-          'text': 'Menjadi peserta didik berprestasi di tingkat provinsi.',
-          'points': '30 poin',
-        },
-        {
-          'text': 'Menjadi peserta didik berprestasi di tingkat nasional.',
-          'points': '40 poin',
-        },
-        {
-          'text': 'Memperoleh beasiswa prestasi dari instansi/lembaga/yayasan.',
-          'points': '20 poin',
-        },
-      ],
-    ),
-    'R4': FAQItem(
-      title: 'Kedisiplinan',
-      items: [
-        {
-          'text': 'Menyimpan alat-alat pembelajaran di tempatnya.',
-          'points': '10 poin',
-        },
-        {
-          'text':
-              'Tidak pernah melanggar tata tertib minimal 3 bulan berturut-turut.',
-          'points': '20 poin',
-        },
-        {
-          'text':
-              'Tidak pernah melanggar tata tertib minimal 6 bulan berturut-turut.',
-          'points': '30 poin',
-        },
-        {
-          'text':
-              'Tidak pernah melanggar tata tertib minimal 9 bulan berturut-turut.',
-          'points': '40 poin',
-        },
-        {
-          'text':
-              'Tidak pernah melanggar tata tertib minimal 12 bulan berturut-turut.',
-          'points': '50 poin',
-        },
-      ],
-    ),
-    'R5': FAQItem(
-      title: 'Pengembangan Sosial',
-      items: [
-        {
-          'text': 'Membantu/menolong orang yang kena musibah.',
-          'points': '10 poin',
-        },
-        {
-          'text':
-              'Terlibat dalam aksi sosial, seperti bakti sosial ke rumah yatim, donor darah, dan kegiatan sosial lainnya.',
-          'points': '15 poin',
-        },
-      ],
-    ),
-    'R6': FAQItem(
-      title: 'Kepemimpinan',
-      items: [
-        {
-          'text': 'Mengikuti kegiatan LDKS (Latihan Dasar Kepemimpinan Siswa).',
-          'points': '10 poin',
-        },
-        {
-          'text': 'Menjadi ketua OSIS/MPK selama satu periode.',
-          'points': '20 poin',
-        },
-        {
-          'text': 'Menjadi pengurus OSIS/MPK selama satu periode.',
-          'points': '10 poin',
-        },
-        {
-          'text': 'Menjadi ketua kegiatan ekstrakurikuler.',
-          'points': '15 poin',
-        },
-        {'text': 'Menjadi ketua kelompok belajar.', 'points': '10 poin'},
-      ],
-    ),
-    'R7': FAQItem(
-      title: 'Kebangsaan',
-      items: [
-        {
-          'text': 'Mengikuti kegiatan Pendidikan Kesadaran Bela Negara.',
-          'points': '10 poin',
-        },
-        {
-          'text':
-              'Melaksanakan nilai-nilai Pancasila dan UUD 1945 dalam keseharian.',
-          'points': '10 poin',
-        },
-        {'text': 'Menjadi petugas upacara di sekolah.', 'points': '10 poin'},
-        {
-          'text': 'Menjadi petugas upacara di tingkat kota.',
-          'points': '20 poin',
-        },
-        {
-          'text': 'Menjadi petugas upacara di tingkat provinsi.',
-          'points': '30 poin',
-        },
-        {
-          'text': 'Menjadi petugas upacara di tingkat nasional.',
-          'points': '40 poin',
-        },
-        {
-          'text': 'Menjadi duta budaya/seni/pertukaran pelajar.',
-          'points': '30 poin',
-        },
-      ],
-    ),
-    'R8': FAQItem(
-      title: 'Ekstrakurikuler dan Prestasi',
-      items: [
-        {
-          'text': 'Aktif dalam kegiatan ekstrakurikuler wajib.',
-          'points': '10 poin',
-        },
-        {
-          'text': 'Aktif dalam kegiatan ekstrakurikuler lainnya.',
-          'points': '10 poin',
-        },
-        {
-          'text': 'Menjadi peserta perlombaan/kegiatan mewakili sekolah.',
-          'points': '5 poin',
-        },
-        {'text': 'Menjadi juara di tingkat sekolah.', 'points': '5 poin'},
-        {
-          'text': 'Menjadi juara di tingkat kota/kabupaten.',
-          'points': '20 poin',
-        },
-        {'text': 'Menjadi juara di tingkat provinsi.', 'points': '30 poin'},
-        {'text': 'Menjadi juara di tingkat nasional.', 'points': '40 poin'},
-        {
-          'text': 'Menjadi juara di tingkat internasional.',
-          'points': '50 poin',
-        },
-      ],
-    ),
-    'R9': FAQItem(
-      title: 'Peduli Lingkungan',
-      items: [
-        {
-          'text': 'Membuang dan memilah sampah pada tempatnya/sesuai jenis.',
-          'points': '10 poin',
-        },
-        {
-          'text': 'Menghasilkan karya inovatif untuk pelestarian lingkungan.',
-          'points': '20 poin',
-        },
-        {
-          'text': 'Memberikan ide/gagasan yang mengatasi masalah lingkungan.',
-          'points': '20 poin',
-        },
-        {
-          'text':
-              'Menjadi motivator dan inovator dalam memelihara potensi lokal (seni dan budaya).',
-          'points': '20 poin',
-        },
-        {
-          'text': 'Mengikuti kegiatan Reboisasi/menanam pohon.',
-          'points': '10 poin',
-        },
-      ],
-    ),
-    'R10': FAQItem(
-      title: 'Kewirausahaan',
-      items: [
-        {
-          'text': 'Memberi ide/gagasan yang dapat menambah nilai ekonomis.',
-          'points': '10 poin',
-        },
-        {
-          'text': 'Aktif mengikuti kegiatan kewirausahaan sekolah.',
-          'points': '15 poin',
-        },
-        {'text': 'Membuat produk kreatif bernilai jual.', 'points': '20 poin'},
-      ],
-    ),
-    'P1': FAQItem(
-      title: 'Terlambat',
-      items: [
-        {
-          'text': 'Terlambat hadir ke sekolah.',
-          'points': '5 poin per kejadian',
-        },
-      ],
-    ),
-    'P2': FAQItem(
-      title: 'Kehadiran',
-      items: [
-        {
-          'text': 'Tidak mengikuti pelajaran tanpa izin.',
-          'points': '10 poin per jam',
-        },
-      ],
-    ),
-    'P3': FAQItem(
-      title: 'Seragam',
-      items: [
-        {'text': 'Tidak memakai seragam sesuai ketentuan.', 'points': '5 poin'},
-      ],
-    ),
-    'P4': FAQItem(
-      title: 'Kerapian dan Penampilan',
-      items: [
-        {
-          'text': 'Rambut tidak rapi atau tidak sesuai ketentuan.',
-          'points': '10 poin',
-        },
-        {'text': 'Memakai aksesoris berlebihan.', 'points': '10 poin'},
-      ],
-    ),
-    'P5': FAQItem(
-      title: 'Kedisiplinan Berat',
-      items: [
-        {'text': 'Berkelahi/tawuran.', 'points': '50 poin'},
-        {'text': 'Membawa senjata tajam/narkoba.', 'points': '50 poin'},
-        {'text': 'Vandalisme.', 'points': '30 poin'},
-      ],
-    ),
-    'Sanksi': FAQItem(
-      title: 'Ketentuan Sanksi Berdasarkan Akumulasi Poin',
-      items: [
-        {'text': '25 poin', 'points': 'Teguran lisan'},
-        {'text': '50 poin', 'points': 'Teguran tertulis/SP1'},
-        {'text': '75 poin', 'points': 'Pemanggilan orang tua/SP2'},
-        {'text': '100 poin', 'points': 'Skorsing/SP3'},
-        {'text': '100 poin', 'points': 'Dikeluarkan dari sekolah'},
-      ],
-    ),
-  };
-
-  final List<Student> _studentsData = [
-    Student(
-      name: 'Abijalu Anggra Putra',
-      totalPoin: 27,
-      apresiasi: 30,
-      pelanggaran: 3,
-      isPositive: true,
-      color: const Color(0xFF10B981),
-      avatar: 'AP',
-      scores: [
-        StudentScore(
-          keterangan: 'Terlibat Tawuran',
-          tanggal: '12 Juli 2025',
-          poin: -45,
-          type: 'pelanggaran',
-        ),
-        StudentScore(
-          keterangan: 'Juara 1 Olimpiade',
-          tanggal: '10 Juli 2025',
-          poin: 50,
-          type: 'apresiasi',
-        ),
-        StudentScore(
-          keterangan: 'Membantu Guru',
-          tanggal: '8 Juli 2025',
-          poin: 22,
-          type: 'apresiasi',
-        ),
-      ],
-    ),
-    Student(
-      name: 'Ahmad Lutfi Khairul',
-      totalPoin: -45,
-      apresiasi: 5,
-      pelanggaran: 50,
-      isPositive: false,
-      color: const Color(0xFFFF6B6D),
-      avatar: 'AL',
-      scores: [
-        StudentScore(
-          keterangan: 'Terlibat Tawuran',
-          tanggal: '12 Juli 2025',
-          poin: -45,
-          type: 'pelanggaran',
-        ),
-        StudentScore(
-          keterangan: 'Datang Terlambat',
-          tanggal: '11 Juli 2025',
-          poin: -5,
-          type: 'pelanggaran',
-        ),
-        StudentScore(
-          keterangan: 'Membantu Teman',
-          tanggal: '9 Juli 2025',
-          poin: 5,
-          type: 'apresiasi',
-        ),
-      ],
-    ),
-    Student(
-      name: 'Arga Teja',
-      totalPoin: -8,
-      apresiasi: 12,
-      pelanggaran: 20,
-      isPositive: false,
-      color: const Color(0xFFFF6B6D),
-      avatar: 'AT',
-      scores: [
-        StudentScore(
-          keterangan: 'Tidak Mengerjakan PR',
-          tanggal: '13 Juli 2025',
-          poin: -20,
-          type: 'pelanggaran',
-        ),
-        StudentScore(
-          keterangan: 'Membantu Kebersihan',
-          tanggal: '10 Juli 2025',
-          poin: 12,
-          type: 'apresiasi',
-        ),
-      ],
-    ),
-    Student(
-      name: 'Budi Santoso',
-      totalPoin: 75,
-      apresiasi: 80,
-      pelanggaran: 5,
-      isPositive: true,
-      color: const Color(0xFF10B981),
-      avatar: 'BS',
-      scores: [
-        StudentScore(
-          keterangan: 'Juara 1 Lomba Desain',
-          tanggal: '14 Juli 2025',
-          poin: 50,
-          type: 'apresiasi',
-        ),
-        StudentScore(
-          keterangan: 'Aktif di Kelas',
-          tanggal: '12 Juli 2025',
-          poin: 30,
-          type: 'apresiasi',
-        ),
-        StudentScore(
-          keterangan: 'Terlambat',
-          tanggal: '11 Juli 2025',
-          poin: -5,
-          type: 'pelanggaran',
-        ),
-      ],
-    ),
-    Student(
-      name: 'Citra Dewi',
-      totalPoin: 12,
-      apresiasi: 20,
-      pelanggaran: 8,
-      isPositive: true,
-      color: const Color(0xFF10B981),
-      avatar: 'CD',
-      scores: [
-        StudentScore(
-          keterangan: 'Terlibat Tawuran',
-          tanggal: '12 Juli 2025',
-          poin: -45,
-          type: 'pelanggaran',
-        ),
-        StudentScore(
-          keterangan: 'Membantu Guru',
-          tanggal: '10 Juli 2025',
-          poin: 20,
-          type: 'apresiasi',
-        ),
-        StudentScore(
-          keterangan: 'Piket Kelas',
-          tanggal: '8 Juli 2025',
-          poin: 15,
-          type: 'apresiasi',
-        ),
-      ],
-    ),
-    Student(
-      name: 'Deni Ramadan',
-      totalPoin: -15,
-      apresiasi: 10,
-      pelanggaran: 25,
-      isPositive: false,
-      color: const Color(0xFFFF6B6D),
-      avatar: 'DR',
-      scores: [
-        StudentScore(
-          keterangan: 'Bolos Sekolah',
-          tanggal: '13 Juli 2025',
-          poin: -25,
-          type: 'pelanggaran',
-        ),
-        StudentScore(
-          keterangan: 'Membantu Teman',
-          tanggal: '9 Juli 2025',
-          poin: 10,
-          type: 'apresiasi',
-        ),
-      ],
-    ),
-    Student(
-      name: 'Eka Putri',
-      totalPoin: 120,
-      apresiasi: 125,
-      pelanggaran: 5,
-      isPositive: true,
-      color: const Color(0xFF10B981),
-      avatar: 'EP',
-      scores: [
-        StudentScore(
-          keterangan: 'Juara 1 Olimpiade Nasional',
-          tanggal: '15 Juli 2025',
-          poin: 100,
-          type: 'apresiasi',
-        ),
-        StudentScore(
-          keterangan: 'Ketua Kelas Teladan',
-          tanggal: '12 Juli 2025',
-          poin: 25,
-          type: 'apresiasi',
-        ),
-        StudentScore(
-          keterangan: 'Terlambat',
-          tanggal: '10 Juli 2025',
-          poin: -5,
-          type: 'pelanggaran',
-        ),
-      ],
-    ),
-    Student(
-      name: 'Fajar Ahmad',
-      totalPoin: 65,
-      apresiasi: 70,
-      pelanggaran: 5,
-      isPositive: true,
-      color: const Color(0xFF10B981),
-      avatar: 'FA',
-      scores: [
-        StudentScore(
-          keterangan: 'Juara 2 Lomba Programming',
-          tanggal: '14 Juli 2025',
-          poin: 40,
-          type: 'apresiasi',
-        ),
-        StudentScore(
-          keterangan: 'Membantu Guru',
-          tanggal: '11 Juli 2025',
-          poin: 30,
-          type: 'apresiasi',
-        ),
-        StudentScore(
-          keterangan: 'Lupa PR',
-          tanggal: '9 Juli 2025',
-          poin: -5,
-          type: 'pelanggaran',
-        ),
-      ],
-    ),
-  ];
+  final Map<String, bool> _expandedSections = {};
 
   @override
   void initState() {
@@ -610,6 +161,210 @@ class _LaporanScreenState extends State<LaporanScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
+
+    _loadWalikelasId().then((_) {
+      fetchKelas();
+      fetchSiswa();
+      fetchAspekPenilaian();
+    });
+  }
+
+  Future<void> _loadWalikelasId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      walikelasId = prefs.getString('walikelas_id');
+      idKelas = prefs.getString('id_kelas');
+    });
+  }
+
+  Future<void> fetchKelas() async {
+    if (walikelasId == null) {
+      setState(() {
+        errorMessageKelas = 'ID walikelas tidak ditemukan';
+        isLoadingKelas = false;
+      });
+      return;
+    }
+
+    setState(() {
+      isLoadingKelas = true;
+      errorMessageKelas = null;
+    });
+
+    try {
+      final response = await http
+          .get(Uri.parse('http://10.0.2.2:8000/api/kelas'))
+          .timeout(Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['success']) {
+          List<dynamic> data = jsonData['data'];
+          setState(() {
+            kelasList = data.map((json) => Kelas.fromJson(json)).toList();
+            selectedKelas =
+                idKelas != null
+                    ? kelasList.firstWhere(
+                      (kelas) => kelas.idKelas == idKelas,
+                      orElse:
+                          () =>
+                              kelasList.isNotEmpty
+                                  ? kelasList.first
+                                  : throw Exception('No valid class found'),
+                    )
+                    : kelasList.isNotEmpty
+                    ? kelasList.first
+                    : null;
+            isLoadingKelas = false;
+            if (selectedKelas == null) {
+              errorMessageKelas = 'Kelas terkait tidak ditemukan';
+            }
+          });
+        } else {
+          setState(() {
+            errorMessageKelas = jsonData['message'];
+            isLoadingKelas = false;
+          });
+        }
+      } else {
+        setState(() {
+          errorMessageKelas =
+              'Gagal mengambil data kelas: ${response.statusCode}';
+          isLoadingKelas = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessageKelas = 'Terjadi kesalahan: $e';
+        isLoadingKelas = false;
+      });
+    }
+  }
+
+  Future<void> fetchSiswa() async {
+    setState(() {
+      isLoadingStudents = true;
+      errorMessageStudents = null;
+    });
+
+    try {
+      final response = await http
+          .get(Uri.parse('http://10.0.2.2:8000/api/siswa'))
+          .timeout(Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['success']) {
+          List<dynamic> data = jsonData['data'];
+          List<Student> students = [];
+          for (var studentJson in data) {
+            final scores = await _fetchStudentScores(
+              studentJson['nis'].toString(),
+            );
+            students.add(Student.fromJson(studentJson, scores));
+          }
+          setState(() {
+            studentsList = students;
+            isLoadingStudents = false;
+          });
+        } else {
+          setState(() {
+            errorMessageStudents = jsonData['message'];
+            isLoadingStudents = false;
+          });
+        }
+      } else {
+        setState(() {
+          errorMessageStudents =
+              'Gagal mengambil data siswa: ${response.statusCode}';
+          isLoadingStudents = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessageStudents = 'Terjadi kesalahan: $e';
+        isLoadingStudents = false;
+      });
+    }
+  }
+
+  Future<List<StudentScore>> _fetchStudentScores(String nis) async {
+    List<StudentScore> scores = [];
+    try {
+      final penghargaanResponse = await http
+          .get(Uri.parse('http://10.0.2.2:8000/api/penghargaan'))
+          .timeout(Duration(seconds: 10));
+      if (penghargaanResponse.statusCode == 200) {
+        final jsonData = jsonDecode(penghargaanResponse.body);
+        if (jsonData['success']) {
+          scores.addAll(
+            (jsonData['data'] as List)
+                .map((json) => StudentScore.fromPenghargaan(json))
+                .toList(),
+          );
+        }
+      }
+
+      final peringatanResponse = await http
+          .get(Uri.parse('http://10.0.2.2:8000/api/peringatan'))
+          .timeout(Duration(seconds: 10));
+      if (peringatanResponse.statusCode == 200) {
+        final jsonData = jsonDecode(peringatanResponse.body);
+        if (jsonData['success']) {
+          scores.addAll(
+            (jsonData['data'] as List)
+                .map((json) => StudentScore.fromPeringatan(json))
+                .toList(),
+          );
+        }
+      }
+    } catch (e) {
+      // Handle errors silently for scores, as they are supplementary
+    }
+    return scores;
+  }
+
+  Future<void> fetchAspekPenilaian() async {
+    setState(() {
+      isLoadingAspek = true;
+      errorMessageAspek = null;
+    });
+
+    try {
+      final response = await http
+          .get(Uri.parse('http://10.0.2.2:8000/api/aspekpenilaian'))
+          .timeout(Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['success']) {
+          List<dynamic> data = jsonData['data'];
+          Map<String, FAQItem> tempFaqData = {};
+          for (var i = 0; i < data.length; i++) {
+            String key = data[i]['id_aspekpenilaian'] ?? 'A$i';
+            tempFaqData[key] = FAQItem.fromJson(data[i]);
+            _expandedSections[key] = false;
+          }
+          setState(() {
+            faqData = tempFaqData;
+            isLoadingAspek = false;
+          });
+        } else {
+          setState(() {
+            errorMessageAspek = jsonData['message'];
+            isLoadingAspek = false;
+          });
+        }
+      } else {
+        setState(() {
+          errorMessageAspek =
+              'Gagal mengambil data aspek penilaian: ${response.statusCode}';
+          isLoadingAspek = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessageAspek = 'Terjadi kesalahan: $e';
+        isLoadingAspek = false;
+      });
+    }
   }
 
   @override
@@ -620,31 +375,33 @@ class _LaporanScreenState extends State<LaporanScreen>
   }
 
   double get _averageApresiasi {
-    if (_studentsData.isEmpty) return 0;
-    double total = _studentsData.fold(
+    if (studentsList.isEmpty) return 0;
+    double total = studentsList.fold(
       0,
       (sum, student) => sum + student.apresiasi,
     );
-    return total / _studentsData.length;
+    return total / studentsList.length;
   }
 
   double get _apresiasiPercentage {
-    if (_studentsData.isEmpty) return 0;
+    if (studentsList.isEmpty) return 0;
     int positiveCount =
-        _studentsData.where((student) => student.apresiasi > 50).length;
-    return positiveCount / _studentsData.length;
+        studentsList.where((student) => student.apresiasi > 50).length;
+    return positiveCount / studentsList.length;
   }
 
   double get _pelanggaranPercentage {
-    if (_studentsData.isEmpty) return 0;
+    if (studentsList.isEmpty) return 0;
     int lowViolationCount =
-        _studentsData.where((student) => student.pelanggaran < 10).length;
-    return lowViolationCount / _studentsData.length;
+        studentsList.where((student) => student.pelanggaran < 10).length;
+    return lowViolationCount / studentsList.length;
   }
 
   List<Student> get _filteredAndSortedStudents {
+    if (selectedKelas == null) return [];
+
     List<Student> filtered =
-        _studentsData.where((student) {
+        studentsList.where((student) {
           bool matchesSearch = student.name.toLowerCase().contains(
             _searchQuery.toLowerCase(),
           );
@@ -792,7 +549,7 @@ class _LaporanScreenState extends State<LaporanScreen>
                           },
                         )
                         .toList(),
-                    'Laporan_Siswa_XII_RPL_2.pdf',
+                    'Laporan_Siswa_${selectedKelas?.namaKelas ?? 'Unknown'}.pdf',
                   );
                 },
               ),
@@ -825,7 +582,7 @@ class _LaporanScreenState extends State<LaporanScreen>
                           },
                         )
                         .toList(),
-                    'Laporan_Siswa_XII_RPL_2.xlsx',
+                    'Laporan_Siswa_${selectedKelas?.namaKelas ?? 'Unknown'}.xlsx',
                   );
                 },
               ),
@@ -848,9 +605,129 @@ class _LaporanScreenState extends State<LaporanScreen>
     );
   }
 
-  @override
+  Widget _buildHeaderContent() {
+    final bool isLoading =
+        isLoadingKelas || isLoadingStudents || isLoadingAspek;
+    final bool hasError =
+        errorMessageKelas != null ||
+        errorMessageStudents != null ||
+        errorMessageAspek != null;
+
+    if (isLoading) {
+      return Row(
+        children: [
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Text(
+            'Memuat data...',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (hasError) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Terjadi Kesalahan',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            errorMessageKelas ??
+                errorMessageStudents ??
+                errorMessageAspek ??
+                'Gagal memuat data dari server',
+            style: GoogleFonts.poppins(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (selectedKelas != null) {
+      final studentsInClass =
+          studentsList
+              .where(
+                (student) => student.scores.any(
+                  (score) =>
+                      score.type == 'apresiasi' || score.type == 'pelanggaran',
+                ),
+              )
+              .length;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Penilaian Siswa ${selectedKelas!.namaKelas}',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Jurusan: ${selectedKelas!.jurusan.toUpperCase()}',
+            style: GoogleFonts.poppins(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Total Siswa: $studentsInClass • Semester Ganjil 2025/2026',
+            style: GoogleFonts.poppins(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Text(
+      'Tidak ada kelas terkait',
+      style: GoogleFonts.poppins(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool isLoading =
+        isLoadingKelas || isLoadingStudents || isLoadingAspek;
+    final bool hasError =
+        errorMessageKelas != null ||
+        errorMessageStudents != null ||
+        errorMessageAspek != null;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -894,8 +771,7 @@ class _LaporanScreenState extends State<LaporanScreen>
                             child: Padding(
                               padding: EdgeInsets.fromLTRB(
                                 24,
-                                MediaQuery.of(context).padding.top +
-                                    20, // Jarak dari status bar
+                                MediaQuery.of(context).padding.top + 20,
                                 24,
                                 32,
                               ),
@@ -997,130 +873,112 @@ class _LaporanScreenState extends State<LaporanScreen>
                                   const SizedBox(height: 24),
                                   Align(
                                     alignment: Alignment.centerLeft,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Penilaian Siswa XII RPL 2',
-                                          style: GoogleFonts.poppins(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w700,
-                                            height: 1.2,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          'Semester Ganjil 2025/2026',
-                                          style: GoogleFonts.poppins(
-                                            color: Colors.white.withOpacity(
-                                              0.9,
-                                            ),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    child: _buildHeaderContent(),
                                   ),
-                                  const SizedBox(height: 24),
-                                  Container(
-                                    height: 50,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(25),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.08),
-                                          blurRadius: 15,
-                                          offset: const Offset(0, 5),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            gradient: const LinearGradient(
-                                              colors: [
-                                                Color(0xFF61B8FF),
-                                                Color(0xFF0083EE),
-                                              ],
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              30,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.search,
-                                            color: Colors.white,
-                                            size: 18,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: TextField(
-                                            controller: _searchController,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                _searchQuery = value;
-                                              });
-                                            },
-                                            decoration: InputDecoration(
-                                              hintText:
-                                                  _selectedView == 'Rekap'
-                                                      ? 'Cari nama murid...'
-                                                      : 'Cari aturan atau poin...',
-                                              hintStyle: GoogleFonts.poppins(
-                                                color: const Color(0xFF9CA3AF),
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.w400,
-                                              ),
-                                              border: InputBorder.none,
-                                              contentPadding: EdgeInsets.zero,
-                                            ),
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 15,
-                                              color: const Color(0xFF1F2937),
-                                            ),
-                                          ),
-                                        ),
-                                        if (_searchQuery.isNotEmpty)
-                                          GestureDetector(
-                                            onTap: () {
-                                              setState(() {
-                                                _searchController.clear();
-                                                _searchQuery = '';
-                                              });
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(4),
-                                              child: const Icon(
-                                                Icons.clear,
-                                                color: Color(0xFF9CA3AF),
-                                                size: 20,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Row(
-                                    children: [
-                                      _buildViewButton('Rekap', 'Rekap'),
-                                      const SizedBox(width: 10),
-                                      _buildViewButton(
-                                        'FAQ Point',
-                                        'FAQ Point',
+                                  if (!isLoading && !hasError) ...[
+                                    const SizedBox(height: 24),
+                                    Container(
+                                      height: 50,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
                                       ),
-                                    ],
-                                  ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(25),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.08,
+                                            ),
+                                            blurRadius: 15,
+                                            offset: const Offset(0, 5),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [
+                                                  Color(0xFF61B8FF),
+                                                  Color(0xFF0083EE),
+                                                ],
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+                                            ),
+                                            child: const Icon(
+                                              Icons.search,
+                                              color: Colors.white,
+                                              size: 18,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: TextField(
+                                              controller: _searchController,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _searchQuery = value;
+                                                });
+                                              },
+                                              decoration: InputDecoration(
+                                                hintText:
+                                                    _selectedView == 'Rekap'
+                                                        ? 'Cari nama murid...'
+                                                        : 'Cari aturan atau poin...',
+                                                hintStyle: GoogleFonts.poppins(
+                                                  color: const Color(
+                                                    0xFF9CA3AF,
+                                                  ),
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w400,
+                                                ),
+                                                border: InputBorder.none,
+                                                contentPadding: EdgeInsets.zero,
+                                              ),
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 15,
+                                                color: const Color(0xFF1F2937),
+                                              ),
+                                            ),
+                                          ),
+                                          if (_searchQuery.isNotEmpty)
+                                            GestureDetector(
+                                              onTap: () {
+                                                setState(() {
+                                                  _searchController.clear();
+                                                  _searchQuery = '';
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  4,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.clear,
+                                                  color: Color(0xFF9CA3AF),
+                                                  size: 20,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Row(
+                                      children: [
+                                        _buildViewButton('Rekap', 'Rekap'),
+                                        const SizedBox(width: 10),
+                                        _buildViewButton(
+                                          'FAQ Point',
+                                          'FAQ Point',
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -1130,12 +988,16 @@ class _LaporanScreenState extends State<LaporanScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (_selectedView == 'Rekap') ...[
+                                if (hasError)
+                                  _buildErrorState()
+                                else if (isLoading)
+                                  _buildLoadingState()
+                                else if (_selectedView == 'Rekap') ...[
                                   Row(
                                     children: [
                                       Expanded(
                                         child: _buildStatCard(
-                                          '${_studentsData.length}',
+                                          '${_filteredAndSortedStudents.length}',
                                           'Total Siswa',
                                           Icons.people_outline,
                                           const LinearGradient(
@@ -1309,78 +1171,26 @@ class _LaporanScreenState extends State<LaporanScreen>
                                   const SizedBox(height: 16),
                                   if (_filteredAndSortedStudents.isEmpty &&
                                       _searchQuery.isNotEmpty)
-                                    Container(
-                                      padding: const EdgeInsets.all(40),
-                                      child: Column(
-                                        children: [
-                                          Icon(
-                                            Icons.search_off,
-                                            size: 64,
-                                            color: Colors.grey[400],
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Text(
-                                            'Tidak ada siswa ditemukan',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'Coba ubah kata kunci pencarian atau filter',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 14,
-                                              color: Colors.grey[500],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                    _buildEmptyState(
+                                      'Tidak ada siswa ditemukan',
+                                      'Coba ubah kata kunci pencarian atau filter',
                                     )
                                   else if (_filteredAndSortedStudents.isEmpty)
-                                    Container(
-                                      padding: const EdgeInsets.all(40),
-                                      child: Column(
-                                        children: [
-                                          Icon(
-                                            Icons.filter_list_off,
-                                            size: 64,
-                                            color: Colors.grey[400],
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Text(
-                                            'Tidak ada siswa dalam range ini',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'Coba pilih filter lain',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 14,
-                                              color: Colors.grey[500],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                    _buildEmptyState(
+                                      'Tidak ada siswa dalam range ini',
+                                      'Coba pilih filter lain',
                                     )
                                   else
                                     ...List.generate(
                                       _filteredAndSortedStudents.length,
-                                      (index) {
-                                        return _buildStudentCard(
-                                          _filteredAndSortedStudents[index],
-                                          index,
-                                        );
-                                      },
+                                      (index) => _buildStudentCard(
+                                        _filteredAndSortedStudents[index],
+                                        index,
+                                      ),
                                     ),
                                 ] else ...[
                                   FaqWidget(
-                                    faqData: _faqData.map(
+                                    faqData: faqData.map(
                                       (key, value) => MapEntry(key, {
                                         'title': value.title,
                                         'items': value.items,
@@ -1666,6 +1476,8 @@ class _LaporanScreenState extends State<LaporanScreen>
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF1F2937),
                     ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                   const SizedBox(height: 4),
                   Row(
@@ -1754,6 +1566,199 @@ class _LaporanScreenState extends State<LaporanScreen>
     );
   }
 
+  Widget _buildLoadingState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0083EE)),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Memuat data...',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1F2937),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF6B6D).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(50),
+            ),
+            child: const Icon(
+              Icons.error_outline,
+              color: Color(0xFFFF6B6D),
+              size: 50,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Gagal memuat data',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            errorMessageKelas ??
+                errorMessageStudents ??
+                errorMessageAspek ??
+                'Terjadi kesalahan tidak diketahui',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: const Color(0xFF9CA3AF),
+            ),
+          ),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: () {
+              fetchKelas();
+              fetchSiswa();
+              fetchAspekPenilaian();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF0083EE).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.refresh, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Coba Lagi',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String title, String subtitle) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+              ),
+              borderRadius: BorderRadius.circular(50),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0083EE).withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.search_off, color: Colors.white, size: 50),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: const Color(0xFF9CA3AF),
+            ),
+          ),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _searchQuery = '';
+                _searchController.clear();
+                _selectedFilter = 'Semua';
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0083EE).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Text(
+                'Reset Filter',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showStudentDetail(Student student) {
     showModalBottomSheet(
       context: context,
@@ -1800,9 +1805,11 @@ class _LaporanScreenState extends State<LaporanScreen>
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF1F2937),
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                         Text(
-                          'XII RPL 2',
+                          selectedKelas?.namaKelas ?? 'Unknown',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             color: const Color(0xFF6B7280),
@@ -1996,6 +2003,7 @@ class _LaporanScreenState extends State<LaporanScreen>
                                 fontWeight: FontWeight.w500,
                                 color: const Color(0xFF1F2937),
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Expanded(
