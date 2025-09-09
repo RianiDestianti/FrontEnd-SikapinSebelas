@@ -663,53 +663,58 @@ class _LoginForm extends StatefulWidget {
 class _LoginFormState extends State<_LoginForm> {
   final TextEditingController _nipController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isPasswordVisible = false; 
+  bool _isPasswordVisible = false;
 
   void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-void _handleLogin() async {
-  String nip = _nipController.text.trim();
-  String password = _passwordController.text.trim();
+  void _handleLogin() async {
+    String nip = _nipController.text.trim();
+    String password = _passwordController.text.trim();
 
-  if (nip.isEmpty || password.isEmpty) {
-    _showSnackBar(context, "Harap isi NIP dan password");
-    return;
-  }
-
-  try {
-    final response = await http.post(
-      Uri.parse("http://10.0.2.2:8000/api/login"),
-      body: {"nip": nip, "password": password},
-    );
-
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode == 200 && data['status'] == true) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('id_kelas', data['detail']['id_kelas']);
-      await prefs.setString('walikelas_id', data['detail']['nip_walikelas']?.toString() ?? nip);
-      String role = data['role'].toString();
-
-      if (role == '3') {
-        Navigator.pushNamed(context, '/walikelas');
-      } else if (role == '4') {
-        Navigator.pushNamed(context, '/kaprog');
-      } else {
-        _showSnackBar(context, "Role tidak dikenali");
-      }
-    } else {
-      _showSnackBar(context, data['message'] ?? 'Login gagal');
+    if (nip.isEmpty || password.isEmpty) {
+      _showSnackBar(context, "Harap isi NIP dan password");
+      return;
     }
-  } catch (e) {
-    _showSnackBar(context, "Terjadi kesalahan: $e");
+
+    try {
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:8000/api/login"),
+        body: {"nip": nip, "password": password},
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['status'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('walikelas_id', data['detail']['nip_walikelas'].toString());
+        await prefs.setString('role', data['role'].toString());
+        await prefs.setString('name', data['detail']['nama_walikelas'] ?? data['user']['username']);
+        await prefs.setString('email', data['user']['email'] ?? 'Unknown');
+        await prefs.setString('phone', 'Unknown'); // API doesn't provide phone, so default to 'Unknown'
+        await prefs.setString('joinDate', data['detail']['created_at'] ?? 'Unknown');
+        await prefs.setString('id_kelas', data['detail']['id_kelas'] ?? 'Unknown');
+
+        String role = data['role'].toString();
+
+        if (role == '3') {
+          Navigator.pushNamed(context, '/walikelas');
+        } else if (role == '4') {
+          Navigator.pushNamed(context, '/kaprog');
+        } else {
+          _showSnackBar(context, "Role tidak dikenali");
+        }
+      } else {
+        _showSnackBar(context, data['message'] ?? 'Login gagal');
+      }
+    } catch (e) {
+      _showSnackBar(context, "Terjadi kesalahan: $e");
+    }
+
+    widget.onLogin();
   }
 
-  widget.onLogin();
-}
   @override
   void dispose() {
     _nipController.dispose();
@@ -759,10 +764,7 @@ void _handleLogin() async {
                     hintText: 'Masukkan password anda',
                     icon: Icons.lock_outline,
                     obscureText: !_isPasswordVisible,
-                    suffixIcon:
-                        _isPasswordVisible
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
+                    suffixIcon: _isPasswordVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                     controller: _passwordController,
                     isWeb: isWeb,
                     onSuffixIconTap: () {
@@ -787,7 +789,6 @@ void _handleLogin() async {
     );
   }
 }
-
 class _HandleBar extends StatelessWidget {
   final VoidCallback onTap;
 

@@ -5,6 +5,7 @@ import 'package:skoring/models/profile.dart';
 import 'package:skoring/screens/introduction/onboarding.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,32 +19,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   late AnimationController _animationController;
   late AnimationController _buttonController;
   late Animation<double> _fadeAnimation;
-
-  final Profile _profile = Profile(
-    name: 'Bagas Setiawan',
-    role: 'Wali Kelas',
-    nip: '19810512 200901 1 002',
-    username: 'Bagas Setiawan',
-    email: 'BagasSeti@gmail.com',
-    phone: '087654357798',
-    joinDate: '11 Januari 2024',
-  );
-
-  final List<ProfileField> _profileFields = [
-    ProfileField(label: 'NIP', icon: Icons.badge_outlined, key: 'nip'),
-    ProfileField(
-      label: 'Username',
-      icon: Icons.person_outline,
-      key: 'username',
-    ),
-    ProfileField(label: 'Email', icon: Icons.email_outlined, key: 'email'),
-    ProfileField(label: 'Nomor HP', icon: Icons.phone_outlined, key: 'phone'),
-    ProfileField(
-      label: 'Menjabat Sejak',
-      icon: Icons.calendar_today_outlined,
-      key: 'joinDate',
-    ),
-  ];
+  Profile? _profile;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -65,7 +43,43 @@ class _ProfileScreenState extends State<ProfileScreen>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
-    _animationController.forward();
+    _loadProfile().then((_) => _animationController.forward());
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final nip = prefs.getString('walikelas_id');
+      final role = prefs.getString('role');
+      final name = prefs.getString('name') ?? 'Unknown';
+      final email = prefs.getString('email') ?? 'Unknown';
+      final phone = prefs.getString('phone') ?? 'Unknown';
+      final joinDate = prefs.getString('joinDate') ?? 'Unknown';
+      String roleLabel =
+          role == '3'
+              ? 'Wali Kelas'
+              : role == '4'
+              ? 'Kaprog'
+              : 'Unknown';
+
+      setState(() {
+        _profile = Profile(
+          name: name,
+          role: roleLabel,
+          nip: nip ?? 'Unknown',
+          username: name,
+          email: email,
+          phone: phone,
+          joinDate: joinDate,
+        );
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Gagal memuat profil: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -100,36 +114,67 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          top: true,
-          bottom: false,
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Column(
-              children: [
-                HeaderSection(onBack: () => Navigator.pop(context)),
-                Expanded(
-                  child: ProfileContentSection(
-                    profile: _profile,
-                    profileFields: _profileFields,
-                    onLogoutTap: _showLogoutDialog,
-                    buttonController: _buttonController,
+      body:
+          _isLoading
+              ? Center(
+                child: CircularProgressIndicator(color: Color(0xFF0083EE)),
+              )
+              : _errorMessage != null
+              ? Center(
+                child: Text(
+                  _errorMessage!,
+                  style: GoogleFonts.poppins(color: Colors.red),
+                ),
+              )
+              : Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                child: SafeArea(
+                  top: true,
+                  bottom: false,
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: Column(
+                      children: [
+                        HeaderSection(onBack: () => Navigator.pop(context)),
+                        if (_profile != null)
+                          Expanded(
+                            child: ProfileContentSection(
+                              profile: _profile!,
+                              profileFields: _getProfileFields(_profile!.role),
+                              onLogoutTap: _showLogoutDialog,
+                              buttonController: _buttonController,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
     );
+  }
+
+  List<ProfileField> _getProfileFields(String role) {
+    return [
+      ProfileField(label: 'NIP', icon: Icons.badge_outlined, key: 'nip'),
+      ProfileField(
+        label: 'Username',
+        icon: Icons.person_outline,
+        key: 'username',
+      ),
+      ProfileField(label: 'Email', icon: Icons.email_outlined, key: 'email'),
+      ProfileField(label: 'Nomor HP', icon: Icons.phone_outlined, key: 'phone'),
+      ProfileField(
+        label: 'Menjabat Sejak',
+        icon: Icons.calendar_today_outlined,
+        key: 'joinDate',
+      ),
+    ];
   }
 }
 
@@ -329,7 +374,7 @@ class ProfileHeader extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    'BS',
+                    profile.name.isNotEmpty ? profile.name[0] : 'U',
                     style: GoogleFonts.poppins(
                       fontSize: avatarSize * 0.35,
                       fontWeight: FontWeight.w800,
