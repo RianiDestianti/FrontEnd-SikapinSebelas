@@ -216,9 +216,9 @@ class _DetailScreenState extends State<DetailScreen>
         nis: widget.student['nis'],
         programKeahlian: widget.student['programKeahlian'],
         kelas: widget.student['kelas'],
-        poinApresiasi: widget.student['poinApresiasi'],
-        poinPelanggaran: widget.student['poinPelanggaran'],
-        poinTotal: widget.student['points'],
+        poinApresiasi: widget.student['poinApresiasi'] ?? 0,
+        poinPelanggaran: widget.student['poinPelanggaran']?.abs() ?? 0,
+        poinTotal: widget.student['points'] ?? 0,
       );
       isLoadingStudent = false;
       fetchViolations(widget.student['nis']);
@@ -244,7 +244,11 @@ class _DetailScreenState extends State<DetailScreen>
           });
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      setState(() {
+        errorMessageStudent = 'Gagal mengambil data aspek penilaian: $e';
+      });
+    }
   }
 
   Future<void> fetchViolations(String nis) async {
@@ -254,68 +258,112 @@ class _DetailScreenState extends State<DetailScreen>
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/peringatan?nis=$nis'),
+      final scoringResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis'),
       );
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-        if (jsonData['success']) {
-          List<dynamic> data = jsonData['data'];
-          setState(() {
-            pelanggaranHistory =
-                data.map((item) {
-                  final apiViolation = ApiViolation.fromJson(item);
-                  final aspek = aspekPenilaianData.firstWhere(
-                    (a) =>
-                        a['pelanggaran_ke'] ==
-                            (apiViolation.levelSp == 'SP1' ? '1' : '2') &&
-                        a['jenis_poin'] == 'Pelanggaran',
-                    orElse:
-                        () => {
-                          'indikator_poin':
-                              apiViolation.levelSp == 'SP1' ? 5 : 10,
-                          'uraian': apiViolation.alasan,
-                          'kategori':
-                              apiViolation.levelSp == 'SP1'
-                                  ? 'Ringan'
-                                  : 'Terlambat',
-                          'pelanggaran_ke':
-                              apiViolation.levelSp == 'SP1' ? '1' : '2',
-                        },
+      if (scoringResponse.statusCode == 200) {
+        final scoringData = jsonDecode(scoringResponse.body);
+        if (scoringData['penilaian']['data'].isNotEmpty) {
+          final violationsResponse = await http.get(
+            Uri.parse('http://10.0.2.2:8000/api/peringatan'),
+          );
+          if (violationsResponse.statusCode == 200) {
+            final violationsData = jsonDecode(violationsResponse.body);
+            if (violationsData['success']) {
+              List<dynamic> violations = violationsData['data'];
+              List<dynamic> studentEvaluations =
+                  scoringData['penilaian']['data']
+                      .where(
+                        (eval) =>
+                            eval['nis'].toString() == nis &&
+                            aspekPenilaianData.any(
+                              (aspek) =>
+                                  aspek['id_aspekpenilaian'] ==
+                                      eval['id_aspekpenilaian'] &&
+                                  aspek['jenis_poin'] == 'Pelanggaran',
+                            ),
+                      )
+                      .toList();
+
+              List<ViolationHistory> filteredViolations = [];
+              for (var eval in studentEvaluations) {
+                final aspek = aspekPenilaianData.firstWhere(
+                  (a) => a['id_aspekpenilaian'] == eval['id_aspekpenilaian'],
+                  orElse: () => null,
+                );
+                if (aspek == null) continue;
+
+                final violation = violations.firstWhere(
+                  (v) =>
+                      DateTime.parse(v['tanggal_sp']).isAtSameMomentAs(
+                        DateTime.parse(eval['created_at'].substring(0, 10)),
+                      ) ||
+                      v['alasan'].toLowerCase().contains(
+                        aspek['uraian'].toLowerCase(),
+                      ),
+                  orElse: () => null,
+                );
+
+                if (violation != null) {
+                  final apiViolation = ApiViolation.fromJson(violation);
+                  filteredViolations.add(
+                    ViolationHistory(
+                      type: apiViolation.levelSp,
+                      description: aspek['uraian'],
+                      date: apiViolation.tanggalSp,
+                      time:
+                          apiViolation.createdAt != null
+                              ? DateTime.parse(
+                                apiViolation.createdAt!,
+                              ).toLocal().toString().substring(11, 16)
+                              : eval['created_at'].substring(11, 16),
+                      points:
+                          aspek['indikator_poin'] ??
+                          (apiViolation.levelSp == 'SP1'
+                              ? 5
+                              : apiViolation.levelSp == 'SP2'
+                              ? 10
+                              : 20),
+                      icon: Icons.warning,
+                      color: const Color(0xFFFF6B6D),
+                      pelanggaranKe: aspek['pelanggaran_ke'],
+                      kategori: aspek['kategori'],
+                    ),
                   );
-                  return ViolationHistory(
-                    type: apiViolation.levelSp,
-                    description: aspek['uraian'],
-                    date: apiViolation.tanggalSp,
-                    time:
-                        apiViolation.createdAt != null
-                            ? DateTime.parse(
-                              apiViolation.createdAt!,
-                            ).toLocal().toString().substring(11, 16)
-                            : "00:00",
-                    points:
-                        aspek['indikator_poin'] ??
-                        (apiViolation.levelSp == 'SP1' ? 5 : 10),
-                    icon: Icons.warning,
-                    color: const Color(0xFFFF6B6D),
-                    pelanggaranKe: aspek['pelanggaran_ke'],
-                    kategori: aspek['kategori'],
-                  );
-                }).toList();
-            isLoadingViolations = false;
-            calculateAccumulations();
-          });
+                }
+              }
+
+              setState(() {
+                pelanggaranHistory = filteredViolations;
+                isLoadingViolations = false;
+                calculateAccumulations();
+              });
+            } else {
+              setState(() {
+                errorMessageViolations = violationsData['message'];
+                isLoadingViolations = false;
+                calculateAccumulations();
+              });
+            }
+          } else {
+            setState(() {
+              errorMessageViolations =
+                  'Gagal mengambil data pelanggaran dari server';
+              isLoadingViolations = false;
+              calculateAccumulations();
+            });
+          }
         } else {
           setState(() {
-            errorMessageViolations = jsonData['message'];
+            errorMessageViolations =
+                'Tidak ada data pelanggaran untuk siswa ini';
             isLoadingViolations = false;
             calculateAccumulations();
           });
         }
       } else {
         setState(() {
-          errorMessageViolations =
-              'Gagal mengambil data pelanggaran dari server';
+          errorMessageViolations = 'Gagal mengambil data penilaian dari server';
           isLoadingViolations = false;
           calculateAccumulations();
         });
@@ -336,55 +384,106 @@ class _DetailScreenState extends State<DetailScreen>
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/Penghargaan?nis=$nis'),
+      final scoringResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis'),
       );
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-        if (jsonData['success']) {
-          List<dynamic> data = jsonData['data'];
-          setState(() {
-            apresiasiHistory =
-                data.map((item) {
-                  final apiAppreciation = ApiAppreciation.fromJson(item);
-                  final aspek = aspekPenilaianData.firstWhere(
-                    (a) =>
-                        a['jenis_poin'] == 'Apresiasi' &&
-                        a['kategori'] == 'Tepat waktu',
-                    orElse:
-                        () => {
-                          'indikator_poin':
-                              apiAppreciation.levelPenghargaan == 'PH1'
-                                  ? 10
-                                  : 20,
-                          'uraian': apiAppreciation.alasan,
-                          'kategori': 'Tepat waktu',
-                        },
+      if (scoringResponse.statusCode == 200) {
+        final scoringData = jsonDecode(scoringResponse.body);
+        if (scoringData['penilaian']['data'].isNotEmpty) {
+          final appreciationsResponse = await http.get(
+            Uri.parse('http://10.0.2.2:8000/api/Penghargaan'),
+          );
+          if (appreciationsResponse.statusCode == 200) {
+            final appreciationsData = jsonDecode(appreciationsResponse.body);
+            if (appreciationsData['success']) {
+              List<dynamic> appreciations = appreciationsData['data'];
+              List<dynamic> studentEvaluations =
+                  scoringData['penilaian']['data']
+                      .where(
+                        (eval) =>
+                            eval['nis'].toString() == nis &&
+                            aspekPenilaianData.any(
+                              (aspek) =>
+                                  aspek['id_aspekpenilaian'] ==
+                                      eval['id_aspekpenilaian'] &&
+                                  aspek['jenis_poin'] == 'Apresiasi',
+                            ),
+                      )
+                      .toList();
+
+              List<AppreciationHistory> filteredAppreciations = [];
+              for (var eval in studentEvaluations) {
+                final aspek = aspekPenilaianData.firstWhere(
+                  (a) => a['id_aspekpenilaian'] == eval['id_aspekpenilaian'],
+                  orElse: () => null,
+                );
+                if (aspek == null) continue;
+
+                final appreciation = appreciations.firstWhere(
+                  (a) =>
+                      DateTime.parse(a['tanggal_penghargaan']).isAtSameMomentAs(
+                        DateTime.parse(eval['created_at'].substring(0, 10)),
+                      ) ||
+                      a['alasan'].toLowerCase().contains(
+                        aspek['uraian'].toLowerCase(),
+                      ),
+                  orElse: () => null,
+                );
+
+                if (appreciation != null) {
+                  final apiAppreciation = ApiAppreciation.fromJson(
+                    appreciation,
                   );
-                  return AppreciationHistory(
-                    type: apiAppreciation.levelPenghargaan,
-                    description: aspek['uraian'],
-                    date: apiAppreciation.tanggalPenghargaan,
-                    time:
-                        apiAppreciation.createdAt != null
-                            ? DateTime.parse(
-                              apiAppreciation.createdAt!,
-                            ).toLocal().toString().substring(11, 16)
-                            : "00:00",
-                    points:
-                        aspek['indikator_poin'] ??
-                        (apiAppreciation.levelPenghargaan == 'PH1' ? 10 : 20),
-                    icon: Icons.star,
-                    color: const Color(0xFF10B981),
-                    kategori: aspek['kategori'],
+                  filteredAppreciations.add(
+                    AppreciationHistory(
+                      type: apiAppreciation.levelPenghargaan,
+                      description: aspek['uraian'],
+                      date: apiAppreciation.tanggalPenghargaan,
+                      time:
+                          apiAppreciation.createdAt != null
+                              ? DateTime.parse(
+                                apiAppreciation.createdAt!,
+                              ).toLocal().toString().substring(11, 16)
+                              : eval['created_at'].substring(11, 16),
+                      points:
+                          aspek['indikator_poin'] ??
+                          (apiAppreciation.levelPenghargaan == 'PH1'
+                              ? 10
+                              : apiAppreciation.levelPenghargaan == 'PH2'
+                              ? 20
+                              : 30),
+                      icon: Icons.star,
+                      color: const Color(0xFF10B981),
+                      kategori: aspek['kategori'],
+                    ),
                   );
-                }).toList();
-            isLoadingAppreciations = false;
-            calculateAccumulations();
-          });
+                }
+              }
+
+              setState(() {
+                apresiasiHistory = filteredAppreciations;
+                isLoadingAppreciations = false;
+                calculateAccumulations();
+              });
+            } else {
+              setState(() {
+                errorMessageAppreciations = appreciationsData['message'];
+                isLoadingAppreciations = false;
+                calculateAccumulations();
+              });
+            }
+          } else {
+            setState(() {
+              errorMessageAppreciations =
+                  'Gagal mengambil data penghargaan dari server';
+              isLoadingAppreciations = false;
+              calculateAccumulations();
+            });
+          }
         } else {
           setState(() {
-            errorMessageAppreciations = jsonData['message'];
+            errorMessageAppreciations =
+                'Tidak ada data penghargaan untuk siswa ini';
             isLoadingAppreciations = false;
             calculateAccumulations();
           });
@@ -392,7 +491,7 @@ class _DetailScreenState extends State<DetailScreen>
       } else {
         setState(() {
           errorMessageAppreciations =
-              'Gagal mengambil data penghargaan dari server';
+              'Gagal mengambil data penilaian dari server';
           isLoadingAppreciations = false;
           calculateAccumulations();
         });
@@ -766,6 +865,8 @@ class _DetailScreenState extends State<DetailScreen>
                                                   showPointPopup(
                                                     context,
                                                     detailedStudent.name,
+                                                    detailedStudent.nis,
+                                                    detailedStudent.kelas,
                                                   );
                                                 },
                                                 child: Container(
@@ -1262,7 +1363,7 @@ class _DetailScreenState extends State<DetailScreen>
                   ),
                 ),
                 Text(
-                  '+${item.points}',
+                  isPelanggaran ? '-${item.points}' : '+${item.points}',
                   style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
@@ -1408,7 +1509,7 @@ class _DetailScreenState extends State<DetailScreen>
                         ),
                       ),
                       Text(
-                        '+${item.pelanggaran}',
+                        '-${item.pelanggaran}',
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,

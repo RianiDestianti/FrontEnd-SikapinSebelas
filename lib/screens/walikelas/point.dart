@@ -1,45 +1,72 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:skoring/models/point.dart';
 
 class PointUtils {
   static Future<Point?> submitPoint({
     required String type,
     required String studentName,
-    required String className,
+    required String nis,
+    required String idPenilaian,
+    required String idAspekPenilaian,
     required String date,
-    required String description,
     required String category,
     required BuildContext context,
   }) async {
-    if (studentName.isEmpty ||
-        className.isEmpty ||
+    if (idPenilaian.isEmpty ||
+        nis.isEmpty ||
+        idAspekPenilaian.isEmpty ||
         date.isEmpty ||
         category.isEmpty) {
       _showErrorSnackBar(context, 'Mohon lengkapi semua field yang diperlukan');
       return null;
     }
 
-    await Future.delayed(const Duration(milliseconds: 1500));
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'id_penilaian': idPenilaian,
+          'nis': nis,
+          'id_aspekpenilaian': idAspekPenilaian,
+        }),
+      );
 
-    final pointData = Point(
-      type: type,
-      studentName: studentName,
-      className: className,
-      date: date,
-      description: description,
-      category: category,
-    );
+      if (response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        final pointData = Point(
+          type: type,
+          studentName: studentName,
+          className: '',
+          date: date,
+          description: '',
+          category: category,
+        );
 
-    print(
-      'Point data: ${pointData.type}, ${pointData.studentName}, ${pointData.className}, ${pointData.date}, ${pointData.description}, ${pointData.category}',
-    );
+        print(
+          'Point data: ${pointData.type}, ${pointData.studentName}, ${pointData.className}, ${pointData.date}, ${pointData.description}, ${pointData.category}',
+        );
 
-    _showSuccessSnackBar(
-      context,
-      'Poin berhasil ditambahkan untuk $studentName',
-    );
-    return pointData;
+        _showSuccessSnackBar(
+          context,
+          'Poin berhasil ditambahkan untuk $studentName',
+        );
+        return pointData;
+      } else {
+        final errorData = jsonDecode(response.body);
+        _showErrorSnackBar(
+          context,
+          errorData['message'] ?? 'Gagal menambahkan poin',
+        );
+        return null;
+      }
+    } catch (e) {
+      _showErrorSnackBar(context, 'Terjadi kesalahan: $e');
+      return null;
+    }
   }
 
   static void _showErrorSnackBar(BuildContext context, String message) {
@@ -101,8 +128,15 @@ class PointUtils {
 
 class PointPopup extends StatefulWidget {
   final String studentName;
+  final String nis;
+  final String className;
 
-  const PointPopup({Key? key, required this.studentName}) : super(key: key);
+  const PointPopup({
+    Key? key,
+    required this.studentName,
+    required this.nis,
+    required this.className,
+  }) : super(key: key);
 
   @override
   State<PointPopup> createState() => _PointPopupState();
@@ -117,44 +151,27 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
   late Animation<double> _rotateAnimation;
 
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _nisController = TextEditingController();
   final TextEditingController _classController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _idPenilaianController = TextEditingController();
   String _selectedPointType = 'Pelanggaran';
   String _selectedCategory = '';
   bool _isSubmitting = false;
-
-  // Data kategori berdasarkan FAQ
-  final Map<String, List<Map<String, String>>> _categories = {
-    'Prestasi': [
-      {'value': 'R1', 'title': 'Pengembangan Keagamaan'},
-      {'value': 'R2', 'title': 'Kejujuran'},
-      {'value': 'R3', 'title': 'Prestasi Akademis'},
-      {'value': 'R4', 'title': 'Kedisiplinan'},
-      {'value': 'R5', 'title': 'Pengembangan Sosial'},
-      {'value': 'R6', 'title': 'Kepemimpinan'},
-      {'value': 'R7', 'title': 'Kebangsaan'},
-      {'value': 'R8', 'title': 'Ekstrakurikuler dan Prestasi'},
-      {'value': 'R9', 'title': 'Peduli Lingkungan'},
-      {'value': 'R10', 'title': 'Kewirausahaan'},
-    ],
-    'Pelanggaran': [
-      {'value': 'P1', 'title': 'Terlambat'},
-      {'value': 'P2', 'title': 'Kehadiran'},
-      {'value': 'P3', 'title': 'Seragam'},
-      {'value': 'P4', 'title': 'Kerapian dan Penampilan'},
-      {'value': 'P5', 'title': 'Kedisiplinan Berat'},
-    ],
-  };
+  bool _isLoadingCategories = true;
+  String? _errorMessageCategories;
+  List<Map<String, dynamic>> _aspekPenilaian = [];
 
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
     _nameController.text = widget.studentName;
-    _classController.text = 'XII RPL 2';
+    _nisController.text = widget.nis;
+    _classController.text = widget.className;
     _dateController.text = DateTime.now().toString().split(' ')[0];
-    _selectedCategory = _categories[_selectedPointType]?.first['value'] ?? '';
+    _idPenilaianController.text = _generateIdPenilaian();
+    fetchAspekPenilaian();
   }
 
   void _initializeAnimations() {
@@ -185,14 +202,65 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
     _animationController.forward();
   }
 
+  String _generateIdPenilaian() {
+    return DateTime.now().millisecondsSinceEpoch.toString();
+  }
+
+  Future<void> fetchAspekPenilaian() async {
+    setState(() {
+      _isLoadingCategories = true;
+      _errorMessageCategories = null;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/aspekpenilaian'),
+      );
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['success']) {
+          setState(() {
+            _aspekPenilaian = List<Map<String, dynamic>>.from(jsonData['data']);
+            if (_aspekPenilaian.isNotEmpty) {
+              _selectedCategory =
+                  _aspekPenilaian
+                      .firstWhere(
+                        (aspek) => aspek['jenis_poin'] == _selectedPointType,
+                        orElse: () => _aspekPenilaian[0],
+                      )['id_aspekpenilaian']
+                      .toString();
+            }
+            _isLoadingCategories = false;
+          });
+        } else {
+          setState(() {
+            _errorMessageCategories = jsonData['message'];
+            _isLoadingCategories = false;
+          });
+        }
+      } else {
+        setState(() {
+          _errorMessageCategories = 'Gagal mengambil data aspek penilaian';
+          _isLoadingCategories = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessageCategories = 'Terjadi kesalahan: $e';
+        _isLoadingCategories = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _animationController.dispose();
     _slideController.dispose();
     _nameController.dispose();
+    _nisController.dispose();
     _classController.dispose();
     _dateController.dispose();
-    _descriptionController.dispose();
+    _idPenilaianController.dispose();
     super.dispose();
   }
 
@@ -202,13 +270,18 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
 
   void _submitPoint() async {
     setState(() => _isSubmitting = true);
+    final selectedAspek = _aspekPenilaian.firstWhere(
+      (aspek) => aspek['id_aspekpenilaian'].toString() == _selectedCategory,
+      orElse: () => {},
+    );
     final point = await PointUtils.submitPoint(
       type: _selectedPointType,
       studentName: _nameController.text,
-      className: _classController.text,
+      nis: _nisController.text,
+      idPenilaian: _idPenilaianController.text,
+      idAspekPenilaian: _selectedCategory,
       date: _dateController.text,
-      description: _descriptionController.text,
-      category: _selectedCategory,
+      category: selectedAspek['kategori'] ?? '',
       context: context,
     );
     setState(() => _isSubmitting = false);
@@ -242,7 +315,15 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
   void _onPointTypeChanged(String value) {
     setState(() {
       _selectedPointType = value;
-      _selectedCategory = _categories[_selectedPointType]?.first['value'] ?? '';
+      _selectedCategory =
+          _aspekPenilaian
+              .firstWhere(
+                (aspek) => aspek['jenis_poin'] == _selectedPointType,
+                orElse:
+                    () => _aspekPenilaian.isNotEmpty ? _aspekPenilaian[0] : {},
+              )['id_aspekpenilaian']
+              ?.toString() ??
+          '';
     });
   }
 
@@ -263,16 +344,19 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
                   color: Colors.transparent,
                   child: PointDialogContent(
                     nameController: _nameController,
+                    nisController: _nisController,
                     classController: _classController,
                     dateController: _dateController,
-                    descriptionController: _descriptionController,
+                    idPenilaianController: _idPenilaianController,
                     selectedPointType: _selectedPointType,
                     selectedCategory: _selectedCategory,
-                    categories: _categories,
+                    aspekPenilaian: _aspekPenilaian,
                     onPointTypeChanged: _onPointTypeChanged,
                     onCategoryChanged:
                         (value) => setState(() => _selectedCategory = value),
                     isSubmitting: _isSubmitting,
+                    isLoadingCategories: _isLoadingCategories,
+                    errorMessageCategories: _errorMessageCategories,
                     onClose: _closeDialog,
                     onSubmit: _submitPoint,
                     onDateTap: _pickDate,
@@ -289,15 +373,18 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
 
 class PointDialogContent extends StatelessWidget {
   final TextEditingController nameController;
+  final TextEditingController nisController;
   final TextEditingController classController;
   final TextEditingController dateController;
-  final TextEditingController descriptionController;
+  final TextEditingController idPenilaianController;
   final String selectedPointType;
   final String selectedCategory;
-  final Map<String, List<Map<String, String>>> categories;
+  final List<Map<String, dynamic>> aspekPenilaian;
   final ValueChanged<String> onPointTypeChanged;
   final ValueChanged<String> onCategoryChanged;
   final bool isSubmitting;
+  final bool isLoadingCategories;
+  final String? errorMessageCategories;
   final VoidCallback onClose;
   final VoidCallback onSubmit;
   final VoidCallback onDateTap;
@@ -305,15 +392,18 @@ class PointDialogContent extends StatelessWidget {
   const PointDialogContent({
     Key? key,
     required this.nameController,
+    required this.nisController,
     required this.classController,
     required this.dateController,
-    required this.descriptionController,
+    required this.idPenilaianController,
     required this.selectedPointType,
     required this.selectedCategory,
-    required this.categories,
+    required this.aspekPenilaian,
     required this.onPointTypeChanged,
     required this.onCategoryChanged,
     required this.isSubmitting,
+    required this.isLoadingCategories,
+    required this.errorMessageCategories,
     required this.onClose,
     required this.onSubmit,
     required this.onDateTap,
@@ -341,15 +431,18 @@ class PointDialogContent extends StatelessWidget {
           HeaderSection(onClose: onClose),
           FormSection(
             nameController: nameController,
+            nisController: nisController,
             classController: classController,
             dateController: dateController,
-            descriptionController: descriptionController,
+            idPenilaianController: idPenilaianController,
             selectedPointType: selectedPointType,
             selectedCategory: selectedCategory,
-            categories: categories,
+            aspekPenilaian: aspekPenilaian,
             onPointTypeChanged: onPointTypeChanged,
             onCategoryChanged: onCategoryChanged,
             onDateTap: onDateTap,
+            isLoadingCategories: isLoadingCategories,
+            errorMessageCategories: errorMessageCategories,
           ),
           ActionButtons(
             isSubmitting: isSubmitting,
@@ -438,28 +531,34 @@ class HeaderSection extends StatelessWidget {
 
 class FormSection extends StatelessWidget {
   final TextEditingController nameController;
+  final TextEditingController nisController;
   final TextEditingController classController;
   final TextEditingController dateController;
-  final TextEditingController descriptionController;
+  final TextEditingController idPenilaianController;
   final String selectedPointType;
   final String selectedCategory;
-  final Map<String, List<Map<String, String>>> categories;
+  final List<Map<String, dynamic>> aspekPenilaian;
   final ValueChanged<String> onPointTypeChanged;
   final ValueChanged<String> onCategoryChanged;
   final VoidCallback onDateTap;
+  final bool isLoadingCategories;
+  final String? errorMessageCategories;
 
   const FormSection({
     Key? key,
     required this.nameController,
+    required this.nisController,
     required this.classController,
     required this.dateController,
-    required this.descriptionController,
+    required this.idPenilaianController,
     required this.selectedPointType,
     required this.selectedCategory,
-    required this.categories,
+    required this.aspekPenilaian,
     required this.onPointTypeChanged,
     required this.onCategoryChanged,
     required this.onDateTap,
+    required this.isLoadingCategories,
+    required this.errorMessageCategories,
   }) : super(key: key);
 
   @override
@@ -472,12 +571,27 @@ class FormSection extends StatelessWidget {
             controller: nameController,
             hint: 'Nama Lengkap',
             icon: Icons.person_outline,
+            readOnly: true,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: nisController,
+            hint: 'NIS',
+            icon: Icons.badge,
+            readOnly: true,
           ),
           const SizedBox(height: 16),
           CustomTextField(
             controller: classController,
             hint: 'Kelas',
             icon: Icons.school_outlined,
+            readOnly: true,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: idPenilaianController,
+            hint: 'ID Penilaian',
+            icon: Icons.badge,
           ),
           const SizedBox(height: 16),
           CustomTextField(
@@ -495,15 +609,13 @@ class FormSection extends StatelessWidget {
           const SizedBox(height: 16),
           CategoryDropdown(
             selectedCategory: selectedCategory,
-            categories: categories[selectedPointType] ?? [],
+            aspekPenilaian:
+                aspekPenilaian
+                    .where((aspek) => aspek['jenis_poin'] == selectedPointType)
+                    .toList(),
             onChanged: onCategoryChanged,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            controller: descriptionController,
-            hint: 'Uraian pelanggaran atau prestasi',
-            icon: Icons.description_outlined,
-            maxLines: 4,
+            isLoading: isLoadingCategories,
+            errorMessage: errorMessageCategories,
           ),
         ],
       ),
@@ -595,7 +707,7 @@ class PointTypeDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pointTypes = ['Pelanggaran', 'Prestasi'];
+    final pointTypes = ['Pelanggaran', 'Apresiasi'];
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
@@ -667,18 +779,34 @@ class PointTypeDropdown extends StatelessWidget {
 
 class CategoryDropdown extends StatelessWidget {
   final String selectedCategory;
-  final List<Map<String, String>> categories;
+  final List<Map<String, dynamic>> aspekPenilaian;
   final ValueChanged<String> onChanged;
+  final bool isLoading;
+  final String? errorMessage;
 
   const CategoryDropdown({
     Key? key,
     required this.selectedCategory,
-    required this.categories,
+    required this.aspekPenilaian,
     required this.onChanged,
+    required this.isLoading,
+    this.errorMessage,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (errorMessage != null) {
+      return Text(
+        errorMessage!,
+        style: GoogleFonts.poppins(
+          fontSize: 14,
+          color: const Color(0xFFEF4444),
+        ),
+      );
+    }
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
@@ -722,11 +850,11 @@ class CategoryDropdown extends StatelessWidget {
                     color: Color(0xFF6B7280),
                   ),
                   items:
-                      categories.map((Map<String, String> category) {
+                      aspekPenilaian.map((Map<String, dynamic> aspek) {
                         return DropdownMenuItem<String>(
-                          value: category['value'],
+                          value: aspek['id_aspekpenilaian'].toString(),
                           child: Text(
-                            '${category['value']} - ${category['title']}',
+                            '${aspek['kategori']} - ${aspek['uraian']} (${aspek['indikator_poin']} poin)',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -841,14 +969,23 @@ class ActionButtons extends StatelessWidget {
   }
 }
 
-void showPointPopup(BuildContext context, String studentName) {
+void showPointPopup(
+  BuildContext context,
+  String studentName,
+  String nis,
+  String className,
+) {
   showDialog(
     context: context,
     barrierDismissible: false,
     builder: (BuildContext context) {
       return Material(
         color: Colors.transparent,
-        child: PointPopup(studentName: studentName),
+        child: PointPopup(
+          studentName: studentName,
+          nis: nis,
+          className: className,
+        ),
       );
     },
   );

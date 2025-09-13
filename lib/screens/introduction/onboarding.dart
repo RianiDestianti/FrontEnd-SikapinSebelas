@@ -666,7 +666,9 @@ class _LoginFormState extends State<_LoginForm> {
   bool _isPasswordVisible = false;
 
   void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _handleLogin() async {
@@ -688,13 +690,29 @@ class _LoginFormState extends State<_LoginForm> {
 
       if (response.statusCode == 200 && data['status'] == true) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('walikelas_id', data['detail']['nip_walikelas'].toString());
+        await prefs.setString(
+          'walikelas_id',
+          data['detail']['nip_walikelas']?.toString() ?? '',
+        );
         await prefs.setString('role', data['role'].toString());
-        await prefs.setString('name', data['detail']['nama_walikelas'] ?? data['user']['username']);
+        await prefs.setString(
+          'name',
+          data['detail']['nama_walikelas'] ?? data['user']['username'],
+        );
         await prefs.setString('email', data['user']['email'] ?? 'Unknown');
-        await prefs.setString('phone', 'Unknown'); // API doesn't provide phone, so default to 'Unknown'
-        await prefs.setString('joinDate', data['detail']['created_at'] ?? 'Unknown');
-        await prefs.setString('id_kelas', data['detail']['id_kelas'] ?? 'Unknown');
+        await prefs.setString('phone', 'Unknown');
+        await prefs.setString(
+          'joinDate',
+          data['detail']['created_at'] ?? 'Unknown',
+        );
+        await prefs.setString(
+          'id_kelas',
+          data['detail']['id_kelas'] ?? 'Unknown',
+        );
+        await prefs.setString(
+          'jurusan',
+          data['detail']['jurusan'] ?? 'Unknown',
+        );
 
         String role = data['role'].toString();
 
@@ -764,7 +782,10 @@ class _LoginFormState extends State<_LoginForm> {
                     hintText: 'Masukkan password anda',
                     icon: Icons.lock_outline,
                     obscureText: !_isPasswordVisible,
-                    suffixIcon: _isPasswordVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    suffixIcon:
+                        _isPasswordVisible
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
                     controller: _passwordController,
                     isWeb: isWeb,
                     onSuffixIconTap: () {
@@ -789,6 +810,7 @@ class _LoginFormState extends State<_LoginForm> {
     );
   }
 }
+
 class _HandleBar extends StatelessWidget {
   final VoidCallback onTap;
 

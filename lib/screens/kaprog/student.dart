@@ -6,6 +6,9 @@ import 'package:skoring/screens/kaprog/home.dart';
 import 'package:skoring/screens/profile.dart';
 import 'package:skoring/screens/kaprog/detail.dart';
 import 'package:skoring/screens/kaprog/report.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProgramKeahlianScreen extends StatefulWidget {
   const ProgramKeahlianScreen({Key? key}) : super(key: key);
@@ -16,9 +19,10 @@ class ProgramKeahlianScreen extends StatefulWidget {
 
 class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
   final TextEditingController _searchController = TextEditingController();
-  String _selectedFilter = 'Semua';
   String _searchQuery = '';
   int _currentIndex = 0;
+  String? _kaprogJurusan;
+  List<Map<String, dynamic>> _classes = [];
 
   final List<Map<String, dynamic>> _programList = [
     {
@@ -71,9 +75,11 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
       'category': 'Bisnis',
     },
   ];
+
   @override
   void initState() {
     super.initState();
+    _loadKaprogJurusan();
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -81,14 +87,78 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
     });
   }
 
+  Future<void> _loadKaprogJurusan() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? idKelas = prefs.getString('id_kelas') ?? '';
+    setState(() {
+      _kaprogJurusan = 'Unknown'; 
+    });
+
+    if (idKelas.isNotEmpty) {
+      try {
+        final response = await http.get(
+          Uri.parse('http://10.0.2.2:8000/api/kelas'),
+        );
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          if (data['success']) {
+            final kelas = List<Map<String, dynamic>>.from(
+              data['data'],
+            ).firstWhere(
+              (kelas) => kelas['id_kelas'] == idKelas,
+              orElse: () => {},
+            );
+            setState(() {
+              _kaprogJurusan = kelas['jurusan'] ?? 'Unknown';
+            });
+          }
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
+      }
+    }
+    await _fetchClasses();
+  }
+
+  Future<void> _fetchClasses() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/kelas'),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success']) {
+          setState(() {
+            _classes =
+                List<Map<String, dynamic>>.from(
+                  data['data'],
+                ).where((kelas) => kelas['jurusan'] == _kaprogJurusan).toList();
+          });
+        }
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal memuat data kelas')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
+    }
+  }
+
   List<Map<String, dynamic>> get _filteredPrograms {
+    if (_kaprogJurusan == null || _kaprogJurusan == 'Unknown') {
+      return [];
+    }
     return _programList.where((program) {
       final matchesSearch =
           program['name'].toLowerCase().contains(_searchQuery) ||
           program['fullName'].toLowerCase().contains(_searchQuery);
-      final matchesFilter =
-          _selectedFilter == 'Semua' || program['category'] == _selectedFilter;
-      return matchesSearch && matchesFilter;
+      final matchesJurusan = program['name'] == _kaprogJurusan;
+      return matchesSearch && matchesJurusan;
     }).toList();
   }
 
@@ -99,6 +169,8 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
   }
 
   void _showClassOptions(Map<String, dynamic> program) {
+    final filteredClasses =
+        _classes.where((kelas) => kelas['jurusan'] == program['name']).toList();
     showDialog(
       context: context,
       builder:
@@ -113,47 +185,45 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildClassOption(program, 'X', '1'),
-                _buildClassOption(program, 'X', '2'),
-                _buildClassOption(program, 'XI', '1'),
-                _buildClassOption(program, 'XI', '2'),
-                _buildClassOption(program, 'XII', '1'),
-                _buildClassOption(program, 'XII', '2'),
-              ],
+              children:
+                  filteredClasses.isEmpty
+                      ? [
+                        Text(
+                          'Tidak ada kelas ditemukan',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            color: const Color(0xFF6B7280),
+                          ),
+                        ),
+                      ]
+                      : filteredClasses.map((kelas) {
+                        return ListTile(
+                          title: Text(
+                            kelas['nama_kelas'],
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: const Color(0xFF1F2937),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => SiswaScreen(
+                                      programName: program['name'],
+                                      idKelas: kelas['id_kelas'],
+                                      namaKelas: kelas['nama_kelas'],
+                                    ),
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
             ),
           ),
-    );
-  }
-
-  Widget _buildClassOption(
-    Map<String, dynamic> program,
-    String angkatan,
-    String kelas,
-  ) {
-    return ListTile(
-      title: Text(
-        '$angkatan ${program['name']} $kelas',
-        style: GoogleFonts.poppins(
-          fontSize: 16,
-          color: const Color(0xFF1F2937),
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      onTap: () {
-        Navigator.pop(context);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => SiswaScreen(
-                  programName: program['name'],
-                  angkatan: angkatan,
-                  kelas: kelas,
-                ),
-          ),
-        );
-      },
     );
   }
 
@@ -266,7 +336,7 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Daftar Jurusan SMKN 11 Bandung',
+                                      'Program Keahlian Anda',
                                       style: GoogleFonts.poppins(
                                         color: Colors.white,
                                         fontSize: 20,
@@ -276,7 +346,7 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      'Kelola program keahlian dengan optimal',
+                                      'Kelola program keahlian ${_kaprogJurusan ?? ''} dengan optimal',
                                       style: GoogleFonts.poppins(
                                         color: Colors.white.withOpacity(0.9),
                                         fontSize: 14,
@@ -345,18 +415,6 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 20),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  _buildFilterButton('Semua', 0),
-                                  const SizedBox(width: 10),
-                                  _buildFilterButton('IT', 1),
-                                  const SizedBox(width: 10),
-                                  _buildFilterButton('Bisnis', 2),
-                                ],
-                              ),
                             ],
                           ),
                         ),
@@ -401,74 +459,6 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
       bottomNavigationBar: KaprogNavigation(
         currentIndex: _currentIndex,
         onTap: _onTap,
-      ),
-    );
-  }
-
-  Widget _buildFilterButton(String text, int index) {
-    bool isActive = _selectedFilter == text;
-    Gradient dotGradient;
-    if (index == 0) {
-      dotGradient = const LinearGradient(
-        colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-      );
-    } else if (index == 1) {
-      dotGradient = const LinearGradient(
-        colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
-      );
-    } else {
-      dotGradient = const LinearGradient(
-        colors: [Color(0xFF2196F3), Color(0xFF42A5F5)],
-      );
-    }
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedFilter = text;
-          });
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 40,
-          decoration: BoxDecoration(
-            color: isActive ? Colors.white : Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow:
-                isActive
-                    ? [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                    : null,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (isActive)
-                Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    gradient: dotGradient,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              Text(
-                text,
-                style: GoogleFonts.poppins(
-                  color: isActive ? const Color(0xFF1F2937) : Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -551,10 +541,10 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
 
 class SiswaScreen extends StatefulWidget {
   final String? programName;
-  final String? angkatan;
-  final String? kelas;
+  final String? idKelas;
+  final String? namaKelas;
 
-  const SiswaScreen({Key? key, this.programName, this.angkatan, this.kelas})
+  const SiswaScreen({Key? key, this.programName, this.idKelas, this.namaKelas})
     : super(key: key);
 
   @override
@@ -568,79 +558,7 @@ class _SiswaScreenState extends State<SiswaScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   TextEditingController _searchController = TextEditingController();
-
-  final List<Map<String, dynamic>> students = [
-    {
-      "name": "Ahmad Sudarji",
-      "nisn": "23000001",
-      "status": "Aman",
-      "points": 20,
-      "absent": 1,
-    },
-    {
-      "name": "Agus Berto",
-      "nisn": "23000002",
-      "status": "Aman",
-      "points": 0,
-      "absent": 2,
-    },
-    {
-      "name": "Bobby Dasta",
-      "nisn": "23000003",
-      "status": "Bermasalah",
-      "points": -15,
-      "absent": 3,
-    },
-    {
-      "name": "Berto",
-      "nisn": "23000004",
-      "status": "Prioritas",
-      "points": -25,
-      "absent": 4,
-    },
-    {
-      "name": "Celine Agustinus",
-      "nisn": "23000006",
-      "status": "Aman",
-      "points": 10,
-      "absent": 5,
-    },
-    {
-      "name": "Diana Sari",
-      "nisn": "23000007",
-      "status": "Aman",
-      "points": 15,
-      "absent": 6,
-    },
-    {
-      "name": "Eko Prasetyo",
-      "nisn": "23000008",
-      "status": "Bermasalah",
-      "points": -10,
-      "absent": 7,
-    },
-    {
-      "name": "Fitri Handayani",
-      "nisn": "23000009",
-      "status": "Aman",
-      "points": 25,
-      "absent": 8,
-    },
-    {
-      "name": "Gilang Ramadan",
-      "nisn": "23000010",
-      "status": "Prioritas",
-      "points": -30,
-      "absent": 9,
-    },
-    {
-      "name": "Haniatul Kamilah",
-      "nisn": "23000011",
-      "status": "Aman",
-      "points": 18,
-      "absent": 10,
-    },
-  ];
+  List<Map<String, dynamic>> _students = [];
 
   @override
   void initState() {
@@ -653,28 +571,48 @@ class _SiswaScreenState extends State<SiswaScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
+    _fetchStudents();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    _searchController.dispose();
-    super.dispose();
+  Future<void> _fetchStudents() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/siswa'),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success']) {
+          setState(() {
+            _students =
+                List<Map<String, dynamic>>.from(data['data'])
+                    .where((student) => student['id_kelas'] == widget.idKelas)
+                    .toList();
+          });
+        }
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal memuat data siswa')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
+    }
   }
 
   List<Map<String, dynamic>> getFilteredStudents() {
-    List<Map<String, dynamic>> filtered = List.from(students);
+    List<Map<String, dynamic>> filtered = List.from(_students);
 
     if (_selectedFilter == 1) {
-      filtered = filtered.where((s) => s['status'] == 'Aman').toList();
+      filtered = filtered.where((s) => (s['poin_total'] ?? 0) >= 0).toList();
     } else if (_selectedFilter == 2) {
-      filtered =
-          filtered
-              .where(
-                (s) =>
-                    s['status'] == 'Bermasalah' || s['status'] == 'Prioritas',
-              )
-              .toList();
+      filtered = filtered.where((s) => (s['poin_total'] ?? 0) < 0).toList();
     }
 
     if (_searchQuery.isNotEmpty) {
@@ -682,10 +620,10 @@ class _SiswaScreenState extends State<SiswaScreen>
           filtered
               .where(
                 (s) =>
-                    s['name'].toString().toLowerCase().contains(
+                    s['nama_siswa'].toString().toLowerCase().contains(
                       _searchQuery.toLowerCase(),
                     ) ||
-                    s['nisn'].toString().contains(_searchQuery),
+                    s['nis'].toString().contains(_searchQuery),
               )
               .toList();
     }
@@ -705,12 +643,7 @@ class _SiswaScreenState extends State<SiswaScreen>
   @override
   Widget build(BuildContext context) {
     final filteredStudents = getFilteredStudents();
-    String classTitle =
-        widget.programName != null &&
-                widget.angkatan != null &&
-                widget.kelas != null
-            ? 'Daftar Siswa ${widget.angkatan} ${widget.programName} ${widget.kelas}'
-            : 'Daftar Siswa XI RPL 2';
+    String classTitle = widget.namaKelas ?? 'Daftar Siswa';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -773,46 +706,39 @@ class _SiswaScreenState extends State<SiswaScreen>
                                 ),
                               ),
                             ),
-                            Row(
-                              children: [
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => const ProfileScreen(),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(30),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.person_rounded,
-                                      color: Color(0xFF0083EE),
-                                      size: 24,
-                                    ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ProfileScreen(),
                                   ),
+                                );
+                              },
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(30),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                                child: const Icon(
+                                  Icons.person_rounded,
+                                  color: Color(0xFF0083EE),
+                                  size: 24,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 24),
-
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Column(
@@ -840,7 +766,6 @@ class _SiswaScreenState extends State<SiswaScreen>
                           ),
                         ),
                         const SizedBox(height: 24),
-
                         Container(
                           height: 50,
                           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -919,7 +844,6 @@ class _SiswaScreenState extends State<SiswaScreen>
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 20),
                         Row(
                           children: [
@@ -934,7 +858,6 @@ class _SiswaScreenState extends State<SiswaScreen>
                     ),
                   ),
                 ),
-
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -974,7 +897,6 @@ class _SiswaScreenState extends State<SiswaScreen>
                             ],
                           ),
                         ),
-
                       filteredStudents.isEmpty
                           ? _buildEmptyState()
                           : Column(
@@ -1090,7 +1012,7 @@ class _SiswaScreenState extends State<SiswaScreen>
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: _getStatusColor(student['status']).withOpacity(0.2),
+            color: _getStatusColor(student['poin_total']).withOpacity(0.2),
             width: 2,
           ),
           boxShadow: [
@@ -1112,7 +1034,7 @@ class _SiswaScreenState extends State<SiswaScreen>
               ),
               child: Center(
                 child: Text(
-                  student['name'][0].toUpperCase(),
+                  student['nama_siswa'][0].toUpperCase(),
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -1122,13 +1044,12 @@ class _SiswaScreenState extends State<SiswaScreen>
               ),
             ),
             const SizedBox(width: 16),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    student['name'],
+                    student['nama_siswa'],
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -1137,7 +1058,7 @@ class _SiswaScreenState extends State<SiswaScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Absen: ${student['absent']}',
+                    'NIS: ${student['nis']}',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -1148,7 +1069,6 @@ class _SiswaScreenState extends State<SiswaScreen>
               ),
             ),
             const SizedBox(width: 16),
-
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -1156,16 +1076,18 @@ class _SiswaScreenState extends State<SiswaScreen>
                   width: 85,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: _getStatusColor(student['status']).withOpacity(0.1),
+                    color: _getStatusColor(
+                      student['poin_total'],
+                    ).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
                     child: Text(
-                      student['status'],
+                      _getStatusText(student['poin_total']),
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: _getStatusColor(student['status']),
+                        color: _getStatusColor(student['poin_total']),
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -1269,16 +1191,32 @@ class _SiswaScreenState extends State<SiswaScreen>
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Aman':
-        return const Color(0xFF10B981);
-      case 'Bermasalah':
-        return const Color(0xFFEA580C);
-      case 'Prioritas':
-        return const Color(0xFFFF6B6D);
-      default:
-        return const Color(0xFF0083EE);
+  Color _getStatusColor(dynamic poinTotal) {
+    final int points = poinTotal ?? 0;
+    if (points >= 0) {
+      return const Color(0xFF10B981); 
+    } else if (points >= -20) {
+      return const Color(0xFFEA580C);
+    } else {
+      return const Color(0xFFFF6B6D); 
     }
+  }
+
+  String _getStatusText(dynamic poinTotal) {
+    final int points = poinTotal ?? 0;
+    if (points >= 0) {
+      return 'Aman';
+    } else if (points >= -20) {
+      return 'Bermasalah';
+    } else {
+      return 'Prioritas';
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 }
