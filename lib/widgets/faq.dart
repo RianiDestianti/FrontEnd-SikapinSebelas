@@ -18,7 +18,7 @@ class FaqWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final filteredFaqData = _filterFaqData();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -31,12 +31,19 @@ class FaqWidget extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'Tidak ada aturan ditemukan',
-                  style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[600]),
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[600],
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Coba ubah kata kunci pencarian',
-                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[500]),
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.grey[500],
+                  ),
                 ),
               ],
             ),
@@ -49,7 +56,9 @@ class FaqWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF0083EE).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF0083EE).withOpacity(0.2)),
+                border: Border.all(
+                  color: const Color(0xFF0083EE).withOpacity(0.2),
+                ),
               ),
               child: Row(
                 children: [
@@ -71,25 +80,45 @@ class FaqWidget extends StatelessWidget {
           ],
           _buildSectionTitle('Lembar 1 – Penghargaan dan Apresiasi'),
           ...filteredFaqData.entries
-              .where((entry) => entry.key.startsWith('R'))
-              .map((entry) => _buildFaqSection(
-                    entry.key,
-                    entry.value['title'],
-                    (entry.value['items'] as List<Map<String, dynamic>>)
-                        .map((item) => _buildFaqItem(item['text'], item['points']))
-                        .toList(),
-                  )),
+              .where(
+                (entry) =>
+                    faqData[entry.key]?['items']?[0]?['text']
+                        ?.toLowerCase()
+                        .contains('apresiasi') ??
+                    false,
+              )
+              .map(
+                (entry) => _buildFaqSection(
+                  entry.key,
+                  entry.value['title'],
+                  (entry.value['items'] as List<Map<String, dynamic>>)
+                      .map(
+                        (item) => _buildFaqItem(item['text'], item['points']),
+                      )
+                      .toList(),
+                ),
+              ),
           const SizedBox(height: 24),
           _buildSectionTitle('Lembar 2 – Pelanggaran dan Sanksi'),
           ...filteredFaqData.entries
-              .where((entry) => entry.key.startsWith('P') || entry.key == 'Sanksi')
-              .map((entry) => _buildFaqSection(
-                    entry.key,
-                    entry.value['title'],
-                    (entry.value['items'] as List<Map<String, dynamic>>)
-                        .map((item) => _buildFaqItem(item['text'], item['points']))
-                        .toList(),
-                  )),
+              .where(
+                (entry) =>
+                    faqData[entry.key]?['items']?[0]?['text']
+                        ?.toLowerCase()
+                        .contains('pelanggaran') ??
+                    false,
+              )
+              .map(
+                (entry) => _buildFaqSection(
+                  entry.key,
+                  entry.value['title'],
+                  (entry.value['items'] as List<Map<String, dynamic>>)
+                      .map(
+                        (item) => _buildFaqItem(item['text'], item['points']),
+                      )
+                      .toList(),
+                ),
+              ),
           const SizedBox(height: 16),
           if (searchQuery.isEmpty) ...[
             Text(
@@ -123,8 +152,10 @@ class FaqWidget extends StatelessWidget {
     String searchLower = searchQuery.toLowerCase();
 
     faqData.forEach((key, section) {
-      bool titleMatches = section['title'].toString().toLowerCase().contains(searchLower);
-      
+      bool titleMatches = section['title'].toString().toLowerCase().contains(
+        searchLower,
+      );
+
       List<Map<String, dynamic>> matchingItems = [];
       for (var item in section['items']) {
         if (item['text'].toString().toLowerCase().contains(searchLower) ||
@@ -247,7 +278,11 @@ class FaqWidget extends StatelessWidget {
     );
   }
 
-  List<TextSpan> _highlightSearchText(String text, String searchQuery, TextStyle baseStyle) {
+  List<TextSpan> _highlightSearchText(
+    String text,
+    String searchQuery,
+    TextStyle baseStyle,
+  ) {
     if (searchQuery.isEmpty) {
       return [TextSpan(text: text, style: baseStyle)];
     }
@@ -255,37 +290,35 @@ class FaqWidget extends StatelessWidget {
     List<TextSpan> spans = [];
     String lowerText = text.toLowerCase();
     String lowerQuery = searchQuery.toLowerCase();
-    
+
     int start = 0;
     int index = lowerText.indexOf(lowerQuery);
-    
+
     while (index != -1) {
       if (index > start) {
-        spans.add(TextSpan(
-          text: text.substring(start, index),
-          style: baseStyle,
-        ));
+        spans.add(
+          TextSpan(text: text.substring(start, index), style: baseStyle),
+        );
       }
-      
-      spans.add(TextSpan(
-        text: text.substring(index, index + searchQuery.length),
-        style: baseStyle.copyWith(
-          backgroundColor: const Color(0xFFFFEB3B).withOpacity(0.3),
-          fontWeight: FontWeight.w700,
+
+      spans.add(
+        TextSpan(
+          text: text.substring(index, index + searchQuery.length),
+          style: baseStyle.copyWith(
+            backgroundColor: const Color(0xFFFFEB3B).withOpacity(0.3),
+            fontWeight: FontWeight.w700,
+          ),
         ),
-      ));
-      
+      );
+
       start = index + searchQuery.length;
       index = lowerText.indexOf(lowerQuery, start);
     }
-    
+
     if (start < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(start),
-        style: baseStyle,
-      ));
+      spans.add(TextSpan(text: text.substring(start), style: baseStyle));
     }
-    
+
     return spans;
   }
 }

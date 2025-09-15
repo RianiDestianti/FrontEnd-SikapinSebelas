@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../navigation/walikelas.dart';
 import 'student.dart';
 import 'report.dart';
@@ -9,6 +11,8 @@ import 'package:skoring/screens/profile.dart';
 import 'package:skoring/screens/chart.dart';
 import 'package:skoring/screens/activity.dart';
 import 'detail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 class Student {
   final String name;
@@ -18,16 +22,7 @@ class Student {
   final IconData avatar;
   final int rank;
   final String status;
-  final String nis;
-  final String ttl;
-  final String jenkel;
-  final String alamat;
-  final String programKeahlian;
-  final String tahunMasuk;
-  final String noHp;
-  final String email;
-  final String namaOrtu;
-  final String noHpOrtu;
+  final int nis;
 
   Student({
     required this.name,
@@ -38,15 +33,6 @@ class Student {
     required this.rank,
     required this.status,
     required this.nis,
-    required this.ttl,
-    required this.jenkel,
-    required this.alamat,
-    required this.programKeahlian,
-    required this.tahunMasuk,
-    required this.noHp,
-    required this.email,
-    required this.namaOrtu,
-    required this.noHpOrtu,
   });
 }
 
@@ -107,164 +93,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String _searchQuery = '';
   List<Student> _filteredSiswaTerbaik = [];
   List<Student> _filteredSiswaBerat = [];
-
-  final List<Student> _siswaTerbaik = [
-    Student(
-      name: 'Nazwa Xariena',
-      kelas: 'XII RPL 2',
-      poin: 850,
-      prestasi: 'Juara 1 OSN Matematika',
-      avatar: Icons.person,
-      rank: 1,
-      status: 'Aman',
-      nis: '2023001',
-      ttl: 'Bandung, 15 Mei 2007',
-      jenkel: 'Perempuan',
-      alamat: 'Jl. Merdeka No. 123, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456789',
-      email: 'nazwa.xariena@smk.sch.id',
-      namaOrtu: 'Ahmad Sudarjo',
-      noHpOrtu: '08129876543',
-    ),
-    Student(
-      name: 'Siti Nurhaliza',
-      kelas: 'XII RPL 2',
-      poin: 820,
-      prestasi: 'Juara 2 Lomba Pidato',
-      avatar: Icons.person,
-      rank: 2,
-      status: 'Aman',
-      nis: '2023002',
-      ttl: 'Jakarta, 20 April 2007',
-      jenkel: 'Perempuan',
-      alamat: 'Jl. Sudirman No. 45, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456790',
-      email: 'siti.nurhaliza@smk.sch.id',
-      namaOrtu: 'Budi Santoso',
-      noHpOrtu: '08129876544',
-    ),
-    Student(
-      name: 'Budi Santoso',
-      kelas: 'XII RPL 2',
-      poin: 800,
-      prestasi: 'Ketua OSIS Berprestasi',
-      avatar: Icons.person,
-      rank: 3,
-      status: 'Aman',
-      nis: '2023003',
-      ttl: 'Surabaya, 10 Januari 2007',
-      jenkel: 'Laki-laki',
-      alamat: 'Jl. Pahlawan No. 78, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456791',
-      email: 'budi.santoso@smk.sch.id',
-      namaOrtu: 'Sari Dewi',
-      noHpOrtu: '08129876545',
-    ),
-    Student(
-      name: 'Maya Sari Dewi',
-      kelas: 'XII RPL 2',
-      poin: 780,
-      prestasi: 'Juara 1 Olimpiade Fisika',
-      avatar: Icons.person,
-      rank: 4,
-      status: 'Aman',
-      nis: '2023004',
-      ttl: 'Medan, 25 Maret 2007',
-      jenkel: 'Perempuan',
-      alamat: 'Jl. Kemerdekaan No. 90, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456792',
-      email: 'maya.dewi@smk.sch.id',
-      namaOrtu: 'Hendra Wijaya',
-      noHpOrtu: '08129876546',
-    ),
-  ];
-
-  final List<Student> _siswaBerat = [
-    Student(
-      name: 'Ahmad Lutfi',
-      kelas: 'XII RPL 2',
-      poin: -150,
-      prestasi: 'Pelanggaran berulang: terlambat',
-      avatar: Icons.person,
-      rank: 1,
-      status: 'Prioritas',
-      nis: '2023005',
-      ttl: 'Bandung, 12 Juni 2007',
-      jenkel: 'Laki-laki',
-      alamat: 'Jl. Raya No. 10, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456793',
-      email: 'ahmad.lutfi@smk.sch.id',
-      namaOrtu: 'Siti Aminah',
-      noHpOrtu: '08129876547',
-    ),
-    Student(
-      name: 'Rudi Hartono',
-      kelas: 'XII RPL 2',
-      poin: -120,
-      prestasi: 'Pelanggaran: tidak memakai seragam',
-      avatar: Icons.person,
-      rank: 2,
-      status: 'Prioritas',
-      nis: '2023006',
-      ttl: 'Jakarta, 18 Februari 2007',
-      jenkel: 'Laki-laki',
-      alamat: 'Jl. Veteran No. 20, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456794',
-      email: 'rudi.hartono@smk.sch.id',
-      namaOrtu: 'Dewi Lestari',
-      noHpOrtu: '08129876548',
-    ),
-    Student(
-      name: 'Lina Marlina',
-      kelas: 'XII RPL 2',
-      poin: -100,
-      prestasi: 'Pelanggaran: bolos kelas',
-      avatar: Icons.person,
-      rank: 3,
-      status: 'Bermasalah',
-      nis: '2023007',
-      ttl: 'Surabaya, 5 April 2007',
-      jenkel: 'Perempuan',
-      alamat: 'Jl. Diponegoro No. 30, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456795',
-      email: 'lina.marlina@smk.sch.id',
-      namaOrtu: 'Hadi Susanto',
-      noHpOrtu: '08129876549',
-    ),
-    Student(
-      name: 'Eko Prasetyo',
-      kelas: 'XII RPL 2',
-      poin: -80,
-      prestasi: 'Pelanggaran: tidak mengerjakan tugas',
-      avatar: Icons.person,
-      rank: 4,
-      status: 'Bermasalah',
-      nis: '2023008',
-      ttl: 'Medan, 22 Januari 2007',
-      jenkel: 'Laki-laki',
-      alamat: 'Jl. Gatot Subroto No. 40, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456796',
-      email: 'eko.prasetyo@smk.sch.id',
-      namaOrtu: 'Rina Wulandari',
-      noHpOrtu: '08129876550',
-    ),
-  ];
+  List<Student> _siswaTerbaik = [];
+  List<Student> _siswaBerat = [];
+  List<Map<String, dynamic>> _apresiasiData = [];
+  List<Map<String, dynamic>> _pelanggaranData = [];
+  List<Map<String, dynamic>> _kelasData = [];
+  List<Map<String, dynamic>> _activityData = [];
+  String _teacherName = 'Teacher';
+  String _teacherClassId = '';
 
   @override
   void initState() {
@@ -277,14 +113,249 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
-    _filteredSiswaTerbaik = _siswaTerbaik;
-    _filteredSiswaBerat = _siswaBerat;
+    _loadTeacherData();
+    _loadLocalActivityData();
   }
 
   @override
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadTeacherData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _teacherName = prefs.getString('name') ?? 'Teacher';
+      _teacherClassId = prefs.getString('id_kelas') ?? '';
+    });
+    await _fetchData();
+  }
+
+  Future<void> _loadLocalActivityData() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> activities = prefs.getStringList('user_activities') ?? [];
+
+    setState(() {
+      _activityData =
+          activities.asMap().entries.map((entry) {
+              int index = entry.key;
+              String activity = entry.value;
+              List<String> parts = activity.split('|');
+              return {
+                'type': parts[0],
+                'title': parts[1],
+                'subtitle': parts[2],
+                'time': parts[3], // Keep as String for display
+                'timeObj': DateTime.parse(
+                  parts[3],
+                ), // Parse to DateTime for sorting
+                'badge': 'SELESAI',
+                'badgeColor':
+                    parts[0] == 'Penghargaan'
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFFFF6B6D),
+                'icon':
+                    parts[0] == 'Penghargaan'
+                        ? Icons.emoji_events_outlined
+                        : Icons.report_problem_outlined,
+                'gradient': LinearGradient(
+                  colors:
+                      parts[0] == 'Penghargaan'
+                          ? [const Color(0xFF10B981), const Color(0xFF34D399)]
+                          : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
+                ),
+              };
+            }).toList()
+            ..sort(
+              (a, b) => (b['timeObj'] as DateTime).compareTo(
+                a['timeObj'] as DateTime,
+              ),
+            );
+    });
+  }
+
+  Future<void> _addLocalActivity(
+    String type,
+    String title,
+    String subtitle,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> activities = prefs.getStringList('user_activities') ?? [];
+    String time = DateTime.now().toString().split('.')[0];
+    String activity = '$type|$title|$subtitle|$time';
+    activities.insert(0, activity); // Add new activity at the beginning
+    if (activities.length > 10) {
+      activities = activities.sublist(0, 10); // Keep only latest 10 activities
+    }
+    await prefs.setStringList('user_activities', activities);
+    await _loadLocalActivityData();
+  }
+
+  Future<void> _fetchData() async {
+    try {
+      final kelasResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/kelas'),
+      );
+      if (kelasResponse.statusCode == 200) {
+        final kelasJson = jsonDecode(kelasResponse.body);
+        _kelasData = List<Map<String, dynamic>>.from(kelasJson['data']);
+      }
+
+      final akumulasiResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
+      );
+      if (akumulasiResponse.statusCode == 200) {
+        final akumulasiJson = jsonDecode(akumulasiResponse.body);
+        final siswaData = List<Map<String, dynamic>>.from(
+          akumulasiJson['data']['data'],
+        );
+
+        final kelasMap = {
+          for (var kelas in _kelasData) kelas['id_kelas']: kelas['nama_kelas'],
+        };
+
+        final allStudents =
+            siswaData.asMap().entries.map((entry) {
+              int index = entry.key;
+              var siswa = entry.value;
+              String kelas = kelasMap[siswa['id_kelas']] ?? 'Unknown';
+              int poin = siswa['poin_total'] != null ? siswa['poin_total'] : 0;
+              String prestasi =
+                  poin >= 0 ? 'Memiliki poin positif' : 'Memiliki pelanggaran';
+              String status =
+                  poin >= 0
+                      ? 'Aman'
+                      : (poin <= -20 ? 'Prioritas' : 'Bermasalah');
+
+              return Student(
+                name: siswa['nama_siswa'],
+                kelas: kelas,
+                poin: poin,
+                prestasi: prestasi,
+                avatar: Icons.person,
+                rank: index + 1,
+                status: status,
+                nis: siswa['nis'],
+              );
+            }).toList();
+
+        final classStudents =
+            allStudents
+                .where((s) => s.kelas == kelasMap[_teacherClassId])
+                .toList();
+
+        _siswaTerbaik =
+            classStudents.where((s) => s.poin >= 0).toList()
+              ..sort((a, b) => b.poin.compareTo(a.poin));
+        _siswaBerat =
+            classStudents.where((s) => s.poin < 0).toList()
+              ..sort((a, b) => a.poin.compareTo(b.poin));
+
+        _siswaTerbaik = _siswaTerbaik.take(4).toList();
+        _siswaBerat = _siswaBerat.take(4).toList();
+
+        _filteredSiswaTerbaik = _siswaTerbaik;
+        _filteredSiswaBerat = _siswaBerat;
+
+        // Log refresh action
+        await _addLocalActivity(
+          'Sistem',
+          'Data Diperbarui',
+          'Melakukan refresh data siswa dan kelas',
+        );
+      }
+
+      final penghargaanResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan'),
+      );
+      if (penghargaanResponse.statusCode == 200) {
+        final penghargaanJson = jsonDecode(penghargaanResponse.body);
+        final penghargaanData = List<Map<String, dynamic>>.from(
+          penghargaanJson['penilaian']['data'],
+        );
+        _apresiasiData = _aggregateChartData(penghargaanData, 'created_at');
+      }
+
+      final pelanggaranResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran'),
+      );
+      if (pelanggaranResponse.statusCode == 200) {
+        final pelanggaranJson = jsonDecode(pelanggaranResponse.body);
+        final pelanggaranData = List<Map<String, dynamic>>.from(
+          pelanggaranJson['penilaian']['data'],
+        );
+        _pelanggaranData = _aggregateChartData(pelanggaranData, 'created_at');
+      }
+
+      setState(() {});
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  List<Map<String, dynamic>> _aggregateChartData(
+    List<Map<String, dynamic>> data,
+    String dateField,
+  ) {
+    Map<String, double> weeklyData = {};
+    Map<String, double> monthlyData = {};
+
+    for (var item in data) {
+      DateTime date = DateTime.parse(item[dateField]);
+      String weekKey = '${date.year}-W${(date.day / 7).ceil()}';
+      String monthKey = '${date.year}-${date.month}';
+
+      weeklyData[weekKey] = (weeklyData[weekKey] ?? 0) + 1;
+      monthlyData[monthKey] = (monthlyData[monthKey] ?? 0) + 1;
+    }
+
+    List<Map<String, dynamic>> result = [];
+    if (_apresiasiChartTab == 0 || _pelanggaranChartTab == 0) {
+      result =
+          weeklyData.entries
+              .map((e) => {'label': e.key.split('-W')[1], 'value': e.value})
+              .toList();
+    } else {
+      result =
+          monthlyData.entries
+              .map(
+                (e) => {
+                  'label': _getMonthName(int.parse(e.key.split('-')[1])),
+                  'value': e.value,
+                },
+              )
+              .toList();
+    }
+
+    return result..sort((a, b) => a['label'].compareTo(b['label']));
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[month - 1];
+  }
+
+  String _formatTime(String dateStr) {
+    try {
+      DateTime date = DateTime.parse(dateStr);
+      return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return dateStr;
+    }
   }
 
   void _filterSiswa(String query) {
@@ -300,21 +371,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               final namaLower = siswa.name.toLowerCase();
               final kelasLower = siswa.kelas.toLowerCase();
               final prestasiLower = siswa.prestasi.toLowerCase();
+              final statusLower = siswa.status.toLowerCase();
+              final nisString = siswa.nis.toString();
               return namaLower.contains(searchLower) ||
                   kelasLower.contains(searchLower) ||
-                  prestasiLower.contains(searchLower);
+                  prestasiLower.contains(searchLower) ||
+                  statusLower.contains(searchLower) ||
+                  nisString.contains(searchLower);
             }).toList();
         _filteredSiswaBerat =
             _siswaBerat.where((siswa) {
               final namaLower = siswa.name.toLowerCase();
               final kelasLower = siswa.kelas.toLowerCase();
               final prestasiLower = siswa.prestasi.toLowerCase();
+              final statusLower = siswa.status.toLowerCase();
+              final nisString = siswa.nis.toString();
               return namaLower.contains(searchLower) ||
                   kelasLower.contains(searchLower) ||
-                  prestasiLower.contains(searchLower);
+                  prestasiLower.contains(searchLower) ||
+                  statusLower.contains(searchLower) ||
+                  nisString.contains(searchLower);
             }).toList();
       }
     });
+
+    // Log search action
+    if (query.isNotEmpty) {
+      _addLocalActivity(
+        'Pencarian',
+        'Pencarian Siswa',
+        'Melakukan pencarian: $query',
+      );
+    }
   }
 
   void _navigateToDetailScreen(Student siswa) {
@@ -326,21 +414,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               student: {
                 'name': siswa.name,
                 'status': siswa.status,
-                'nis': siswa.nis,
-                'ttl': siswa.ttl,
-                'jenkel': siswa.jenkel,
-                'alamat': siswa.alamat,
-                'program_keahlian': siswa.programKeahlian,
+                'nis': siswa.nis.toString(),
                 'kelas': siswa.kelas,
-                'tahun_masuk': siswa.tahunMasuk,
-                'no_hp': siswa.noHp,
-                'email': siswa.email,
-                'nama_ortu': siswa.namaOrtu,
-                'no_hp_ortu': siswa.noHpOrtu,
               },
             ),
       ),
-    );
+    ).then((_) {
+      // Log navigation to detail screen
+      _addLocalActivity(
+        'Navigasi',
+        'Detail Siswa',
+        'Mengakses detail siswa: ${siswa.name}',
+      );
+    });
   }
 
   @override
@@ -397,7 +483,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     GestureDetector(
-                                      onTap: () => Navigator.pop(context),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        _addLocalActivity(
+                                          'Navigasi',
+                                          'Kembali',
+                                          'Kembali ke halaman sebelumnya',
+                                        );
+                                      },
                                       child: Container(
                                         width: 40,
                                         height: 40,
@@ -425,7 +518,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                     (context) =>
                                                         const NotifikasiScreen(),
                                               ),
-                                            );
+                                            ).then((_) {
+                                              _addLocalActivity(
+                                                'Navigasi',
+                                                'Notifikasi',
+                                                'Mengakses halaman notifikasi',
+                                              );
+                                            });
                                           },
                                           child: Container(
                                             width: 40,
@@ -448,6 +547,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         ),
                                         const SizedBox(width: 8),
                                         GestureDetector(
+                                          onTap: () async {
+                                            await _fetchData();
+                                          },
+                                          child: Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(
+                                                0.2,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: const Center(
+                                              child: Icon(
+                                                Icons.refresh_rounded,
+                                                color: Colors.white,
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        GestureDetector(
                                           onTap: () {
                                             Navigator.push(
                                               context,
@@ -456,7 +579,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                     (context) =>
                                                         const ProfileScreen(),
                                               ),
-                                            );
+                                            ).then((_) {
+                                              _addLocalActivity(
+                                                'Navigasi',
+                                                'Profil',
+                                                'Mengakses halaman profil',
+                                              );
+                                            });
                                           },
                                           child: Container(
                                             width: 40,
@@ -493,7 +622,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Hello, Maam Euis! 👋',
+                                        'Hello, $_teacherName! 👋',
                                         style: GoogleFonts.poppins(
                                           color: Colors.white,
                                           fontSize: 26,
@@ -612,20 +741,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   ),
                                   _buildBarChart(
                                     _apresiasiChartTab == 0
-                                        ? [
-                                          {'value': 80.0, 'label': 'Sen'},
-                                          {'value': 120.0, 'label': 'Sel'},
-                                          {'value': 90.0, 'label': 'Rab'},
-                                          {'value': 40.0, 'label': 'Kam'},
-                                          {'value': 100.0, 'label': 'Jum'},
-                                        ]
-                                        : [
-                                          {'value': 320.0, 'label': 'Jan'},
-                                          {'value': 480.0, 'label': 'Feb'},
-                                          {'value': 360.0, 'label': 'Mar'},
-                                          {'value': 160.0, 'label': 'Apr'},
-                                          {'value': 400.0, 'label': 'May'},
-                                        ],
+                                        ? _apresiasiData
+                                        : _apresiasiData,
                                     const LinearGradient(
                                       colors: [
                                         Color(0xFF61B8FF),
@@ -652,20 +769,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   ),
                                   _buildBarChart(
                                     _pelanggaranChartTab == 0
-                                        ? [
-                                          {'value': 60.0, 'label': 'Sen'},
-                                          {'value': 25.0, 'label': 'Sel'},
-                                          {'value': 15.0, 'label': 'Rab'},
-                                          {'value': 10.0, 'label': 'Kam'},
-                                          {'value': 20.0, 'label': 'Jum'},
-                                        ]
-                                        : [
-                                          {'value': 240.0, 'label': 'Jan'},
-                                          {'value': 100.0, 'label': 'Feb'},
-                                          {'value': 60.0, 'label': 'Mar'},
-                                          {'value': 40.0, 'label': 'Apr'},
-                                          {'value': 80.0, 'label': 'May'},
-                                        ],
+                                        ? _pelanggaranData
+                                        : _pelanggaranData,
                                     const LinearGradient(
                                       colors: [
                                         Color(0xFFFF6B6D),
@@ -688,7 +793,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         builder:
                                             (context) => const ActivityScreen(),
                                       ),
-                                    );
+                                    ).then((_) {
+                                      _addLocalActivity(
+                                        'Navigasi',
+                                        'Aktivitas',
+                                        'Mengakses halaman aktivitas',
+                                      );
+                                    });
                                   },
                                   child: Container(
                                     width: double.infinity,
@@ -740,18 +851,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                       fontSize: 18,
                                                       fontWeight:
                                                           FontWeight.w700,
-                                                      color: const Color(
-                                                        0xFF1F2937,
-                                                      ),
+                                                      color: Color(0xFF1F2937),
                                                     ),
                                                   ),
                                                   Text(
-                                                    'Update terbaru dari sistem',
+                                                    'Update terbaru dari aktivitas pengguna',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 12,
-                                                      color: const Color(
-                                                        0xFF6B7280,
-                                                      ),
+                                                      color: Color(0xFF6B7280),
                                                     ),
                                                   ),
                                                 ],
@@ -760,7 +867,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             Container(
                                               padding: const EdgeInsets.all(8),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFF8FAFC),
+                                                color: Color(0xFFF8FAFC),
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                               ),
@@ -773,50 +880,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                           ],
                                         ),
                                         const SizedBox(height: 24),
-                                        _buildEnhancedActivityItem(
-                                          Icons.assessment_outlined,
-                                          const LinearGradient(
-                                            colors: [
-                                              Color(0xFF61B8FF),
-                                              Color(0xFF0083EE),
-                                            ],
-                                          ),
-                                          'Laporan Bulanan',
-                                          'Laporan evaluasi siswa telah selesai dibuat',
-                                          '10.30',
-                                          'SELESAI',
-                                          const Color(0xFF10B981),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        _buildEnhancedActivityItem(
-                                          Icons.emoji_events_outlined,
-                                          const LinearGradient(
-                                            colors: [
-                                              Color(0xFF10B981),
-                                              Color(0xFF34D399),
-                                            ],
-                                          ),
-                                          'Laporan Apresiasi',
-                                          'Rekap berhasil dalam kategori apresiasi',
-                                          '08.30',
-                                          'SELESAI',
-                                          const Color(0xFF10B981),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        _buildEnhancedActivityItem(
-                                          Icons.report_problem_outlined,
-                                          const LinearGradient(
-                                            colors: [
-                                              Color(0xFFFF6B6D),
-                                              Color(0xFFFF8E8F),
-                                            ],
-                                          ),
-                                          'Laporan Pelanggaran',
-                                          'Rekap berhasil dalam kategori pelanggaran',
-                                          '06.30',
-                                          'SELESAI',
-                                          const Color(0xFF10B981),
-                                        ),
+                                        ..._activityData
+                                            .take(3)
+                                            .map(
+                                              (activity) => Padding(
+                                                padding: const EdgeInsets.only(
+                                                  bottom: 16,
+                                                ),
+                                                child:
+                                                    _buildEnhancedActivityItem(
+                                                      activity['icon'],
+                                                      activity['gradient'],
+                                                      activity['title'],
+                                                      activity['subtitle'],
+                                                      activity['time'],
+                                                      activity['badge'],
+                                                      activity['badgeColor'],
+                                                    ),
+                                              ),
+                                            ),
                                       ],
                                     ),
                                   ),
@@ -1419,7 +1501,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     bool isActive = _selectedTab == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedTab = index),
+        onTap: () {
+          setState(() => _selectedTab = index);
+          _addLocalActivity('Navigasi', 'Tab $text', 'Berpindah ke tab $text');
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           height: 40,
@@ -1577,7 +1662,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           subtitle: subtitle,
                         ),
                   ),
-                );
+                ).then((_) {
+                  _addLocalActivity(
+                    'Navigasi',
+                    'Grafik ${isFirst ? 'Apresiasi' : 'Pelanggaran'}',
+                    'Mengakses grafik ${isFirst ? 'apresiasi' : 'pelanggaran'}',
+                  );
+                });
               },
               child: chart,
             ),
@@ -1596,10 +1687,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         if (details.delta.dx > 5) {
           if (selectedTab > 0) {
             onTabChanged(selectedTab - 1);
+            _addLocalActivity(
+              'Navigasi',
+              'Tab Grafik',
+              'Berpindah ke tab ${selectedTab == 0 ? 'Bulan' : 'Minggu'}',
+            );
           }
         } else if (details.delta.dx < -5) {
           if (selectedTab < 1) {
             onTabChanged(selectedTab + 1);
+            _addLocalActivity(
+              'Navigasi',
+              'Tab Grafik',
+              'Berpindah ke tab ${selectedTab == 0 ? 'Bulan' : 'Minggu'}',
+            );
           }
         }
       },
@@ -1662,9 +1763,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildBarChart(List<Map<String, dynamic>> data, Gradient gradient) {
-    double maxValue = data
-        .map((e) => (e['value'] as double?) ?? 0.0)
-        .reduce((a, b) => a > b ? a : b);
+    double maxValue =
+        data.isNotEmpty
+            ? data
+                .map((e) => (e['value'] as double?) ?? 0.0)
+                .reduce((a, b) => a > b ? a : b)
+            : 1.0;
 
     return Container(
       height: 160,
@@ -1795,7 +1899,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const ActivityScreen()),
-        );
+        ).then((_) {
+          _addLocalActivity(
+            'Navigasi',
+            'Aktivitas',
+            'Mengakses halaman aktivitas dari item',
+          );
+        });
       },
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -1855,7 +1965,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  time,
+                  _formatTime(time),
                   style: GoogleFonts.poppins(
                     color: const Color(0xFF9CA3AF),
                     fontSize: 11,

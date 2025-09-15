@@ -42,20 +42,20 @@ class StudentScore {
     required this.type,
   });
 
-  factory StudentScore.fromPenghargaan(Map<String, dynamic> json) {
+  factory StudentScore.fromPenghargaan(Map<String, dynamic> json, int poin) {
     return StudentScore(
-      keterangan: json['alasan'] ?? 'Unknown',
-      tanggal: json['tanggal_penghargaan'] ?? 'Unknown',
-      poin: 0,
+      keterangan: json['alasan']?.toString() ?? 'Unknown',
+      tanggal: json['tanggal_penghargaan']?.toString() ?? 'Unknown',
+      poin: poin,
       type: 'apresiasi',
     );
   }
 
-  factory StudentScore.fromPeringatan(Map<String, dynamic> json) {
+  factory StudentScore.fromPeringatan(Map<String, dynamic> json, int poin) {
     return StudentScore(
-      keterangan: json['alasan'] ?? 'Unknown',
-      tanggal: json['tanggal_sp'] ?? 'Unknown',
-      poin: 0,
+      keterangan: json['alasan']?.toString() ?? 'Unknown',
+      tanggal: json['tanggal_sp']?.toString() ?? 'Unknown',
+      poin: poin,
       type: 'pelanggaran',
     );
   }
@@ -70,6 +70,7 @@ class Student {
   final Color color;
   final String avatar;
   final List<StudentScore> scores;
+  final String idKelas;
 
   Student({
     required this.name,
@@ -80,22 +81,29 @@ class Student {
     required this.color,
     required this.avatar,
     required this.scores,
+    required this.idKelas,
   });
 
   factory Student.fromJson(
     Map<String, dynamic> json,
     List<StudentScore> scores,
   ) {
-    final totalPoin = json['poin_total'] ?? 0;
+    final totalPoin =
+        (json['poin_total'] is int ? json['poin_total'] : 0) as int;
     return Student(
-      name: json['nama_siswa'] ?? 'Unknown',
+      name: json['nama_siswa']?.toString() ?? 'Unknown',
       totalPoin: totalPoin,
-      apresiasi: json['poin_apresiasi'] ?? 0,
-      pelanggaran: json['poin_pelanggaran'] ?? 0,
+      apresiasi:
+          (json['poin_apresiasi'] is int ? json['poin_apresiasi'] : 0) as int,
+      pelanggaran:
+          (json['poin_pelanggaran'] is int ? json['poin_pelanggaran'] : 0)
+              as int,
       isPositive: totalPoin >= 0,
       color: totalPoin >= 0 ? const Color(0xFF10B981) : const Color(0xFFFF6B6D),
-      avatar: (json['nama_siswa'] ?? 'U').substring(0, 2).toUpperCase(),
+      avatar:
+          (json['nama_siswa']?.toString() ?? 'U').substring(0, 2).toUpperCase(),
       scores: scores,
+      idKelas: json['id_kelas']?.toString() ?? '',
     );
   }
 }
@@ -113,9 +121,9 @@ class Kelas {
 
   factory Kelas.fromJson(Map<String, dynamic> json) {
     return Kelas(
-      idKelas: json['id_kelas'] ?? '',
-      namaKelas: json['nama_kelas'] ?? 'Unknown',
-      jurusan: json['jurusan'] ?? 'Unknown',
+      idKelas: json['id_kelas']?.toString() ?? '',
+      namaKelas: json['nama_kelas']?.toString() ?? 'Unknown',
+      jurusan: json['jurusan']?.toString() ?? 'Unknown',
     );
   }
 }
@@ -147,6 +155,7 @@ class _LaporanScreenState extends State<LaporanScreen>
   String? errorMessageAspek;
   String? walikelasId;
   String? idKelas;
+  Map<String, dynamic> aspekPenilaianData = {};
 
   final Map<String, bool> _expandedSections = {};
 
@@ -209,13 +218,17 @@ class _LaporanScreenState extends State<LaporanScreen>
                           () =>
                               kelasList.isNotEmpty
                                   ? kelasList.first
-                                  : throw Exception('No valid class found'),
+                                  : Kelas(
+                                    idKelas: '',
+                                    namaKelas: 'Unknown',
+                                    jurusan: 'Unknown',
+                                  ),
                     )
                     : kelasList.isNotEmpty
                     ? kelasList.first
                     : null;
             isLoadingKelas = false;
-            if (selectedKelas == null) {
+            if (selectedKelas?.idKelas.isEmpty ?? true) {
               errorMessageKelas = 'Kelas terkait tidak ditemukan';
             }
           });
@@ -248,16 +261,16 @@ class _LaporanScreenState extends State<LaporanScreen>
 
     try {
       final response = await http
-          .get(Uri.parse('http://10.0.2.2:8000/api/siswa'))
+          .get(Uri.parse('http://10.0.2.2:8000/api/akumulasi'))
           .timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         if (jsonData['success']) {
-          List<dynamic> data = jsonData['data'];
+          List<dynamic> data = jsonData['data']['data'];
           List<Student> students = [];
           for (var studentJson in data) {
             final scores = await _fetchStudentScores(
-              studentJson['nis'].toString(),
+              studentJson['nis']?.toString() ?? '',
             );
             students.add(Student.fromJson(studentJson, scores));
           }
@@ -287,37 +300,137 @@ class _LaporanScreenState extends State<LaporanScreen>
   }
 
   Future<List<StudentScore>> _fetchStudentScores(String nis) async {
+    if (nis.isEmpty) return [];
     List<StudentScore> scores = [];
     try {
+      // Fetch appreciations
       final penghargaanResponse = await http
-          .get(Uri.parse('http://10.0.2.2:8000/api/penghargaan'))
+          .get(
+            Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis'),
+          )
           .timeout(Duration(seconds: 10));
       if (penghargaanResponse.statusCode == 200) {
         final jsonData = jsonDecode(penghargaanResponse.body);
-        if (jsonData['success']) {
-          scores.addAll(
-            (jsonData['data'] as List)
-                .map((json) => StudentScore.fromPenghargaan(json))
-                .toList(),
-          );
+        if (jsonData['penilaian']['data'].isNotEmpty) {
+          final appreciationsResponse = await http
+              .get(Uri.parse('http://10.0.2.2:8000/api/Penghargaan'))
+              .timeout(Duration(seconds: 10));
+          if (appreciationsResponse.statusCode == 200) {
+            final appreciationsData = jsonDecode(appreciationsResponse.body);
+            if (appreciationsData['success']) {
+              List<dynamic> appreciations = appreciationsData['data'];
+              List<dynamic> studentEvaluations =
+                  jsonData['penilaian']['data']
+                      .where((eval) => eval['nis'].toString() == nis)
+                      .toList();
+
+              for (var eval in studentEvaluations) {
+                final aspek =
+                    aspekPenilaianData[eval['id_aspekpenilaian']?.toString()];
+                if (aspek == null ||
+                    aspek['jenis_poin']?.toString() != 'Apresiasi')
+                  continue;
+
+                final appreciation = appreciations.firstWhere((a) {
+                  if (eval['created_at'] == null ||
+                      a['tanggal_penghargaan'] == null)
+                    return false;
+                  try {
+                    return DateTime.parse(
+                          a['tanggal_penghargaan'],
+                        ).isAtSameMomentAs(
+                          DateTime.parse(eval['created_at'].substring(0, 10)),
+                        ) ||
+                        a['alasan'].toLowerCase().contains(
+                          aspek['uraian'].toLowerCase(),
+                        );
+                  } catch (e) {
+                    return false;
+                  }
+                }, orElse: () => null);
+
+                if (appreciation != null) {
+                  scores.add(
+                    StudentScore.fromPenghargaan(
+                      appreciation,
+                      aspek['indikator_poin'] ??
+                          (appreciation['level_penghargaan'] == 'PH1'
+                              ? 10
+                              : appreciation['level_penghargaan'] == 'PH2'
+                              ? 20
+                              : 30),
+                    ),
+                  );
+                }
+              }
+            }
+          }
         }
       }
 
+      // Fetch violations
       final peringatanResponse = await http
-          .get(Uri.parse('http://10.0.2.2:8000/api/peringatan'))
+          .get(
+            Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran?nis=$nis'),
+          )
           .timeout(Duration(seconds: 10));
       if (peringatanResponse.statusCode == 200) {
         final jsonData = jsonDecode(peringatanResponse.body);
-        if (jsonData['success']) {
-          scores.addAll(
-            (jsonData['data'] as List)
-                .map((json) => StudentScore.fromPeringatan(json))
-                .toList(),
-          );
+        if (jsonData['penilaian']['data'].isNotEmpty) {
+          final violationsResponse = await http
+              .get(Uri.parse('http://10.0.2.2:8000/api/peringatan'))
+              .timeout(Duration(seconds: 10));
+          if (violationsResponse.statusCode == 200) {
+            final violationsData = jsonDecode(violationsResponse.body);
+            if (violationsData['success']) {
+              List<dynamic> violations = violationsData['data'];
+              List<dynamic> studentEvaluations =
+                  jsonData['penilaian']['data']
+                      .where((eval) => eval['nis'].toString() == nis)
+                      .toList();
+
+              for (var eval in studentEvaluations) {
+                final aspek =
+                    aspekPenilaianData[eval['id_aspekpenilaian']?.toString()];
+                if (aspek == null ||
+                    aspek['jenis_poin']?.toString() != 'Pelanggaran')
+                  continue;
+
+                final violation = violations.firstWhere((v) {
+                  if (eval['created_at'] == null || v['tanggal_sp'] == null)
+                    return false;
+                  try {
+                    return DateTime.parse(v['tanggal_sp']).isAtSameMomentAs(
+                          DateTime.parse(eval['created_at'].substring(0, 10)),
+                        ) ||
+                        v['alasan'].toLowerCase().contains(
+                          aspek['uraian'].toLowerCase(),
+                        );
+                  } catch (e) {
+                    return false;
+                  }
+                }, orElse: () => null);
+
+                if (violation != null) {
+                  scores.add(
+                    StudentScore.fromPeringatan(
+                      violation,
+                      aspek['indikator_poin'] ??
+                          (violation['level_sp'] == 'SP1'
+                              ? 5
+                              : violation['level_sp'] == 'SP2'
+                              ? 10
+                              : 20),
+                    ),
+                  );
+                }
+              }
+            }
+          }
         }
       }
     } catch (e) {
-      // Handle errors silently for scores, as they are supplementary
+      // Handle errors silently for scores
     }
     return scores;
   }
@@ -337,13 +450,18 @@ class _LaporanScreenState extends State<LaporanScreen>
         if (jsonData['success']) {
           List<dynamic> data = jsonData['data'];
           Map<String, FAQItem> tempFaqData = {};
-          for (var i = 0; i < data.length; i++) {
-            String key = data[i]['id_aspekpenilaian'] ?? 'A$i';
-            tempFaqData[key] = FAQItem.fromJson(data[i]);
+          Map<String, dynamic> tempAspekData = {};
+          for (var item in data) {
+            String key =
+                item['id_aspekpenilaian']?.toString() ??
+                'A${data.indexOf(item)}';
+            tempFaqData[key] = FAQItem.fromJson(item);
+            tempAspekData[key] = item;
             _expandedSections[key] = false;
           }
           setState(() {
             faqData = tempFaqData;
+            aspekPenilaianData = tempAspekData;
             isLoadingAspek = false;
           });
         } else {
@@ -375,26 +493,30 @@ class _LaporanScreenState extends State<LaporanScreen>
   }
 
   double get _averageApresiasi {
-    if (studentsList.isEmpty) return 0;
-    double total = studentsList.fold(
+    if (_filteredAndSortedStudents.isEmpty) return 0;
+    double total = _filteredAndSortedStudents.fold(
       0,
       (sum, student) => sum + student.apresiasi,
     );
-    return total / studentsList.length;
+    return total / _filteredAndSortedStudents.length;
   }
 
   double get _apresiasiPercentage {
-    if (studentsList.isEmpty) return 0;
+    if (_filteredAndSortedStudents.isEmpty) return 0;
     int positiveCount =
-        studentsList.where((student) => student.apresiasi > 50).length;
-    return positiveCount / studentsList.length;
+        _filteredAndSortedStudents
+            .where((student) => student.apresiasi > 0)
+            .length;
+    return positiveCount / _filteredAndSortedStudents.length;
   }
 
   double get _pelanggaranPercentage {
-    if (studentsList.isEmpty) return 0;
-    int lowViolationCount =
-        studentsList.where((student) => student.pelanggaran < 10).length;
-    return lowViolationCount / studentsList.length;
+    if (_filteredAndSortedStudents.isEmpty) return 0;
+    int noViolationCount =
+        _filteredAndSortedStudents
+            .where((student) => student.pelanggaran == 0)
+            .length;
+    return noViolationCount / _filteredAndSortedStudents.length;
   }
 
   List<Student> get _filteredAndSortedStudents {
@@ -402,10 +524,11 @@ class _LaporanScreenState extends State<LaporanScreen>
 
     List<Student> filtered =
         studentsList.where((student) {
+          bool matchesClass = student.idKelas == selectedKelas!.idKelas;
           bool matchesSearch = student.name.toLowerCase().contains(
             _searchQuery.toLowerCase(),
           );
-          if (!matchesSearch) return false;
+          if (!matchesClass || !matchesSearch) return false;
 
           int poin = student.totalPoin;
           switch (_selectedFilter) {
@@ -666,15 +789,7 @@ class _LaporanScreenState extends State<LaporanScreen>
     }
 
     if (selectedKelas != null) {
-      final studentsInClass =
-          studentsList
-              .where(
-                (student) => student.scores.any(
-                  (score) =>
-                      score.type == 'apresiasi' || score.type == 'pelanggaran',
-                ),
-              )
-              .length;
+      final studentsInClass = _filteredAndSortedStudents.length;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
