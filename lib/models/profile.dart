@@ -6,7 +6,6 @@ class Profile {
   final String nip;
   final String username;
   final String email;
-  final String phone;
   final String joinDate;
 
   Profile({
@@ -15,7 +14,6 @@ class Profile {
     required this.nip,
     required this.username,
     required this.email,
-    required this.phone,
     required this.joinDate,
   });
 }

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:skoring/navigation/kaprog.dart';
 import 'package:skoring/screens/kaprog/home.dart';
 import 'package:skoring/screens/profile.dart';
 import 'package:skoring/screens/kaprog/detail.dart';
 import 'package:skoring/screens/kaprog/report.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProgramKeahlianScreen extends StatefulWidget {
@@ -19,162 +19,167 @@ class ProgramKeahlianScreen extends StatefulWidget {
 
 class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
   final TextEditingController _searchController = TextEditingController();
+  String _selectedFilter = 'Semua';
   String _searchQuery = '';
   int _currentIndex = 0;
-  String? _kaprogJurusan;
-  List<Map<String, dynamic>> _classes = [];
+  List<Map<String, dynamic>> _jurusanList = [];
+  List<Map<String, dynamic>> _kelasList = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadKaprogJurusan();
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
       });
+      if (_searchController.text.isNotEmpty) {
+        _addLocalActivity(
+          'Pencarian',
+          'Pencarian Jurusan',
+          'Melakukan pencarian: ${_searchController.text}',
+        );
+      }
     });
+    _fetchJurusanAndKelas();
   }
 
-  Future<void> _loadKaprogJurusan() async {
+  Future<void> _addLocalActivity(
+    String type,
+    String title,
+    String subtitle,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
-    String? idKelas = prefs.getString('id_kelas') ?? '';
+    List<String> activities = prefs.getStringList('kaprog_activities') ?? [];
+    String time = DateTime.now().toString().split('.')[0];
+    String activity = '$type|$title|$subtitle|$time';
+    activities.insert(0, activity);
+    if (activities.length > 10) {
+      activities = activities.sublist(0, 10);
+    }
+    await prefs.setStringList('kaprog_activities', activities);
+  }
+
+  Future<void> _fetchJurusanAndKelas() async {
     setState(() {
-      _kaprogJurusan = 'Unknown';
       _isLoading = true;
     });
-
-    if (idKelas.isNotEmpty) {
-      try {
-        final response = await http.get(
-          Uri.parse('http://10.0.2.2:8000/api/kelas'),
-        );
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          if (data['success']) {
-            final kelas = List<Map<String, dynamic>>.from(
-              data['data'],
-            ).firstWhere(
-              (kelas) => kelas['id_kelas'] == idKelas,
-              orElse: () => {},
-            );
-            setState(() {
-              _kaprogJurusan = kelas['jurusan'] ?? 'Unknown';
-            });
-          }
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
-      }
-    }
-    await _fetchClasses();
-    setState(() => _isLoading = false);
-  }
-
-  Future<void> _fetchClasses() async {
     try {
       final response = await http.get(
         Uri.parse('http://10.0.2.2:8000/api/kelas'),
       );
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success']) {
-          setState(() {
-            _classes =
-                List<Map<String, dynamic>>.from(
-                  data['data'],
-                ).where((kelas) => kelas['jurusan'] == _kaprogJurusan).toList();
-          });
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Gagal memuat data kelas')),
-          );
+        final jsonData = jsonDecode(response.body);
+        final kelasData = jsonData['data'] as List<dynamic>;
+
+        // Group classes by jurusan and create jurusan list
+        final jurusanMap = <String, Map<String, dynamic>>{};
+        for (var kelas in kelasData) {
+          final jurusan = kelas['jurusan'] as String;
+          if (!jurusanMap.containsKey(jurusan)) {
+            jurusanMap[jurusan] = {
+              'name': jurusan,
+              'fullName': _getJurusanFullName(jurusan),
+              'color': _getJurusanColor(jurusan),
+              'icon': _getJurusanIcon(jurusan),
+              'category': _getJurusanCategory(jurusan),
+              'classes': <Map<String, dynamic>>[],
+            };
+          }
+          jurusanMap[jurusan]!['classes'].add(kelas);
         }
+
+        setState(() {
+          _jurusanList = jurusanMap.values.toList();
+          _kelasList = kelasData.map((k) => k as Map<String, dynamic>).toList();
+          _isLoading = false;
+        });
+
+        await _addLocalActivity(
+          'Sistem',
+          'Data Jurusan Diperbarui',
+          'Melakukan refresh data jurusan dan kelas',
+        );
+      } else {
+        throw Exception('Failed to load kelas data: ${response.statusCode}');
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
+      print('Error fetching jurusan and kelas: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      await _addLocalActivity(
+        'Error',
+        'Gagal Memuat Data Jurusan',
+        'Terjadi kesalahan saat memuat data: $e',
+      );
     }
+  }
+
+  String _getJurusanFullName(String jurusan) {
+    const jurusanNames = {
+      'RPL': 'Rekayasa Perangkat Lunak',
+      'DKV': 'Desain Komunikasi Visual',
+      'TKJ': 'Teknik Komputer dan Jaringan',
+      'MP': 'Manajemen Perkantoran',
+      'AKL': 'Akuntansi dan Keuangan Lembaga',
+      'MLOG': 'Manajemen Logistik',
+      'PM': 'Pemasaran',
+    };
+    return jurusanNames[jurusan] ?? jurusan;
+  }
+
+  Color _getJurusanColor(String jurusan) {
+    const jurusanColors = {
+      'RPL': Color(0xFF4CAF50),
+      'DKV': Color(0xFF9C27B0),
+      'TKJ': Color(0xFF757575),
+      'MP': Color(0xFF2196F3),
+      'AKL': Color(0xFFFFEB3B),
+      'MLOG': Color(0xFFFF9800),
+      'PM': Color(0xFFF44336),
+    };
+    return jurusanColors[jurusan] ?? Colors.blue;
+  }
+
+  IconData _getJurusanIcon(String jurusan) {
+    const jurusanIcons = {
+      'RPL': Icons.computer,
+      'DKV': Icons.design_services,
+      'TKJ': Icons.settings_ethernet,
+      'MP': Icons.business_center,
+      'AKL': Icons.account_balance,
+      'MLOG': Icons.local_shipping,
+      'PM': Icons.campaign,
+    };
+    return jurusanIcons[jurusan] ?? Icons.school;
+  }
+
+  String _getJurusanCategory(String jurusan) {
+    const itJurusan = ['RPL', 'DKV', 'TKJ'];
+    return itJurusan.contains(jurusan) ? 'IT' : 'Bisnis';
   }
 
   List<Map<String, dynamic>> get _filteredPrograms {
-    if (_kaprogJurusan == null || _kaprogJurusan == 'Unknown') {
-      return [];
-    }
-    return [
-      {
-        'name': _kaprogJurusan,
-        'fullName': _getFullName(_kaprogJurusan),
-        'color': _getColor(_kaprogJurusan),
-        'icon': _getIcon(_kaprogJurusan),
-        'category': _getCategory(_kaprogJurusan),
-      },
-    ].where((program) {
+    return _jurusanList.where((program) {
       final matchesSearch =
-          (program['name']?.toString().toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ) ??
-              false) ||
-          (program['fullName']?.toString().toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ) ??
-              false);
-
-      return matchesSearch;
+          program['name'].toLowerCase().contains(_searchQuery) ||
+          program['fullName'].toLowerCase().contains(_searchQuery);
+      final matchesFilter =
+          _selectedFilter == 'Semua' || program['category'] == _selectedFilter;
+      return matchesSearch && matchesFilter;
     }).toList();
   }
 
-  String _getFullName(String? jurusan) {
-    switch (jurusan) {
-      case 'RPL':
-        return 'Rekayasa Perangkat Lunak';
-      case 'DKV':
-        return 'Desain Komunikasi Visual';
-      case 'TKJ':
-        return 'Teknik Komputer dan Jaringan';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  Color _getColor(String? jurusan) {
-    switch (jurusan) {
-      case 'RPL':
-        return const Color(0xFF4CAF50);
-      case 'DKV':
-        return const Color(0xFF9C27B0);
-      case 'TKJ':
-        return const Color(0xFF757575);
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getIcon(String? jurusan) {
-    switch (jurusan) {
-      case 'RPL':
-        return Icons.computer;
-      case 'DKV':
-        return Icons.design_services;
-      case 'TKJ':
-        return Icons.settings_ethernet;
-      default:
-        return Icons.category;
-    }
-  }
-
-  String _getCategory(String? jurusan) {
-    switch (jurusan) {
-      case 'RPL':
-      case 'DKV':
-      case 'TKJ':
-        return 'IT';
-      default:
-        return 'Unknown';
-    }
+  void _onTap(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    _addLocalActivity(
+      'Navigasi',
+      'Tab Navigasi',
+      'Berpindah ke tab index $index',
+    );
   }
 
   void _showClassOptions(Map<String, dynamic> program) {
@@ -193,7 +198,7 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children:
-                  _classes.map((kelas) {
+                  program['classes'].map<Widget>((kelas) {
                     return ListTile(
                       title: Text(
                         kelas['nama_kelas'],
@@ -215,7 +220,13 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                                   namaKelas: kelas['nama_kelas'],
                                 ),
                           ),
-                        );
+                        ).then((_) {
+                          _addLocalActivity(
+                            'Navigasi',
+                            'Pilih Kelas',
+                            'Mengakses kelas ${kelas['nama_kelas']} dari jurusan ${program['name']}',
+                          );
+                        });
                       },
                     );
                   }).toList(),
@@ -224,18 +235,13 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
     );
   }
 
-  void _onTap(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final isTablet = MediaQuery.of(context).size.width >= 768;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle(
+        value: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.light,
         ),
@@ -281,54 +287,94 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                                   GestureDetector(
                                     onTap: () {
                                       Navigator.pop(context);
+                                      _addLocalActivity(
+                                        'Navigasi',
+                                        'Kembali',
+                                        'Kembali ke halaman sebelumnya',
+                                      );
                                     },
                                     child: Container(
-                                      width: 40,
-                                      height: 40,
+                                      width: isTablet ? 48 : 40,
+                                      height: isTablet ? 48 : 40,
                                       decoration: BoxDecoration(
                                         color: Colors.white.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: const Icon(
+                                      child: Icon(
                                         Icons.arrow_back_ios_new_rounded,
                                         color: Colors.white,
-                                        size: 18,
+                                        size: isTablet ? 20 : 18,
                                       ),
                                     ),
                                   ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) =>
-                                                  const ProfileScreen(),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(30),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              0.1,
+                                  Row(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () async {
+                                          await _fetchJurusanAndKelas();
+                                        },
+                                        child: Container(
+                                          width: isTablet ? 48 : 40,
+                                          height: isTablet ? 48 : 40,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(
+                                              0.2,
                                             ),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                           ),
-                                        ],
+                                          child: Icon(
+                                            Icons.refresh_rounded,
+                                            color: Colors.white,
+                                            size: isTablet ? 26 : 24,
+                                          ),
+                                        ),
                                       ),
-                                      child: const Icon(
-                                        Icons.person_rounded,
-                                        color: Color(0xFF0083EE),
-                                        size: 24,
+                                      const SizedBox(width: 8),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      const ProfileScreen(),
+                                            ),
+                                          ).then((_) {
+                                            _addLocalActivity(
+                                              'Navigasi',
+                                              'Profil',
+                                              'Mengakses halaman profil',
+                                            );
+                                          });
+                                        },
+                                        child: Container(
+                                          width: isTablet ? 48 : 40,
+                                          height: isTablet ? 48 : 40,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              30,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(
+                                                  0.1,
+                                                ),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Icon(
+                                            Icons.person_rounded,
+                                            color: Color(0xFF0083EE),
+                                            size: 24,
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -339,7 +385,7 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Program Keahlian Anda',
+                                      'Daftar Jurusan SMKN 11 Bandung',
                                       style: GoogleFonts.poppins(
                                         color: Colors.white,
                                         fontSize: 20,
@@ -349,7 +395,7 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      'Kelola program keahlian ${_kaprogJurusan ?? ''} dengan optimal',
+                                      'Kelola program keahlian dengan optimal',
                                       style: GoogleFonts.poppins(
                                         color: Colors.white.withOpacity(0.9),
                                         fontSize: 14,
@@ -418,6 +464,18 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                                   ],
                                 ),
                               ),
+                              const SizedBox(height: 20),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _buildFilterButton('Semua', 0),
+                                  const SizedBox(width: 10),
+                                  _buildFilterButton('IT', 1),
+                                  const SizedBox(width: 10),
+                                  _buildFilterButton('Bisnis', 2),
+                                ],
+                              ),
                             ],
                           ),
                         ),
@@ -429,42 +487,34 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                                 ? const Center(
                                   child: CircularProgressIndicator(),
                                 )
+                                : _filteredPrograms.isEmpty
+                                ? Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 40,
+                                  ),
+                                  child: Text(
+                                    'Tidak ada program ditemukan',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      color: const Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                )
                                 : Column(
                                   children:
-                                      _filteredPrograms.isEmpty
-                                          ? [
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 40,
-                                                  ),
-                                              child: Text(
-                                                'Tidak ada program ditemukan',
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 16,
-                                                  color: const Color(
-                                                    0xFF6B7280,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ]
-                                          : _filteredPrograms.map((program) {
-                                            return Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 16,
-                                              ),
-                                              child: GestureDetector(
-                                                onTap:
-                                                    () => _showClassOptions(
-                                                      program,
-                                                    ),
-                                                child: _buildProgramCard(
-                                                  program,
-                                                ),
-                                              ),
-                                            );
-                                          }).toList(),
+                                      _filteredPrograms.map((program) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 16,
+                                          ),
+                                          child: GestureDetector(
+                                            onTap:
+                                                () =>
+                                                    _showClassOptions(program),
+                                            child: _buildProgramCard(program),
+                                          ),
+                                        );
+                                      }).toList(),
                                 ),
                       ),
                     ],
@@ -475,6 +525,79 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
       bottomNavigationBar: KaprogNavigation(
         currentIndex: _currentIndex,
         onTap: _onTap,
+      ),
+    );
+  }
+
+  Widget _buildFilterButton(String text, int index) {
+    bool isActive = _selectedFilter == text;
+    Gradient dotGradient;
+    if (index == 0) {
+      dotGradient = const LinearGradient(
+        colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+      );
+    } else if (index == 1) {
+      dotGradient = const LinearGradient(
+        colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+      );
+    } else {
+      dotGradient = const LinearGradient(
+        colors: [Color(0xFF2196F3), Color(0xFF42A5F5)],
+      );
+    }
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedFilter = text;
+          });
+          _addLocalActivity(
+            'Filter',
+            'Filter Jurusan',
+            'Memilih filter: $text',
+          );
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 40,
+          decoration: BoxDecoration(
+            color: isActive ? Colors.white : Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow:
+                isActive
+                    ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                    : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isActive)
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    gradient: dotGradient,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              Text(
+                text,
+                style: GoogleFonts.poppins(
+                  color: isActive ? const Color(0xFF1F2937) : Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -537,9 +660,9 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
               color: program['color'].withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_forward_ios_rounded,
-              color: Color(0xFF6B7280),
+              color: program['color'],
               size: 16,
             ),
           ),
@@ -575,6 +698,7 @@ class _SiswaScreenState extends State<SiswaScreen>
   late Animation<double> _fadeAnimation;
   TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _students = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -592,33 +716,118 @@ class _SiswaScreenState extends State<SiswaScreen>
       setState(() {
         _searchQuery = _searchController.text;
       });
+      if (_searchController.text.isNotEmpty) {
+        _addLocalActivity(
+          'Pencarian',
+          'Pencarian Siswa',
+          'Melakukan pencarian siswa: ${_searchController.text}',
+        );
+      }
     });
   }
 
+  Future<void> _addLocalActivity(
+    String type,
+    String title,
+    String subtitle,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> activities = prefs.getStringList('kaprog_activities') ?? [];
+    String time = DateTime.now().toString().split('.')[0];
+    String activity = '$type|$title|$subtitle|$time';
+    activities.insert(0, activity);
+    if (activities.length > 10) {
+      activities = activities.sublist(0, 10);
+    }
+    await prefs.setStringList('kaprog_activities', activities);
+  }
+
   Future<void> _fetchStudents() async {
+    setState(() {
+      _isLoading = true;
+    });
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/siswa'),
+        Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
       );
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success']) {
-          setState(() {
-            _students =
-                List<Map<String, dynamic>>.from(data['data'])
-                    .where((student) => student['id_kelas'] == widget.idKelas)
-                    .toList();
-          });
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal memuat data siswa')),
+      final pelanggaranResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran'),
+      );
+      final peringatanResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/peringatan'),
+      );
+
+      if (response.statusCode == 200 &&
+          pelanggaranResponse.statusCode == 200 &&
+          peringatanResponse.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final pelanggaranData = jsonDecode(pelanggaranResponse.body);
+        final peringatanData = jsonDecode(peringatanResponse.body);
+        final studentsData = jsonData['data']['data'] as List<dynamic>;
+        final pelanggaranList =
+            pelanggaranData['penilaian']['data'] as List<dynamic>;
+        final peringatanList = peringatanData['data'] as List<dynamic>;
+
+        final studentList =
+            studentsData.map((student) {
+              final studentMap = student as Map<String, dynamic>;
+              final violationCount =
+                  pelanggaranList
+                      .where((p) => p['nis'] == student['nis'])
+                      .length;
+              final warningCount =
+                  peringatanList
+                      .where((p) => p['nis'] == student['nis'])
+                      .length;
+              final poinTotal = (student['poin_total'] ?? 0) as num;
+
+              String status;
+              if (warningCount > 0 || poinTotal <= -20) {
+                status = 'Prioritas';
+              } else if (violationCount > 0 || poinTotal < 0) {
+                status = 'Bermasalah';
+              } else {
+                status = 'Aman';
+              }
+
+              return {
+                'nis': student['nis'],
+                'name': student['nama_siswa'],
+                'id_kelas': student['id_kelas'],
+                'status': status,
+                'points': poinTotal,
+                'absent': 0, 
+                'violations': violationCount,
+                'warnings': warningCount,
+              };
+            }).toList();
+
+        setState(() {
+          _students =
+              studentList
+                  .where((s) => s['id_kelas'] == widget.idKelas)
+                  .toList();
+          _isLoading = false;
+        });
+
+        await _addLocalActivity(
+          'Sistem',
+          'Data Siswa Diperbarui',
+          'Melakukan refresh data siswa untuk kelas ${widget.namaKelas}',
         );
+      } else {
+        throw Exception('Failed to load data');
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
+      print('Error fetching students: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      await _addLocalActivity(
+        'Error',
+        'Gagal Memuat Data Siswa',
+        'Terjadi kesalahan saat memuat data: $e',
+      );
     }
   }
 
@@ -626,9 +835,15 @@ class _SiswaScreenState extends State<SiswaScreen>
     List<Map<String, dynamic>> filtered = List.from(_students);
 
     if (_selectedFilter == 1) {
-      filtered = filtered.where((s) => (s['poin_total'] ?? 0) >= 0).toList();
+      filtered = filtered.where((s) => s['status'] == 'Aman').toList();
     } else if (_selectedFilter == 2) {
-      filtered = filtered.where((s) => (s['poin_total'] ?? 0) < 0).toList();
+      filtered =
+          filtered
+              .where(
+                (s) =>
+                    s['status'] == 'Bermasalah' || s['status'] == 'Prioritas',
+              )
+              .toList();
     }
 
     if (_searchQuery.isNotEmpty) {
@@ -636,7 +851,7 @@ class _SiswaScreenState extends State<SiswaScreen>
           filtered
               .where(
                 (s) =>
-                    s['nama_siswa'].toString().toLowerCase().contains(
+                    s['name'].toString().toLowerCase().contains(
                       _searchQuery.toLowerCase(),
                     ) ||
                     s['nis'].toString().contains(_searchQuery),
@@ -653,18 +868,25 @@ class _SiswaScreenState extends State<SiswaScreen>
       MaterialPageRoute(
         builder: (context) => KaprogDetailScreen(student: student),
       ),
-    );
+    ).then((_) {
+      _addLocalActivity(
+        'Navigasi',
+        'Detail Siswa',
+        'Mengakses detail siswa: ${student['name']}',
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final filteredStudents = getFilteredStudents();
     String classTitle = widget.namaKelas ?? 'Daftar Siswa';
+    final isTablet = MediaQuery.of(context).size.width >= 768;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle(
+        value: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.light,
         ),
@@ -707,50 +929,85 @@ class _SiswaScreenState extends State<SiswaScreen>
                             GestureDetector(
                               onTap: () {
                                 Navigator.pop(context);
+                                _addLocalActivity(
+                                  'Navigasi',
+                                  'Kembali',
+                                  'Kembali ke halaman sebelumnya',
+                                );
                               },
                               child: Container(
-                                width: 40,
-                                height: 40,
+                                width: isTablet ? 48 : 40,
+                                height: isTablet ? 48 : 40,
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.arrow_back_ios_new_rounded,
                                   color: Colors.white,
-                                  size: 18,
+                                  size: isTablet ? 20 : 18,
                                 ),
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const ProfileScreen(),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(30),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () async {
+                                    await _fetchStudents();
+                                  },
+                                  child: Container(
+                                    width: isTablet ? 48 : 40,
+                                    height: isTablet ? 48 : 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                  ],
+                                    child: Icon(
+                                      Icons.refresh_rounded,
+                                      color: Colors.white,
+                                      size: isTablet ? 26 : 24,
+                                    ),
+                                  ),
                                 ),
-                                child: const Icon(
-                                  Icons.person_rounded,
-                                  color: Color(0xFF0083EE),
-                                  size: 24,
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => const ProfileScreen(),
+                                      ),
+                                    ).then((_) {
+                                      _addLocalActivity(
+                                        'Navigasi',
+                                        'Profil',
+                                        'Mengakses halaman profil',
+                                      );
+                                    });
+                                  },
+                                  child: Container(
+                                    width: isTablet ? 48 : 40,
+                                    height: isTablet ? 48 : 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(30),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.person_rounded,
+                                      color: Color(0xFF0083EE),
+                                      size: 24,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ],
                         ),
@@ -819,6 +1076,11 @@ class _SiswaScreenState extends State<SiswaScreen>
                               Expanded(
                                 child: TextField(
                                   controller: _searchController,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _searchQuery = value;
+                                    });
+                                  },
                                   decoration: InputDecoration(
                                     hintText: 'Cari nama siswa...',
                                     hintStyle: GoogleFonts.poppins(
@@ -873,7 +1135,9 @@ class _SiswaScreenState extends State<SiswaScreen>
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      if (_searchQuery.isNotEmpty || _selectedFilter != 0)
+                      if (_isLoading)
+                        const Center(child: CircularProgressIndicator())
+                      else if (_searchQuery.isNotEmpty || _selectedFilter != 0)
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
@@ -891,9 +1155,9 @@ class _SiswaScreenState extends State<SiswaScreen>
                           ),
                           child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.info_outline,
-                                color: const Color(0xFF0083EE),
+                                color: Color(0xFF0083EE),
                                 size: 20,
                               ),
                               const SizedBox(width: 12),
@@ -934,7 +1198,10 @@ class _SiswaScreenState extends State<SiswaScreen>
     bool isActive = _selectedFilter == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedFilter = index),
+        onTap: () {
+          setState(() => _selectedFilter = index);
+          _addLocalActivity('Filter', 'Filter Siswa', 'Memilih filter: $text');
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           height: 40,
@@ -1023,7 +1290,7 @@ class _SiswaScreenState extends State<SiswaScreen>
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: _getStatusColor(student['poin_total']).withOpacity(0.2),
+            color: _getStatusColor(student['status']).withOpacity(0.2),
             width: 2,
           ),
           boxShadow: [
@@ -1045,7 +1312,7 @@ class _SiswaScreenState extends State<SiswaScreen>
               ),
               child: Center(
                 child: Text(
-                  student['nama_siswa'][0].toUpperCase(),
+                  student['name'][0].toUpperCase(),
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -1060,7 +1327,7 @@ class _SiswaScreenState extends State<SiswaScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    student['nama_siswa'],
+                    student['name'],
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -1069,7 +1336,7 @@ class _SiswaScreenState extends State<SiswaScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'NIS: ${student['nis']}',
+                    'Poin: ${student['points']}',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -1087,18 +1354,16 @@ class _SiswaScreenState extends State<SiswaScreen>
                   width: 85,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: _getStatusColor(
-                      student['poin_total'],
-                    ).withOpacity(0.1),
+                    color: _getStatusColor(student['status']).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
                     child: Text(
-                      _getStatusText(student['poin_total']),
+                      student['status'],
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: _getStatusColor(student['poin_total']),
+                        color: _getStatusColor(student['status']),
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -1109,10 +1374,10 @@ class _SiswaScreenState extends State<SiswaScreen>
               ],
             ),
             const SizedBox(width: 8),
-            Icon(
+            const Icon(
               Icons.arrow_forward_ios,
               size: 16,
-              color: const Color(0xFF9CA3AF),
+              color: Color(0xFF9CA3AF),
             ),
           ],
         ),
@@ -1137,7 +1402,7 @@ class _SiswaScreenState extends State<SiswaScreen>
               borderRadius: BorderRadius.circular(50),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF0083EE).withOpacity(0.3),
+                  color: Color(0xFF0083EE).withOpacity(0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -1171,6 +1436,11 @@ class _SiswaScreenState extends State<SiswaScreen>
                 _searchController.clear();
                 _selectedFilter = 0;
               });
+              _addLocalActivity(
+                'Sistem',
+                'Reset Filter',
+                'Mereset filter dan pencarian siswa',
+              );
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -1181,7 +1451,7 @@ class _SiswaScreenState extends State<SiswaScreen>
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0083EE).withOpacity(0.3),
+                    color: Color(0xFF0083EE).withOpacity(0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -1202,25 +1472,16 @@ class _SiswaScreenState extends State<SiswaScreen>
     );
   }
 
-  Color _getStatusColor(dynamic poinTotal) {
-    final int points = poinTotal ?? 0;
-    if (points >= 0) {
-      return const Color(0xFF10B981);
-    } else if (points >= -20) {
-      return const Color(0xFFEA580C);
-    } else {
-      return const Color(0xFFFF6B6D);
-    }
-  }
-
-  String _getStatusText(dynamic poinTotal) {
-    final int points = poinTotal ?? 0;
-    if (points >= 0) {
-      return 'Aman';
-    } else if (points >= -20) {
-      return 'Bermasalah';
-    } else {
-      return 'Prioritas';
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Aman':
+        return const Color(0xFF10B981);
+      case 'Bermasalah':
+        return const Color(0xFFEA580C);
+      case 'Prioritas':
+        return const Color(0xFFFF6B6D);
+      default:
+        return const Color(0xFF0083EE);
     }
   }
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HistoryItem {
   final String id;
@@ -37,7 +39,8 @@ class HistoryItem {
 class KaprogHistoryScreen extends StatefulWidget {
   final Map<String, dynamic> student;
 
-  const KaprogHistoryScreen({Key? key, required this.student}) : super(key: key);
+  const KaprogHistoryScreen({Key? key, required this.student})
+    : super(key: key);
 
   @override
   State<KaprogHistoryScreen> createState() => _KaprogHistoryScreenState();
@@ -54,155 +57,13 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
 
   final TextEditingController searchController = TextEditingController();
   List<HistoryItem> searchResults = [];
-
-  List<HistoryItem> allHistory = [
-    HistoryItem(
-      id: "apr_001",
-      type: "Prestasi Akademik",
-      description: "Juara 1 Olimpiade Matematika Tingkat Kota",
-      date: "22 Jul 2025",
-      time: "14:00",
-      points: 30,
-      icon: Icons.emoji_events,
-      color: Color(0xFFFFD700),
-      pemberi: "Kepala Sekolah",
-      isNew: true,
-      isPelanggaran: false,
-      createdAt: DateTime.now().subtract(Duration(hours: 2)),
-    ),
-    HistoryItem(
-      id: "pel_002",
-      type: "Pelanggaran Pakaian",
-      description: "Tidak memakai seragam sesuai ketentuan",
-      date: "21 Jul 2025",
-      time: "07:00",
-      points: -5,
-      icon: Icons.checkroom,
-      color: Color(0xFFEA580C),
-      pelapor: "Bu Sari (Guru BK)",
-      isNew: true,
-      isPelanggaran: true,
-      createdAt: DateTime.now().subtract(Duration(hours: 5)),
-    ),
-    HistoryItem(
-      id: "apr_004",
-      type: "Sikap Positif",
-      description: "Membantu teman yang kesulitan belajar",
-      date: "20 Jul 2025",
-      time: "13:15",
-      points: 10,
-      icon: Icons.people_alt,
-      color: Color(0xFF8B5CF6),
-      pemberi: "Pak Rahman (Wali Kelas)",
-      isNew: true,
-      isPelanggaran: false,
-      createdAt: DateTime.now().subtract(Duration(hours: 8)),
-    ),
-    HistoryItem(
-      id: "apr_002",
-      type: "Prestasi Non-Akademik",
-      description: "Juara 2 Lomba Coding Regional",
-      date: "19 Jul 2025",
-      time: "16:30",
-      points: 25,
-      icon: Icons.code,
-      color: Color(0xFF10B981),
-      pemberi: "Pak Dedi (Guru Produktif)",
-      isNew: false,
-      isPelanggaran: false,
-      createdAt: DateTime.now().subtract(Duration(days: 3)),
-    ),
-    HistoryItem(
-      id: "pel_001",
-      type: "Pelanggaran Kedisiplinan",
-      description: "Terlambat masuk kelas lebih dari 15 menit",
-      date: "18 Jul 2025",
-      time: "07:30",
-      points: -10,
-      icon: Icons.access_time,
-      color: Color(0xFFFF6B6D),
-      pelapor: "Pak Budi (Guru Piket)",
-      isNew: false,
-      isPelanggaran: true,
-      createdAt: DateTime.now().subtract(Duration(days: 4)),
-    ),
-    HistoryItem(
-      id: "apr_003",
-      type: "Kegiatan Sosial",
-      description: "Membantu kegiatan bakti sosial sekolah",
-      date: "16 Jul 2025",
-      time: "08:00",
-      points: 15,
-      icon: Icons.volunteer_activism,
-      color: Color(0xFF0EA5E9),
-      pemberi: "Bu Lisa (Guru OSIS)",
-      isNew: false,
-      isPelanggaran: false,
-      createdAt: DateTime.now().subtract(Duration(days: 6)),
-    ),
-    HistoryItem(
-      id: "pel_003",
-      type: "Pelanggaran Tugas",
-      description: "Tidak mengumpulkan tugas matematika",
-      date: "15 Jul 2025",
-      time: "10:30",
-      points: -8,
-      icon: Icons.assignment_late,
-      color: Color(0xFFFF6B6D),
-      pelapor: "Bu Ani (Guru Matematika)",
-      isNew: false,
-      isPelanggaran: true,
-      createdAt: DateTime.now().subtract(Duration(days: 7)),
-    ),
-    HistoryItem(
-      id: "apr_005",
-      type: "Prestasi Olahraga",
-      description: "Juara 1 Lomba Badminton Antar Kelas",
-      date: "10 Jul 2025",
-      time: "15:00",
-      points: 20,
-      icon: Icons.sports,
-      color: Color(0xFFFF9F43),
-      pemberi: "Pak Joko (Guru Olahraga)",
-      isNew: false,
-      isPelanggaran: false,
-      createdAt: DateTime.now().subtract(Duration(days: 12)),
-    ),
-    HistoryItem(
-      id: "pel_004",
-      type: "Pelanggaran Ketertiban",
-      description: "Membuat keributan di dalam kelas",
-      date: "08 Jul 2025",
-      time: "09:45",
-      points: -15,
-      icon: Icons.volume_up,
-      color: Color(0xFFFF6B6D),
-      pelapor: "Bu Rina (Guru Bahasa Indonesia)",
-      isNew: false,
-      isPelanggaran: true,
-      createdAt: DateTime.now().subtract(Duration(days: 14)),
-    ),
-    HistoryItem(
-      id: "apr_006",
-      type: "Sikap Kepemimpinan",
-      description: "Memimpin kegiatan gotong royong kelas",
-      date: "05 Jul 2025",
-      time: "14:30",
-      points: 12,
-      icon: Icons.supervisor_account,
-      color: Color(0xFF6366F1),
-      pemberi: "Bu Maya (Guru PPKn)",
-      isNew: false,
-      isPelanggaran: false,
-      createdAt: DateTime.now().subtract(Duration(days: 17)),
-    ),
-  ];
+  List<HistoryItem> allHistory = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-
-    _sortHistory();
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -212,14 +73,181 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
+    _fetchHistory();
     _animationController.forward();
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    searchController.dispose();
-    super.dispose();
+  Future<void> _fetchHistory() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final nis = widget.student['nis'].toString();
+      final skoringPelanggaranResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran?nis=$nis'),
+      );
+      final peringatanResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/peringatan'),
+      );
+
+      final skoringPenghargaanResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis'),
+      );
+      final penghargaanResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/Penghargaan'),
+      );
+
+      if (skoringPelanggaranResponse.statusCode == 200 &&
+          peringatanResponse.statusCode == 200 &&
+          skoringPenghargaanResponse.statusCode == 200 &&
+          penghargaanResponse.statusCode == 200) {
+        final skoringPelanggaranData = jsonDecode(
+          skoringPelanggaranResponse.body,
+        );
+        final peringatanData = jsonDecode(peringatanResponse.body);
+        final skoringPenghargaanData = jsonDecode(
+          skoringPenghargaanResponse.body,
+        );
+        final penghargaanData = jsonDecode(penghargaanResponse.body);
+
+        List<HistoryItem> historyItems = [];
+
+        if (skoringPelanggaranData['penilaian']['data'].isNotEmpty &&
+            peringatanData['success']) {
+          final studentEvaluations =
+              skoringPelanggaranData['penilaian']['data']
+                  .where((eval) => eval['nis'].toString() == nis)
+                  .toList();
+          final violations = peringatanData['data'];
+          final aspekPel = skoringPelanggaranData['aspekPel'];
+
+          for (var eval in studentEvaluations) {
+            final aspek = aspekPel.firstWhere(
+              (a) => a['id_aspekpenilaian'] == eval['id_aspekpenilaian'],
+              orElse: () => null,
+            );
+            if (aspek == null || aspek['jenis_poin'] != 'Pelanggaran') continue;
+
+            final evalDate = DateTime.parse(
+              eval['created_at'].substring(0, 10),
+            );
+            final matchingViolation = violations.firstWhere((v) {
+              final violationDate = DateTime.parse(v['tanggal_sp']);
+              return (violationDate.difference(evalDate).inDays.abs() <= 2) ||
+                  v['alasan'].toLowerCase().contains(
+                    aspek['uraian'].toLowerCase(),
+                  );
+            }, orElse: () => null);
+
+            if (matchingViolation != null) {
+              final createdAt = DateTime.parse(eval['created_at']);
+              historyItems.add(
+                HistoryItem(
+                  id: 'pel_${eval['id_penilaian']}',
+                  type: matchingViolation['level_sp'],
+                  description: aspek['uraian'],
+                  date: matchingViolation['tanggal_sp'],
+                  time: eval['created_at'].substring(11, 16),
+                  points: -(aspek['indikator_poin'] ?? 0),
+                  icon: Icons.warning,
+                  color: const Color(0xFFFF6B6D),
+                  pelapor:
+                      eval['nip_bk'] != null
+                          ? 'Guru BK'
+                          : eval['nip_walikelas'] != null
+                          ? 'Wali Kelas'
+                          : eval['nip_wakasek'] != null
+                          ? 'Wakasek'
+                          : 'Tidak diketahui',
+                  isNew: createdAt.isAfter(
+                    DateTime.now().subtract(Duration(days: 3)),
+                  ),
+                  isPelanggaran: true,
+                  createdAt: createdAt,
+                ),
+              );
+            }
+          }
+        }
+
+        if (skoringPenghargaanData['penilaian']['data'].isNotEmpty &&
+            penghargaanData['success']) {
+          final studentEvaluations =
+              skoringPenghargaanData['penilaian']['data']
+                  .where((eval) => eval['nis'].toString() == nis)
+                  .toList();
+          final appreciations = penghargaanData['data'];
+          final aspekPel = skoringPenghargaanData['aspekPel'];
+
+          for (var eval in studentEvaluations) {
+            final aspek = aspekPel.firstWhere(
+              (a) => a['id_aspekpenilaian'] == eval['id_aspekpenilaian'],
+              orElse: () => null,
+            );
+            if (aspek == null || aspek['jenis_poin'] != 'Apresiasi') continue;
+
+            final evalDate = DateTime.parse(
+              eval['created_at'].substring(0, 10),
+            );
+            final matchingAppreciation = appreciations.firstWhere((a) {
+              final appreciationDate = DateTime.parse(a['tanggal_penghargaan']);
+              return (appreciationDate.difference(evalDate).inDays.abs() <=
+                      2) ||
+                  a['alasan'].toLowerCase().contains(
+                    aspek['uraian'].toLowerCase(),
+                  );
+            }, orElse: () => null);
+
+            if (matchingAppreciation != null) {
+              final createdAt = DateTime.parse(eval['created_at']);
+              historyItems.add(
+                HistoryItem(
+                  id: 'apr_${eval['id_penilaian']}',
+                  type: matchingAppreciation['level_penghargaan'],
+                  description: aspek['uraian'],
+                  date: matchingAppreciation['tanggal_penghargaan'],
+                  time: eval['created_at'].substring(11, 16),
+                  points: aspek['indikator_poin'] ?? 0,
+                  icon: Icons.star,
+                  color: const Color(0xFF10B981),
+                  pemberi:
+                      eval['nip_bk'] != null
+                          ? 'Guru BK'
+                          : eval['nip_walikelas'] != null
+                          ? 'Wali Kelas'
+                          : eval['nip_wakasek'] != null
+                          ? 'Wakasek'
+                          : 'Tidak diketahui',
+                  isNew: createdAt.isAfter(
+                    DateTime.now().subtract(Duration(days: 3)),
+                  ),
+                  isPelanggaran: false,
+                  createdAt: createdAt,
+                ),
+              );
+            }
+          }
+        }
+
+        setState(() {
+          allHistory = historyItems;
+          _sortHistory();
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Gagal mengambil data dari server';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Terjadi kesalahan: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   void _sortHistory() {
@@ -356,7 +384,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                     ),
                   ),
                   SizedBox(height: 20),
-
                   Text(
                     'Filter Riwayat',
                     style: GoogleFonts.poppins(
@@ -366,7 +393,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                     ),
                   ),
                   SizedBox(height: 20),
-
                   Text(
                     'Jenis Data',
                     style: GoogleFonts.poppins(
@@ -376,7 +402,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                     ),
                   ),
                   SizedBox(height: 12),
-
                   Wrap(
                     spacing: 8,
                     children:
@@ -422,7 +447,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                         }).toList(),
                   ),
                   SizedBox(height: 24),
-
                   Text(
                     'Periode Waktu',
                     style: GoogleFonts.poppins(
@@ -432,7 +456,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                     ),
                   ),
                   SizedBox(height: 12),
-
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -479,7 +502,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                         }).toList(),
                   ),
                   SizedBox(height: 24),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -503,7 +525,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                     ],
                   ),
                   SizedBox(height: 24),
-
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -563,7 +584,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                     ),
                   ),
                   SizedBox(height: 20),
-
                   Row(
                     children: [
                       Icon(Icons.search, color: Color(0xFF0083EE)),
@@ -579,7 +599,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                     ],
                   ),
                   SizedBox(height: 20),
-
                   TextField(
                     controller: searchController,
                     decoration: InputDecoration(
@@ -616,7 +635,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                     },
                   ),
                   SizedBox(height: 20),
-
                   Expanded(
                     child:
                         searchResults.isEmpty &&
@@ -684,6 +702,30 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _errorMessage!,
+                style: GoogleFonts.poppins(color: Colors.red),
+              ),
+              ElevatedButton(
+                onPressed: _fetchHistory,
+                child: Text('Coba Lagi', style: GoogleFonts.poppins()),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     List<HistoryItem> filteredHistory = _getFilteredHistory();
     List<HistoryItem> newItems =
         filteredHistory.where((item) => item.isNew).toList();
@@ -793,9 +835,7 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                                 ),
                               ],
                             ),
-
                             SizedBox(height: 20),
-
                             Row(
                               children: [
                                 Expanded(
@@ -872,7 +912,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                           ],
                         ),
                       ),
-
                       if (_selectedFilter != 'Semua' ||
                           _selectedTimeFilter != 'Semua' ||
                           _showOnlyNew)
@@ -921,7 +960,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                             ],
                           ),
                         ),
-
                       Expanded(
                         child:
                             filteredHistory.isEmpty
@@ -1091,11 +1129,11 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                                         ),
                                         ...newItems
                                             .map(
-                                              (item) => _buildKaprogHistoryCard(item),
+                                              (item) =>
+                                                  _buildKaprogHistoryCard(item),
                                             )
                                             .toList(),
                                       ],
-
                                       if (oldItems.isNotEmpty) ...[
                                         if (newItems.isNotEmpty)
                                           const SizedBox(height: 24),
@@ -1202,7 +1240,8 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                                         ),
                                         ...oldItems
                                             .map(
-                                              (item) => _buildKaprogHistoryCard(item),
+                                              (item) =>
+                                                  _buildKaprogHistoryCard(item),
                                             )
                                             .toList(),
                                       ],
@@ -1259,7 +1298,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                   child: Icon(item.icon, color: item.color, size: 28),
                 ),
                 const SizedBox(width: 16),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1287,7 +1325,6 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                     ],
                   ),
                 ),
-
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -1314,9 +1351,7 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                 ),
               ],
             ),
-
             const SizedBox(height: 16),
-
             Row(
               children: [
                 Icon(
@@ -1335,9 +1370,7 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                 ),
               ],
             ),
-
             const SizedBox(height: 8),
-
             Row(
               children: [
                 Icon(Icons.person, size: 16, color: const Color(0xFF9CA3AF)),
@@ -1357,9 +1390,7 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
                 ),
               ],
             ),
-
             const SizedBox(height: 16),
-            
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1394,5 +1425,12 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    searchController.dispose();
+    super.dispose();
   }
 }

@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'detail.dart';
 import 'package:skoring/screens/walikelas/notification.dart';
 import 'package:skoring/screens/profile.dart';
-import 'package:skoring/models/api_kelas.dart';
+import 'package:skoring/models/api/api_kelas.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Student {
@@ -262,14 +262,12 @@ class _SiswaScreenState extends State<SiswaScreen>
             (context) => DetailScreen(
               student: {
                 'name': student.namaSiswa,
-                'nis':
-                    student.nis
-                        .toString(), 
+                'nis': student.nis.toString(),
                 'status': student.status,
                 'points': student.points,
                 'absent': 0,
                 'absen': student.nis,
-                'idKelas': student.idKelas, 
+                'idKelas': student.idKelas,
                 'programKeahlian':
                     selectedKelas?.jurusan.toUpperCase() ?? 'Tidak Diketahui',
                 'kelas': selectedKelas?.namaKelas ?? 'Tidak Diketahui',
@@ -476,26 +474,6 @@ class _SiswaScreenState extends State<SiswaScreen>
                                       Row(
                                         children: [
                                           GestureDetector(
-                                            onTap: _refreshData,
-                                            child: Container(
-                                              width: 40,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(
-                                                  0.2,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                              child: const Icon(
-                                                Icons.refresh_rounded,
-                                                color: Colors.white,
-                                                size: 24,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          GestureDetector(
                                             onTap: () {
                                               Navigator.push(
                                                 context,
@@ -518,6 +496,26 @@ class _SiswaScreenState extends State<SiswaScreen>
                                               ),
                                               child: const Icon(
                                                 Icons.notifications_rounded,
+                                                color: Colors.white,
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          GestureDetector(
+                                            onTap: _refreshData,
+                                            child: Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(
+                                                  0.2,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: const Icon(
+                                                Icons.refresh_rounded,
                                                 color: Colors.white,
                                                 size: 24,
                                               ),
@@ -955,14 +953,7 @@ class _SiswaScreenState extends State<SiswaScreen>
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'NIS: ${student.nis}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF6B7280),
-                    ),
-                  ),
+
                   const SizedBox(height: 2),
                   Text(
                     'Poin: ${student.points}',

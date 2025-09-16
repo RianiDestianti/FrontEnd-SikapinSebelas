@@ -8,8 +8,8 @@ import 'student.dart';
 import 'report.dart';
 import 'notification.dart';
 import 'package:skoring/screens/profile.dart';
-import 'package:skoring/screens/chart.dart';
-import 'package:skoring/screens/activity.dart';
+import 'package:skoring/screens/walikelas/chart.dart';
+import 'package:skoring/screens/walikelas/activity.dart';
 import 'detail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -142,28 +142,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               int index = entry.key;
               String activity = entry.value;
               List<String> parts = activity.split('|');
+              String type = parts[0];
               return {
-                'type': parts[0],
+                'type': type,
                 'title': parts[1],
                 'subtitle': parts[2],
-                'time': parts[3], 
-                'timeObj': DateTime.parse(
-                  parts[3],
-                ), 
+                'time': parts[3],
+                'timeObj': DateTime.parse(parts[3]),
                 'badge': 'SELESAI',
                 'badgeColor':
-                    parts[0] == 'Penghargaan'
+                    type == 'Penghargaan'
                         ? const Color(0xFF10B981)
-                        : const Color(0xFFFF6B6D),
+                        : type == 'Pelanggaran'
+                        ? const Color(0xFFFF6B6D)
+                        : const Color(0xFF8B5CF6),
                 'icon':
-                    parts[0] == 'Penghargaan'
+                    type == 'Penghargaan'
                         ? Icons.emoji_events_outlined
-                        : Icons.report_problem_outlined,
+                        : type == 'Pelanggaran'
+                        ? Icons.report_problem_outlined
+                        : Icons.settings_outlined,
                 'gradient': LinearGradient(
                   colors:
-                      parts[0] == 'Penghargaan'
+                      type == 'Penghargaan'
                           ? [const Color(0xFF10B981), const Color(0xFF34D399)]
-                          : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
+                          : type == 'Pelanggaran'
+                          ? [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)]
+                          : [const Color(0xFF8B5CF6), const Color(0xFFA78BFA)],
                 ),
               };
             }).toList()
@@ -184,9 +189,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     List<String> activities = prefs.getStringList('user_activities') ?? [];
     String time = DateTime.now().toString().split('.')[0];
     String activity = '$type|$title|$subtitle|$time';
-    activities.insert(0, activity); 
+    activities.insert(0, activity);
     if (activities.length > 10) {
-      activities = activities.sublist(0, 10); 
+      activities = activities.sublist(0, 10);
     }
     await prefs.setStringList('user_activities', activities);
     await _loadLocalActivityData();
@@ -222,7 +227,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               String kelas = kelasMap[siswa['id_kelas']] ?? 'Unknown';
               int poin = siswa['poin_total'] != null ? siswa['poin_total'] : 0;
               String prestasi =
-                  poin >= 0 ? 'Memiliki poin positif' : 'Memiliki pelanggaran';
+                  poin >= 0
+                      ? 'Peringkat ${index + 1}'
+                      : 'Peringkat ${index + 1}';
               String status =
                   poin >= 0
                       ? 'Aman'

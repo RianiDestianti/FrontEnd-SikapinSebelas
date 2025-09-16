@@ -82,9 +82,9 @@ class FaqWidget extends StatelessWidget {
           ...filteredFaqData.entries
               .where(
                 (entry) =>
-                    faqData[entry.key]?['items']?[0]?['text']
-                        ?.toLowerCase()
-                        .contains('apresiasi') ??
+                    entry.value['items'][0]['text']?.toLowerCase().contains(
+                      'tepat waktu',
+                    ) ??
                     false,
               )
               .map(
@@ -103,9 +103,9 @@ class FaqWidget extends StatelessWidget {
           ...filteredFaqData.entries
               .where(
                 (entry) =>
-                    faqData[entry.key]?['items']?[0]?['text']
-                        ?.toLowerCase()
-                        .contains('pelanggaran') ??
+                    entry.value['items'][0]['text']?.toLowerCase().contains(
+                      'terlambat',
+                    ) ??
                     false,
               )
               .map(

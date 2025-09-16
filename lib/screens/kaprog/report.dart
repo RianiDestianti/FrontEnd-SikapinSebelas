@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:skoring/screens/profile.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:excel/excel.dart' as excel;
 import 'package:file_saver/file_saver.dart';
 import 'dart:typed_data';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LaporanKaprog extends StatefulWidget {
   const LaporanKaprog({Key? key}) : super(key: key);
@@ -28,11 +26,8 @@ class _LaporanKaprogState extends State<LaporanKaprog>
   String _selectedFilter = 'Semua';
   TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  String? _loggedInJurusan;
-  List<Map<String, dynamic>> _allStudentsData = [];
-  List<Map<String, dynamic>> _kelasList = [];
-  bool _isLoading = true;
-
+  List<String> _jurusanList = ['Semua'];
+  List<String> _kelasList = ['Semua'];
   final List<String> _filterList = [
     'Semua',
     '0-50',
@@ -40,6 +35,8 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     '101+',
     'Negatif',
   ];
+  Map<String, List<Map<String, dynamic>>> _allStudentsData = {};
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -52,75 +49,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
-    _loadLoggedInJurusan();
     _fetchData();
-  }
-
-  Future<void> _loadLoggedInJurusan() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _loggedInJurusan = prefs.getString('jurusan') ?? 'Semua';
-      _selectedJurusan = _loggedInJurusan ?? 'Semua';
-    });
-  }
-
-  Future<void> _fetchData() async {
-    setState(() => _isLoading = true);
-    try {
-      final kelasResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
-      );
-      if (kelasResponse.statusCode == 200) {
-        final data = jsonDecode(kelasResponse.body);
-        setState(() {
-          _kelasList =
-              (data['kelas_list'] as List)
-                  .map(
-                    (item) => {
-                      'id_kelas': item['id_kelas'],
-                      'nama_kelas': item['nama_kelas'],
-                      'jurusan': item['jurusan'],
-                    },
-                  )
-                  .toList();
-          _allStudentsData =
-              (data['data']['data'] as List)
-                  .map(
-                    (item) => {
-                      'nis': item['nis'],
-                      'name': item['nama_siswa'],
-                      'totalPoin': item['poin_total'] ?? 0,
-                      'apresiasi': item['poin_apresiasi'] ?? 0,
-                      'pelanggaran': item['poin_pelanggaran'] ?? 0,
-                      'isPositive': (item['poin_total'] ?? 0) >= 0,
-                      'color':
-                          (item['poin_total'] ?? 0) >= 0
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFFFF6B6D),
-                      'avatar':
-                          item['nama_siswa']
-                              .split(' ')
-                              .map((e) => e[0])
-                              .join('')
-                              .substring(0, 2)
-                              .toUpperCase(),
-                      'kelas':
-                          _kelasList.firstWhere(
-                            (k) => k['id_kelas'] == item['id_kelas'],
-                            orElse: () => {'nama_kelas': 'Unknown'},
-                          )['nama_kelas'],
-                      'scores':
-                          [], 
-                    },
-                  )
-                  .toList();
-        });
-      }
-    } catch (e) {
-      print('Error fetching data: $e');
-    } finally {
-      setState(() => _isLoading = false);
-    }
   }
 
   @override
@@ -130,27 +59,146 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     super.dispose();
   }
 
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final akumulasiResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
+      );
+      final akumulasiData = jsonDecode(akumulasiResponse.body);
+      if (!akumulasiData['success'])
+        throw Exception('Failed to fetch akumulasi');
+
+      final aspekResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/aspekpenilaian'),
+      );
+      final aspekData = jsonDecode(aspekResponse.body);
+      if (!aspekData['success'])
+        throw Exception('Failed to fetch aspek penilaian');
+
+      final penghargaanResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan'),
+      );
+      final penghargaanData = jsonDecode(penghargaanResponse.body);
+
+      final pelanggaranResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran'),
+      );
+      final pelanggaranData = jsonDecode(pelanggaranResponse.body);
+
+      _jurusanList = ['Semua', ...akumulasiData['jurusan_list']];
+
+      _kelasList = ['Semua'];
+      for (var kelas in akumulasiData['kelas_list']) {
+        String kelasName =
+            kelas['nama_kelas'].split(' ')[0]; 
+        if (!_kelasList.contains(kelasName)) {
+          _kelasList.add(kelasName);
+        }
+      }
+
+      _allStudentsData = {};
+      for (var student in akumulasiData['data']['data']) {
+        String jurusan =
+            akumulasiData['kelas_list'].firstWhere(
+              (kelas) => kelas['id_kelas'] == student['id_kelas'],
+            )['jurusan'];
+        String kelas =
+            akumulasiData['kelas_list']
+                .firstWhere(
+                  (kelas) => kelas['id_kelas'] == student['id_kelas'],
+                )['nama_kelas']
+                .split(' ')[0];
+
+        if (!_allStudentsData.containsKey(jurusan)) {
+          _allStudentsData[jurusan] = [];
+        }
+
+        List<Map<String, dynamic>> scores = [];
+        for (var penilaian in penghargaanData['penilaian']['data']) {
+          if (penilaian['nis'] == student['nis']) {
+            var aspek = aspekData['data'].firstWhere(
+              (aspek) =>
+                  aspek['id_aspekpenilaian'] == penilaian['id_aspekpenilaian'],
+              orElse: () => null,
+            );
+            if (aspek != null) {
+              scores.add({
+                'keterangan': aspek['uraian'],
+                'tanggal': penilaian['created_at'].substring(0, 10),
+                'poin': aspek['indikator_poin'],
+                'type': 'apresiasi',
+              });
+            }
+          }
+        }
+        for (var penilaian in pelanggaranData['penilaian']['data']) {
+          if (penilaian['nis'] == student['nis']) {
+            var aspek = aspekData['data'].firstWhere(
+              (aspek) =>
+                  aspek['id_aspekpenilaian'] == penilaian['id_aspekpenilaian'],
+              orElse: () => null,
+            );
+            if (aspek != null) {
+              scores.add({
+                'keterangan': aspek['uraian'],
+                'tanggal': penilaian['created_at'].substring(0, 10),
+                'poin': -aspek['indikator_poin'],
+                'type': 'pelanggaran',
+              });
+            }
+          }
+        }
+
+        _allStudentsData[jurusan]!.add({
+          'name': student['nama_siswa'],
+          'totalPoin': student['poin_total'] ?? 0,
+          'apresiasi': student['poin_apresiasi'] ?? 0,
+          'pelanggaran': student['poin_pelanggaran'] ?? 0,
+          'isPositive': (student['poin_total'] ?? 0) >= 0,
+          'color':
+              (student['poin_total'] ?? 0) >= 0
+                  ? const Color(0xFF10B981)
+                  : const Color(0xFFFF6B6D),
+          'avatar': student['nama_siswa'][0].toUpperCase(),
+          'kelas': kelas,
+          'jurusan': jurusan,
+          'scores': scores,
+        });
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal memuat data: $e')));
+    }
+  }
+
   List<Map<String, dynamic>> get _currentStudentsData {
     List<Map<String, dynamic>> allStudents = [];
 
-    if (_selectedJurusan == 'Semua' && _loggedInJurusan != null) {
-      allStudents =
-          _allStudentsData
-              .where(
-                (student) =>
-                    student['kelas'].toString().contains(_loggedInJurusan!),
-              )
-              .toList();
-    } else if (_selectedJurusan != 'Semua') {
-      allStudents =
-          _allStudentsData
-              .where(
-                (student) =>
-                    student['kelas'].toString().contains(_selectedJurusan),
-              )
-              .toList();
+    if (_selectedJurusan == 'Semua') {
+      _allStudentsData.forEach((jurusan, students) {
+        for (var student in students) {
+          allStudents.add({...student, 'jurusan': jurusan});
+        }
+      });
     } else {
-      allStudents = _allStudentsData;
+      allStudents =
+          _allStudentsData[_selectedJurusan]
+              ?.map((student) => {...student, 'jurusan': _selectedJurusan})
+              .toList() ??
+          [];
     }
 
     return allStudents;
@@ -160,7 +208,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     if (_currentStudentsData.isEmpty) return 0;
     double total = _currentStudentsData.fold(
       0,
-      (sum, student) => sum + (student['apresiasi'] as num),
+      (sum, student) => sum + (student['apresiasi'] ?? 0),
     );
     return total / _currentStudentsData.length;
   }
@@ -169,7 +217,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     if (_currentStudentsData.isEmpty) return 0;
     int positiveCount =
         _currentStudentsData
-            .where((student) => (student['apresiasi'] as num) > 50)
+            .where((student) => (student['apresiasi'] ?? 0) > 50)
             .length;
     return positiveCount / _currentStudentsData.length;
   }
@@ -178,7 +226,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     if (_currentStudentsData.isEmpty) return 0;
     int lowViolationCount =
         _currentStudentsData
-            .where((student) => (student['pelanggaran'] as num) < 10)
+            .where((student) => (student['pelanggaran'] ?? 0) < 10)
             .length;
     return lowViolationCount / _currentStudentsData.length;
   }
@@ -195,7 +243,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
               _selectedKelas == 'Semua' || student['kelas'] == _selectedKelas;
           if (!matchesKelas) return false;
 
-          int poin = student['totalPoin'] as int;
+          int poin = student['totalPoin'] ?? 0;
           switch (_selectedFilter) {
             case '0-50':
               return poin >= 0 && poin <= 50;
@@ -212,7 +260,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
         }).toList();
 
     filtered.sort(
-      (a, b) => (b['totalPoin'] as int).compareTo(a['totalPoin'] as int),
+      (a, b) => (b['totalPoin'] ?? 0).compareTo(a['totalPoin'] ?? 0),
     );
     return filtered;
   }
@@ -260,10 +308,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                       spacing: 8,
                       runSpacing: 8,
                       children:
-                          [
-                            'Semua',
-                            if (_loggedInJurusan != null) _loggedInJurusan!,
-                          ].map((jurusan) {
+                          _jurusanList.map((jurusan) {
                             return FilterChip(
                               label: Text(
                                 jurusan,
@@ -298,10 +343,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                       spacing: 8,
                       runSpacing: 8,
                       children:
-                          [
-                            'Semua',
-                            ..._kelasList.map((k) => k['nama_kelas'] as String),
-                          ].map((kelas) {
+                          _kelasList.map((kelas) {
                             return FilterChip(
                               label: Text(
                                 kelas,
@@ -507,6 +549,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
             pw.Table.fromTextArray(
               headers: [
                 'Nama',
+                'Jurusan',
                 'Kelas',
                 'Total Poin',
                 'Apresiasi',
@@ -517,10 +560,11 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                       .map(
                         (student) => [
                           student['name'],
+                          student['jurusan'] ?? '-',
                           student['kelas'] ?? '-',
-                          student['totalPoin'].toString(),
-                          student['apresiasi'].toString(),
-                          student['pelanggaran'].toString(),
+                          (student['totalPoin'] ?? 0).toString(),
+                          (student['apresiasi'] ?? 0).toString(),
+                          (student['pelanggaran'] ?? 0).toString(),
                         ],
                       )
                       .toList(),
@@ -549,6 +593,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     sheet.appendRow(['']);
     sheet.appendRow([
       'Nama',
+      'Jurusan',
       'Kelas',
       'Total Poin',
       'Apresiasi',
@@ -558,10 +603,11 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     for (var student in _filteredAndSortedStudents) {
       sheet.appendRow([
         student['name'],
+        student['jurusan'] ?? '-',
         student['kelas'] ?? '-',
-        student['totalPoin'].toString(),
-        student['apresiasi'].toString(),
-        student['pelanggaran'].toString(),
+        (student['totalPoin'] ?? 0).toString(),
+        (student['apresiasi'] ?? 0).toString(),
+        (student['pelanggaran'] ?? 0).toString(),
       ]);
     }
 
@@ -622,12 +668,12 @@ class _LaporanKaprogState extends State<LaporanKaprog>
               return Center(
                 child: SizedBox(
                   width: maxWidth,
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child:
-                        _isLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : SingleChildScrollView(
+                  child:
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: SingleChildScrollView(
                               child: Column(
                                 children: [
                                   Container(
@@ -688,46 +734,70 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                                   ),
                                                 ),
                                               ),
-                                              GestureDetector(
-                                                onTap: () {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder:
-                                                          (context) =>
-                                                              const ProfileScreen(),
-                                                    ),
-                                                  );
-                                                },
-                                                child: Container(
-                                                  width: isTablet ? 48 : 40,
-                                                  height: isTablet ? 48 : 40,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          30,
-                                                        ),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: Colors.black
-                                                            .withOpacity(0.1),
-                                                        blurRadius: 8,
-                                                        offset: const Offset(
-                                                          0,
-                                                          2,
-                                                        ),
+                                              Row(
+                                                children: [
+                                                  GestureDetector(
+                                                    onTap: _fetchData,
+                                                    child: Container(
+                                                      width: isTablet ? 48 : 40,
+                                                      height:
+                                                          isTablet ? 48 : 40,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white
+                                                            .withOpacity(0.2),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              12,
+                                                            ),
                                                       ),
-                                                    ],
-                                                  ),
-                                                  child: Icon(
-                                                    Icons.person_rounded,
-                                                    color: const Color(
-                                                      0xFF0083EE,
+                                                      child: Icon(
+                                                        Icons.refresh_rounded,
+                                                        color: Colors.white,
+                                                        size:
+                                                            isTablet ? 26 : 24,
+                                                      ),
                                                     ),
-                                                    size: isTablet ? 26 : 24,
                                                   ),
-                                                ),
+                                                  const SizedBox(width: 8),
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                    },
+                                                    child: Container(
+                                                      width: isTablet ? 48 : 40,
+                                                      height:
+                                                          isTablet ? 48 : 40,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              30,
+                                                            ),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: Colors.black
+                                                                .withOpacity(
+                                                                  0.1,
+                                                                ),
+                                                            blurRadius: 8,
+                                                            offset:
+                                                                const Offset(
+                                                                  0,
+                                                                  2,
+                                                                ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: Icon(
+                                                        Icons.person_rounded,
+                                                        color: const Color(
+                                                          0xFF0083EE,
+                                                        ),
+                                                        size:
+                                                            isTablet ? 26 : 24,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
@@ -1289,7 +1359,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                                 ],
                               ),
                             ),
-                  ),
+                          ),
                 ),
               );
             },
@@ -1561,12 +1631,12 @@ class _LaporanKaprogState extends State<LaporanKaprog>
     bool isGrid = false,
   }) {
     double totalPoints =
-        ((student['apresiasi'] as num) + (student['pelanggaran'] as num))
+        ((student['apresiasi'] ?? 0) + (student['pelanggaran'] ?? 0))
             .toDouble();
     double apresiasiRatio =
-        totalPoints > 0 ? (student['apresiasi'] as num) / totalPoints : 0;
+        totalPoints > 0 ? (student['apresiasi'] ?? 0) / totalPoints : 0;
     double pelanggaranRatio =
-        totalPoints > 0 ? (student['pelanggaran'] as num) / totalPoints : 0;
+        totalPoints > 0 ? (student['pelanggaran'] ?? 0) / totalPoints : 0;
 
     return GestureDetector(
       onTap: () => _showStudentDetail(student, isTablet),
@@ -1608,7 +1678,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                   ),
                   child: Center(
                     child: Text(
-                      student['avatar'],
+                      student['avatar'] ?? student['name'][0].toUpperCase(),
                       style: GoogleFonts.poppins(
                         fontSize: isTablet ? 20 : 16,
                         fontWeight: FontWeight.w700,
@@ -1634,7 +1704,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                       ),
                       SizedBox(height: isTablet ? 6 : 4),
                       Text(
-                        '${student['kelas']} | A: ${student['apresiasi']} | P: ${student['pelanggaran']}',
+                        '${student['jurusan']} ${student['kelas']} | A: ${student['apresiasi'] ?? 0} | P: ${student['pelanggaran'] ?? 0}',
                         style: GoogleFonts.poppins(
                           fontSize: isTablet ? 13 : 11,
                           fontWeight: FontWeight.w500,
@@ -1650,7 +1720,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                 Column(
                   children: [
                     Text(
-                      '${student['totalPoin']}',
+                      '${student['totalPoin'] ?? 0}',
                       style: GoogleFonts.poppins(
                         fontSize: isTablet ? 24 : 20,
                         fontWeight: FontWeight.w800,
@@ -1736,7 +1806,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                     ),
                     child: Center(
                       child: Text(
-                        student['name'][0].toUpperCase(),
+                        student['avatar'] ?? student['name'][0].toUpperCase(),
                         style: GoogleFonts.poppins(
                           fontSize: isTablet ? 28 : 20,
                           fontWeight: FontWeight.w700,
@@ -1759,7 +1829,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                           ),
                         ),
                         Text(
-                          '${student['kelas']}',
+                          '${student['jurusan']} ${student['kelas']}',
                           style: GoogleFonts.poppins(
                             fontSize: isTablet ? 16 : 14,
                             color: const Color(0xFF6B7280),
@@ -1794,7 +1864,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                     Column(
                       children: [
                         Text(
-                          '${student['totalPoin']}',
+                          '${student['totalPoin'] ?? 0}',
                           style: GoogleFonts.poppins(
                             fontSize: isTablet ? 32 : 28,
                             fontWeight: FontWeight.w800,
@@ -1818,7 +1888,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                     Column(
                       children: [
                         Text(
-                          '${student['apresiasi']}',
+                          '${student['apresiasi'] ?? 0}',
                           style: GoogleFonts.poppins(
                             fontSize: isTablet ? 32 : 28,
                             fontWeight: FontWeight.w800,
@@ -1842,7 +1912,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                     Column(
                       children: [
                         Text(
-                          '${student['pelanggaran']}',
+                          '${student['pelanggaran'] ?? 0}',
                           style: GoogleFonts.poppins(
                             fontSize: isTablet ? 32 : 28,
                             fontWeight: FontWeight.w800,

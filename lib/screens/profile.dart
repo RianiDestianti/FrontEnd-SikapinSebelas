@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/models/profile.dart';
 import 'package:skoring/screens/introduction/onboarding.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -53,7 +51,6 @@ class _ProfileScreenState extends State<ProfileScreen>
       final role = prefs.getString('role');
       final name = prefs.getString('name') ?? 'Unknown';
       final email = prefs.getString('email') ?? 'Unknown';
-      final phone = prefs.getString('phone') ?? 'Unknown';
       final joinDate = prefs.getString('joinDate') ?? 'Unknown';
       String roleLabel =
           role == '3'
@@ -69,7 +66,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           nip: nip ?? 'Unknown',
           username: name,
           email: email,
-          phone: phone,
           joinDate: joinDate,
         );
         _isLoading = false;
@@ -97,18 +93,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  void _handleLogout() async {
-    final response = await http.post(
-      Uri.parse("http://10.0.2.2:8000/api/logout"),
-    );
-
-    final data = jsonDecode(response.body);
-    if (data['status'] == true) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const IntroductionScreen()),
-        (route) => false,
-      );
-    }
+  void _handleLogout() {
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil('/introduction', (route) => false);
   }
 
   @override
@@ -168,7 +156,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         key: 'username',
       ),
       ProfileField(label: 'Email', icon: Icons.email_outlined, key: 'email'),
-      ProfileField(label: 'Nomor HP', icon: Icons.phone_outlined, key: 'phone'),
       ProfileField(
         label: 'Menjabat Sejak',
         icon: Icons.calendar_today_outlined,
@@ -310,8 +297,6 @@ class ProfileContentSection extends StatelessWidget {
         return profile.username;
       case 'email':
         return profile.email;
-      case 'phone':
-        return profile.phone;
       case 'joinDate':
         return profile.joinDate;
       default:

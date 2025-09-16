@@ -172,9 +172,7 @@ class _LaporanScreenState extends State<LaporanScreen>
     _animationController.forward();
 
     _loadWalikelasId().then((_) {
-      fetchKelas();
-      fetchSiswa();
-      fetchAspekPenilaian();
+      _refreshData();
     });
   }
 
@@ -184,6 +182,10 @@ class _LaporanScreenState extends State<LaporanScreen>
       walikelasId = prefs.getString('walikelas_id');
       idKelas = prefs.getString('id_kelas');
     });
+  }
+
+  Future<void> _refreshData() async {
+    await Future.wait([fetchKelas(), fetchSiswa(), fetchAspekPenilaian()]);
   }
 
   Future<void> fetchKelas() async {
@@ -428,8 +430,7 @@ class _LaporanScreenState extends State<LaporanScreen>
           }
         }
       }
-    } catch (e) {
-    }
+    } catch (e) {}
     return scores;
   }
 
@@ -939,6 +940,26 @@ class _LaporanScreenState extends State<LaporanScreen>
                                               ),
                                               child: const Icon(
                                                 Icons.notifications_rounded,
+                                                color: Colors.white,
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          GestureDetector(
+                                            onTap: _refreshData,
+                                            child: Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(
+                                                  0.2,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: const Icon(
+                                                Icons.refresh_rounded,
                                                 color: Colors.white,
                                                 size: 24,
                                               ),
@@ -1746,11 +1767,7 @@ class _LaporanScreenState extends State<LaporanScreen>
           ),
           const SizedBox(height: 20),
           GestureDetector(
-            onTap: () {
-              fetchKelas();
-              fetchSiswa();
-              fetchAspekPenilaian();
-            },
+            onTap: _refreshData,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(

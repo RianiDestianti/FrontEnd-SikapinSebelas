@@ -222,7 +222,7 @@ class _DetailScreenState extends State<DetailScreen>
       );
       isLoadingStudent = false;
       fetchAppreciations(widget.student['nis']);
-      fetchViolations(widget.student['nis']); 
+      fetchViolations(widget.student['nis']);
     } catch (e) {
       setState(() {
         errorMessageStudent = 'Terjadi kesalahan: $e';
@@ -492,8 +492,7 @@ class _DetailScreenState extends State<DetailScreen>
             apresiasi: totalApresiasiPoints,
             total: totalPoints,
             status: status,
-            date:
-                'Sampai ${DateTime.now().toString().split(' ')[0]}', 
+            date: 'Sampai ${DateTime.now().toString().split(' ')[0]}',
           ),
         ];
         isLoadingAppreciations = false;
@@ -1262,15 +1261,6 @@ class _DetailScreenState extends State<DetailScreen>
                           color: const Color(0xFF6B7280),
                         ),
                       ),
-                      if (isPelanggaran && item.pelanggaranKe != null)
-                        Text(
-                          'Pelanggaran ke: ${item.pelanggaranKe}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF6B7280),
-                          ),
-                        ),
                     ],
                   ),
                 ),

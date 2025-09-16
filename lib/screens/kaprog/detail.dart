@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:skoring/screens/kaprog/history.dart';
 
 class KaprogDetailScreen extends StatefulWidget {
@@ -19,140 +21,17 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
   late final Animation<Offset> _slideAnimation;
   int _selectedTab = 0;
   late Map<String, dynamic> detailedStudent;
-
-  final List<HistoryItem> pelanggaranHistory = [
-    HistoryItem(
-      type: "Pelanggaran Kedisiplinan",
-      description: "Terlambat masuk kelas lebih dari 15 menit",
-      date: "20 Jul 2025",
-      time: "07:30",
-      points: -10,
-      icon: Icons.access_time,
-      color: Color(0xFFFF6B6D),
-      pelapor: "Pak Budi (Guru Piket)",
-    ),
-    HistoryItem(
-      type: "Pelanggaran Pakaian",
-      description: "Tidak memakai seragam sesuai ketentuan",
-      date: "18 Jul 2025",
-      time: "07:00",
-      points: -5,
-      icon: Icons.checkroom,
-      color: Color(0xFFEA580C),
-      pelapor: "Bu Sari (Guru BK)",
-    ),
-    HistoryItem(
-      type: "Pelanggaran Tugas",
-      description: "Tidak mengumpulkan tugas matematika",
-      date: "15 Jul 2025",
-      time: "10:30",
-      points: -8,
-      icon: Icons.assignment_late,
-      color: Color(0xFFFF6B6D),
-      pelapor: "Bu Ani (Guru Matematika)",
-    ),
-  ];
-
-  final List<HistoryItem> apresiasiHistory = [
-    HistoryItem(
-      type: "Prestasi Akademik",
-      description: "Juara 1 Olimpiade Matematika Tingkat Kota",
-      date: "22 Jul 2025",
-      time: "14:00",
-      points: 30,
-      icon: Icons.emoji_events,
-      color: Color(0xFFFFD700),
-      pemberi: "Kepala Sekolah",
-    ),
-    HistoryItem(
-      type: "Prestasi Non-Akademik",
-      description: "Juara 2 Lomba Coding Regional",
-      date: "19 Jul 2025",
-      time: "16:30",
-      points: 25,
-      icon: Icons.code,
-      color: Color(0xFF10B981),
-      pemberi: "Pak Dedi (Guru Produktif)",
-    ),
-    HistoryItem(
-      type: "Kegiatan Sosial",
-      description: "Membantu kegiatan bakti sosial sekolah",
-      date: "16 Jul 2025",
-      time: "08:00",
-      points: 15,
-      icon: Icons.volunteer_activism,
-      color: Color(0xFF0EA5E9),
-      pemberi: "Bu Lisa (Guru OSIS)",
-    ),
-    HistoryItem(
-      type: "Sikap Positif",
-      description: "Membantu teman yang kesulitan belajar",
-      date: "14 Jul 2025",
-      time: "13:15",
-      points: 10,
-      icon: Icons.people_alt,
-      color: Color(0xFF8B5CF6),
-      pemberi: "Pak Rahman (Wali Kelas)",
-    ),
-  ];
-
-  final List<AkumulasiItem> akumulasiHistory = [
-    AkumulasiItem(
-      periode: "Minggu ke-4 Juli 2025",
-      pelanggaran: -23,
-      apresiasi: 80,
-      total: 57,
-      status: "Aman",
-      date: "21-27 Jul 2025",
-    ),
-    AkumulasiItem(
-      periode: "Minggu ke-3 Juli 2025",
-      pelanggaran: -15,
-      apresiasi: 25,
-      total: 10,
-      status: "Aman",
-      date: "14-20 Jul 2025",
-    ),
-    AkumulasiItem(
-      periode: "Minggu ke-2 Juli 2025",
-      pelanggaran: -10,
-      apresiasi: 15,
-      total: 5,
-      status: "Aman",
-      date: "7-13 Jul 2025",
-    ),
-    AkumulasiItem(
-      periode: "Minggu ke-1 Juli 2025",
-      pelanggaran: -8,
-      apresiasi: 20,
-      total: 12,
-      status: "Aman",
-      date: "30 Jun - 6 Jul 2025",
-    ),
-  ];
+  List<HistoryItem> pelanggaranHistory = [];
+  List<HistoryItem> apresiasiHistory = [];
+  List<AkumulasiItem> akumulasiHistory = [];
+  bool _isLoading = true;
+  List<dynamic> aspekPenilaianData = [];
 
   @override
   void initState() {
     super.initState();
-    _initializeStudentData();
     _initializeAnimations();
-  }
-
-  void _initializeStudentData() {
-    detailedStudent = {
-      ...widget.student,
-      "nis": "2023001",
-      "ttl": "Bandung, 15 Mei 2007",
-      "jenkel": "Laki-laki",
-      "alamat": "Jl. Merdeka No. 123, Cimahi, Jawa Barat",
-      "program_keahlian": "Rekayasa Perangkat Lunak",
-      "kelas": "XI RPL 2",
-      "tahun_masuk": "2023",
-      "no_hp": "08123456789",
-      "email": "ahmad.sudarji@smk.sch.id",
-      "nama_ortu": "Budi Sudarji",
-      "no_hp_ortu": "08129876543",
-    };
+    _fetchStudentDetails();
   }
 
   void _initializeAnimations() {
@@ -172,10 +51,233 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
     _animationController.forward();
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+  Future<void> _fetchStudentDetails() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final aspekResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/aspekpenilaian'),
+      );
+      if (aspekResponse.statusCode == 200) {
+        final aspekJson = jsonDecode(aspekResponse.body);
+        if (aspekJson['success']) {
+          aspekPenilaianData = aspekJson['data'];
+        }
+      } else {
+        throw Exception('Failed to load aspek penilaian');
+      }
+
+      final nis = widget.student['nis'].toString();
+      final skoringPelanggaranResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran?nis=$nis'),
+      );
+      final skoringPenghargaanResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis'),
+      );
+      final peringatanResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/peringatan'),
+      );
+      final penghargaanResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/Penghargaan'),
+      );
+      final akumulasiResponse = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
+      );
+
+      if (skoringPelanggaranResponse.statusCode == 200 &&
+          skoringPenghargaanResponse.statusCode == 200 &&
+          peringatanResponse.statusCode == 200 &&
+          penghargaanResponse.statusCode == 200 &&
+          akumulasiResponse.statusCode == 200) {
+        final pelanggaranData = jsonDecode(skoringPelanggaranResponse.body);
+        final penghargaanData = jsonDecode(skoringPenghargaanResponse.body);
+        final peringatanData = jsonDecode(peringatanResponse.body);
+        final penghargaanList = jsonDecode(penghargaanResponse.body);
+        final akumulasiData = jsonDecode(akumulasiResponse.body);
+
+        final pelanggaranList = pelanggaranData['penilaian']['data'] as List;
+        final penghargaanPenilaianList =
+            penghargaanData['penilaian']['data'] as List;
+        final peringatanList = peringatanData['data'] as List;
+        final penghargaanItems = penghargaanList['data'] as List;
+        final siswaList = akumulasiData['data']['data'] as List;
+
+        final studentData = siswaList.firstWhere(
+          (s) => s['nis'].toString() == nis,
+          orElse: () => widget.student,
+        );
+
+        pelanggaranHistory =
+            pelanggaranList
+                .where((p) => p['nis'].toString() == nis)
+                .map((p) {
+                  final aspek = aspekPenilaianData.firstWhere(
+                    (a) => a['id_aspekpenilaian'] == p['id_aspekpenilaian'],
+                    orElse: () => {},
+                  );
+                  if (aspek['jenis_poin'] != 'Pelanggaran') return null;
+
+                  final evalDate = DateTime.parse(
+                    p['created_at'].substring(0, 10),
+                  );
+                  final matchingPeringatan = peringatanList.firstWhere((v) {
+                    final violationDate = DateTime.parse(v['tanggal_sp']);
+                    return (violationDate.difference(evalDate).inDays.abs() <=
+                            2) ||
+                        v['alasan'].toLowerCase().contains(
+                          aspek['uraian']?.toLowerCase() ?? '',
+                        );
+                  }, orElse: () => null);
+
+                  if (matchingPeringatan == null) return null;
+
+                  return HistoryItem(
+                    type: matchingPeringatan['level_sp'],
+                    description:
+                        aspek['uraian'] ??
+                        matchingPeringatan['alasan'] ??
+                        'Tidak ada deskripsi',
+                    date: matchingPeringatan['tanggal_sp'],
+                    time: p['created_at'].split(' ')[1].substring(0, 5),
+                    points:
+                        -(aspek['indikator_poin'] ??
+                            (matchingPeringatan['level_sp'] == 'SP1'
+                                ? 10
+                                : matchingPeringatan['level_sp'] == 'SP2'
+                                ? 20
+                                : 30)),
+                    icon: Icons.warning,
+                    color: const Color(0xFFFF6B6D),
+                  );
+                })
+                .whereType<HistoryItem>()
+                .toList();
+
+        apresiasiHistory =
+            penghargaanPenilaianList
+                .where((p) => p['nis'].toString() == nis)
+                .map((p) {
+                  final aspek = aspekPenilaianData.firstWhere(
+                    (a) => a['id_aspekpenilaian'] == p['id_aspekpenilaian'],
+                    orElse: () => {},
+                  );
+                  if (aspek['jenis_poin'] != 'Apresiasi') return null;
+
+                  final evalDate = DateTime.parse(
+                    p['created_at'].substring(0, 10),
+                  );
+                  final matchingPenghargaan = penghargaanItems.firstWhere((a) {
+                    final appreciationDate = DateTime.parse(
+                      a['tanggal_penghargaan'],
+                    );
+                    return (appreciationDate
+                                .difference(evalDate)
+                                .inDays
+                                .abs() <=
+                            2) ||
+                        a['alasan'].toLowerCase().contains(
+                          aspek['uraian']?.toLowerCase() ?? '',
+                        );
+                  }, orElse: () => null);
+
+                  if (matchingPenghargaan == null) return null;
+
+                  return HistoryItem(
+                    type: matchingPenghargaan['level_penghargaan'],
+                    description:
+                        aspek['uraian'] ??
+                        matchingPenghargaan['alasan'] ??
+                        'Tidak ada deskripsi',
+                    date: matchingPenghargaan['tanggal_penghargaan'],
+                    time: p['created_at'].split(' ')[1].substring(0, 5),
+                    points:
+                        aspek['indikator_poin'] ??
+                        (matchingPenghargaan['level_penghargaan'] == 'PH1'
+                            ? 10
+                            : matchingPenghargaan['level_penghargaan'] == 'PH2'
+                            ? 20
+                            : 30),
+                    icon: Icons.star,
+                    color: const Color(0xFF10B981),
+                  );
+                })
+                .whereType<HistoryItem>()
+                .toList();
+
+        int totalApresiasiPoints = studentData['poin_apresiasi'] ?? 0;
+        int totalPelanggaranPoints =
+            studentData['poin_pelanggaran']?.abs() ?? 0;
+        int totalPoints = studentData['poin_total'] ?? 0;
+        String status =
+            totalPoints >= 0
+                ? 'Aman'
+                : totalPoints >= -20
+                ? 'Bermasalah'
+                : 'Prioritas';
+
+        akumulasiHistory = [
+          AkumulasiItem(
+            periode: 'Semester Ganjil 2025/2026',
+            pelanggaran: totalPelanggaranPoints,
+            apresiasi: totalApresiasiPoints,
+            total: totalPoints,
+            status: status,
+            date: '2025-09-01 - 2025-12-31',
+          ),
+        ];
+
+        setState(() {
+          detailedStudent = {
+            'nis': studentData['nis'].toString(),
+            'name': studentData['nama_siswa'] ?? widget.student['name'],
+            'id_kelas': studentData['id_kelas'] ?? widget.student['id_kelas'],
+            'status': status,
+            'poin_apresiasi': totalApresiasiPoints,
+            'poin_pelanggaran': totalPelanggaranPoints,
+            'poin_total': totalPoints,
+            'program_keahlian': _getJurusanFullName(studentData['id_kelas']),
+            'kelas':
+                (akumulasiData['kelas_list'] as List).firstWhere(
+                  (k) => k['id_kelas'] == studentData['id_kelas'],
+                  orElse:
+                      () => {
+                        'nama_kelas':
+                            widget.student['kelas'] ?? 'Tidak diketahui',
+                      },
+                )['nama_kelas'],
+          };
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      print('Error fetching student details: $e');
+      setState(() {
+        detailedStudent = {
+          ...widget.student,
+          'nis': widget.student['nis'].toString(),
+          'poin_apresiasi': widget.student['poinApresiasi'] ?? 0,
+          'poin_pelanggaran': widget.student['poinPelanggaran']?.abs() ?? 0,
+          'poin_total': widget.student['points'] ?? 0,
+          'program_keahlian': _getJurusanFullName(widget.student['id_kelas']),
+          'kelas': widget.student['kelas'] ?? 'Tidak diketahui',
+        };
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _getJurusanFullName(String? idKelas) {
+    const jurusanNames = {
+      'RPL': 'Rekayasa Perangkat Lunak',
+      'DKV': 'Desain Komunikasi Visual',
+      'TKJ': 'Teknik Komputer dan Jaringan',
+    };
+    if (idKelas == null) return 'Tidak diketahui';
+    final jurusan = idKelas.substring(0, 3);
+    return jurusanNames[jurusan] ?? jurusan;
   }
 
   Color _getStatusColor(String status) {
@@ -203,6 +305,10 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final backgroundGradient = _getBackgroundGradient(
       detailedStudent['status'],
     );
@@ -211,7 +317,7 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle(
+        value: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.light,
         ),
@@ -246,7 +352,6 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                         SizedBox(
                           height: MediaQuery.of(context).padding.top + 20,
                         ),
-
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -266,19 +371,37 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                                 ),
                               ),
                             ),
-                            Text(
-                              'Profil Siswa',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
+                            Expanded(
+                              child: Center(
+                                child: Text(
+                                  'Profil Siswa',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 40),
+                            GestureDetector(
+                              onTap: _fetchStudentDetails,
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.refresh,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 32),
-
                         SlideTransition(
                           position: _slideAnimation,
                           child: Container(
@@ -325,7 +448,6 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-
                                 Text(
                                   detailedStudent['name'],
                                   style: GoogleFonts.poppins(
@@ -335,7 +457,6 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-
                                 Text(
                                   '${detailedStudent['kelas']} - ${detailedStudent['program_keahlian']}',
                                   style: GoogleFonts.poppins(
@@ -345,7 +466,6 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.symmetric(
@@ -398,15 +518,12 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
                     ),
                   ),
                 ),
-
                 BiodataSection(student: detailedStudent),
-
                 TabSection(
                   selectedTab: _selectedTab,
                   onTabSelected:
                       (index) => setState(() => _selectedTab = index),
                 ),
-
                 TabContentSection(
                   selectedTab: _selectedTab,
                   pelanggaranHistory: pelanggaranHistory,
@@ -421,6 +538,12 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 }
 
 class HistoryItem {
@@ -431,8 +554,6 @@ class HistoryItem {
   final int points;
   final IconData icon;
   final Color color;
-  final String? pelapor;
-  final String? pemberi;
 
   HistoryItem({
     required this.type,
@@ -442,8 +563,6 @@ class HistoryItem {
     required this.points,
     required this.icon,
     required this.color,
-    this.pelapor,
-    this.pemberi,
   });
 }
 
@@ -506,19 +625,9 @@ class BiodataSection extends StatelessWidget {
               icon: Icons.badge,
             ),
             BiodataRow(
-              label: 'Tempat, Tanggal Lahir',
-              value: student['ttl'],
-              icon: Icons.cake,
-            ),
-            BiodataRow(
-              label: 'Jenis Kelamin',
-              value: student['jenkel'],
+              label: 'Nama Siswa',
+              value: student['name'],
               icon: Icons.person,
-            ),
-            BiodataRow(
-              label: 'Alamat',
-              value: student['alamat'],
-              icon: Icons.home,
             ),
             BiodataRow(
               label: 'Program Keahlian',
@@ -531,29 +640,19 @@ class BiodataSection extends StatelessWidget {
               icon: Icons.class_,
             ),
             BiodataRow(
-              label: 'Tahun Masuk',
-              value: student['tahun_masuk'],
-              icon: Icons.calendar_today,
+              label: 'Poin Apresiasi',
+              value: student['poin_apresiasi'].toString(),
+              icon: Icons.star,
             ),
             BiodataRow(
-              label: 'No. HP Siswa',
-              value: student['no_hp'],
-              icon: Icons.phone,
+              label: 'Poin Pelanggaran',
+              value: student['poin_pelanggaran'].toString(),
+              icon: Icons.warning,
             ),
             BiodataRow(
-              label: 'Email',
-              value: student['email'],
-              icon: Icons.email,
-            ),
-            BiodataRow(
-              label: 'Nama Orang Tua',
-              value: student['nama_ortu'],
-              icon: Icons.family_restroom,
-            ),
-            BiodataRow(
-              label: 'No. HP Orang Tua',
-              value: student['no_hp_ortu'],
-              icon: Icons.phone_android,
+              label: 'Poin Total',
+              value: student['poin_total'].toString(),
+              icon: Icons.calculate,
             ),
           ],
         ),
@@ -933,8 +1032,6 @@ class KaprogHistoryCard extends StatelessWidget {
             HistoryDetails(
               date: item.date,
               time: item.time,
-              pelapor: item.pelapor,
-              pemberi: item.pemberi,
               isPelanggaran: isPelanggaran,
             ),
           ],
@@ -947,16 +1044,12 @@ class KaprogHistoryCard extends StatelessWidget {
 class HistoryDetails extends StatelessWidget {
   final String date;
   final String time;
-  final String? pelapor;
-  final String? pemberi;
   final bool isPelanggaran;
 
   const HistoryDetails({
     Key? key,
     required this.date,
     required this.time,
-    this.pelapor,
-    this.pemberi,
     required this.isPelanggaran,
   }) : super(key: key);
 
@@ -991,22 +1084,6 @@ class HistoryDetails extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.person, size: 16, color: Color(0xFF6B7280)),
-              const SizedBox(width: 8),
-              Text(
-                isPelanggaran
-                    ? 'Pelapor: ${pelapor ?? ''}'
-                    : 'Pemberi: ${pemberi ?? ''}',
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF6B7280),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -1257,15 +1334,15 @@ class PointProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final total = pelanggaran.abs() + apresiasi;
     final pelanggaranWidth =
         total > 0
-            ? (pelanggaran.abs() / total) * MediaQuery.of(context).size.width
+            ? (pelanggaran.abs() / total) *
+                (MediaQuery.of(context).size.width - 80)
             : 0.0;
     final apresiasiWidth =
         total > 0
-            ? (apresiasi / total) * MediaQuery.of(context).size.width
+            ? (apresiasi / total) * (MediaQuery.of(context).size.width - 80)
             : 0.0;
 
     return Container(
@@ -1277,7 +1354,7 @@ class PointProgressBar extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          if (pelanggaran < 0)
+          if (pelanggaran > 0)
             Container(
               width: pelanggaranWidth,
               height: 8,
