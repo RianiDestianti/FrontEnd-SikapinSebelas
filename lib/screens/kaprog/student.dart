@@ -23,58 +23,7 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
   int _currentIndex = 0;
   String? _kaprogJurusan;
   List<Map<String, dynamic>> _classes = [];
-
-  final List<Map<String, dynamic>> _programList = [
-    {
-      'name': 'RPL',
-      'fullName': 'Rekayasa Perangkat Lunak',
-      'color': const Color(0xFF4CAF50),
-      'icon': Icons.computer,
-      'category': 'IT',
-    },
-    {
-      'name': 'DKV',
-      'fullName': 'Desain Komunikasi Visual',
-      'color': const Color(0xFF9C27B0),
-      'icon': Icons.design_services,
-      'category': 'IT',
-    },
-    {
-      'name': 'TKJ',
-      'fullName': 'Teknik Komputer dan Jaringan',
-      'color': const Color(0xFF757575),
-      'icon': Icons.settings_ethernet,
-      'category': 'IT',
-    },
-    {
-      'name': 'MP',
-      'fullName': 'Manajemen Perkantoran',
-      'color': const Color(0xFF2196F3),
-      'icon': Icons.business_center,
-      'category': 'Bisnis',
-    },
-    {
-      'name': 'AKL',
-      'fullName': 'Akuntansi dan Keuangan Lembaga',
-      'color': const Color(0xFFFFEB3B),
-      'icon': Icons.account_balance,
-      'category': 'Bisnis',
-    },
-    {
-      'name': 'MLOG',
-      'fullName': 'Manajemen Logistik',
-      'color': const Color(0xFFFF9800),
-      'icon': Icons.local_shipping,
-      'category': 'Bisnis',
-    },
-    {
-      'name': 'PM',
-      'fullName': 'Pemasaran',
-      'color': const Color(0xFFF44336),
-      'icon': Icons.campaign,
-      'category': 'Bisnis',
-    },
-  ];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -91,7 +40,8 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
     final prefs = await SharedPreferences.getInstance();
     String? idKelas = prefs.getString('id_kelas') ?? '';
     setState(() {
-      _kaprogJurusan = 'Unknown'; 
+      _kaprogJurusan = 'Unknown';
+      _isLoading = true;
     });
 
     if (idKelas.isNotEmpty) {
@@ -120,6 +70,7 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
       }
     }
     await _fetchClasses();
+    setState(() => _isLoading = false);
   }
 
   Future<void> _fetchClasses() async {
@@ -136,11 +87,11 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                   data['data'],
                 ).where((kelas) => kelas['jurusan'] == _kaprogJurusan).toList();
           });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Gagal memuat data kelas')),
+          );
         }
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal memuat data kelas')));
       }
     } catch (e) {
       ScaffoldMessenger.of(
@@ -153,24 +104,80 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
     if (_kaprogJurusan == null || _kaprogJurusan == 'Unknown') {
       return [];
     }
-    return _programList.where((program) {
+    return [
+      {
+        'name': _kaprogJurusan,
+        'fullName': _getFullName(_kaprogJurusan),
+        'color': _getColor(_kaprogJurusan),
+        'icon': _getIcon(_kaprogJurusan),
+        'category': _getCategory(_kaprogJurusan),
+      },
+    ].where((program) {
       final matchesSearch =
-          program['name'].toLowerCase().contains(_searchQuery) ||
-          program['fullName'].toLowerCase().contains(_searchQuery);
-      final matchesJurusan = program['name'] == _kaprogJurusan;
-      return matchesSearch && matchesJurusan;
+          (program['name']?.toString().toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ) ??
+              false) ||
+          (program['fullName']?.toString().toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ) ??
+              false);
+
+      return matchesSearch;
     }).toList();
   }
 
-  void _onTap(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+  String _getFullName(String? jurusan) {
+    switch (jurusan) {
+      case 'RPL':
+        return 'Rekayasa Perangkat Lunak';
+      case 'DKV':
+        return 'Desain Komunikasi Visual';
+      case 'TKJ':
+        return 'Teknik Komputer dan Jaringan';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  Color _getColor(String? jurusan) {
+    switch (jurusan) {
+      case 'RPL':
+        return const Color(0xFF4CAF50);
+      case 'DKV':
+        return const Color(0xFF9C27B0);
+      case 'TKJ':
+        return const Color(0xFF757575);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getIcon(String? jurusan) {
+    switch (jurusan) {
+      case 'RPL':
+        return Icons.computer;
+      case 'DKV':
+        return Icons.design_services;
+      case 'TKJ':
+        return Icons.settings_ethernet;
+      default:
+        return Icons.category;
+    }
+  }
+
+  String _getCategory(String? jurusan) {
+    switch (jurusan) {
+      case 'RPL':
+      case 'DKV':
+      case 'TKJ':
+        return 'IT';
+      default:
+        return 'Unknown';
+    }
   }
 
   void _showClassOptions(Map<String, dynamic> program) {
-    final filteredClasses =
-        _classes.where((kelas) => kelas['jurusan'] == program['name']).toList();
     showDialog(
       context: context,
       builder:
@@ -186,45 +193,41 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children:
-                  filteredClasses.isEmpty
-                      ? [
-                        Text(
-                          'Tidak ada kelas ditemukan',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            color: const Color(0xFF6B7280),
-                          ),
+                  _classes.map((kelas) {
+                    return ListTile(
+                      title: Text(
+                        kelas['nama_kelas'],
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: const Color(0xFF1F2937),
+                          fontWeight: FontWeight.w500,
                         ),
-                      ]
-                      : filteredClasses.map((kelas) {
-                        return ListTile(
-                          title: Text(
-                            kelas['nama_kelas'],
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              color: const Color(0xFF1F2937),
-                              fontWeight: FontWeight.w500,
-                            ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => SiswaScreen(
+                                  programName: program['name'],
+                                  idKelas: kelas['id_kelas'],
+                                  namaKelas: kelas['nama_kelas'],
+                                ),
                           ),
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => SiswaScreen(
-                                      programName: program['name'],
-                                      idKelas: kelas['id_kelas'],
-                                      namaKelas: kelas['nama_kelas'],
-                                    ),
-                              ),
-                            );
-                          },
                         );
-                      }).toList(),
+                      },
+                    );
+                  }).toList(),
             ),
           ),
     );
+  }
+
+  void _onTap(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
   }
 
   @override
@@ -421,35 +424,48 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(20),
-                        child: Column(
-                          children:
-                              _filteredPrograms.isEmpty
-                                  ? [
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 40,
-                                      ),
-                                      child: Text(
-                                        'Tidak ada program ditemukan',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 16,
-                                          color: const Color(0xFF6B7280),
-                                        ),
-                                      ),
-                                    ),
-                                  ]
-                                  : _filteredPrograms.map((program) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 16,
-                                      ),
-                                      child: GestureDetector(
-                                        onTap: () => _showClassOptions(program),
-                                        child: _buildProgramCard(program),
-                                      ),
-                                    );
-                                  }).toList(),
-                        ),
+                        child:
+                            _isLoading
+                                ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                                : Column(
+                                  children:
+                                      _filteredPrograms.isEmpty
+                                          ? [
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 40,
+                                                  ),
+                                              child: Text(
+                                                'Tidak ada program ditemukan',
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 16,
+                                                  color: const Color(
+                                                    0xFF6B7280,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ]
+                                          : _filteredPrograms.map((program) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 16,
+                                              ),
+                                              child: GestureDetector(
+                                                onTap:
+                                                    () => _showClassOptions(
+                                                      program,
+                                                    ),
+                                                child: _buildProgramCard(
+                                                  program,
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                ),
                       ),
                     ],
                   ),
@@ -521,9 +537,9 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
               color: program['color'].withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.arrow_forward_ios_rounded,
-              color: program['color'],
+              color: Color(0xFF6B7280),
               size: 16,
             ),
           ),
@@ -595,9 +611,9 @@ class _SiswaScreenState extends State<SiswaScreen>
           });
         }
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal memuat data siswa')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal memuat data siswa')),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(
@@ -803,11 +819,6 @@ class _SiswaScreenState extends State<SiswaScreen>
                               Expanded(
                                 child: TextField(
                                   controller: _searchController,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _searchQuery = value;
-                                    });
-                                  },
                                   decoration: InputDecoration(
                                     hintText: 'Cari nama siswa...',
                                     hintStyle: GoogleFonts.poppins(
@@ -1194,11 +1205,11 @@ class _SiswaScreenState extends State<SiswaScreen>
   Color _getStatusColor(dynamic poinTotal) {
     final int points = poinTotal ?? 0;
     if (points >= 0) {
-      return const Color(0xFF10B981); 
+      return const Color(0xFF10B981);
     } else if (points >= -20) {
       return const Color(0xFFEA580C);
     } else {
-      return const Color(0xFFFF6B6D); 
+      return const Color(0xFFFF6B6D);
     }
   }
 

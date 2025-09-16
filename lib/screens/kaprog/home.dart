@@ -7,6 +7,9 @@ import 'package:skoring/screens/activity.dart';
 import 'package:skoring/screens/kaprog/student.dart';
 import 'package:skoring/screens/kaprog/report.dart';
 import 'detail.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Student {
   final String name;
@@ -46,6 +49,28 @@ class Student {
     required this.namaOrtu,
     required this.noHpOrtu,
   });
+
+  factory Student.fromJson(Map<String, dynamic> json) {
+    return Student(
+      name: json['nama_siswa'] ?? 'Unknown',
+      kelas: json['id_kelas'] ?? 'Unknown',
+      poin: json['poin_total'] ?? 0,
+      prestasi: '', // To be populated from penghargaan/peringatan if needed
+      avatar: Icons.person,
+      rank: 0, // To be calculated
+      status: (json['poin_total'] ?? 0) < 0 ? 'Bermasalah' : 'Aman',
+      nis: json['nis'].toString(),
+      ttl: json['ttl'] ?? '', // Placeholder, requires additional API
+      jenkel: json['jenkel'] ?? '', // Placeholder, requires additional API
+      alamat: json['alamat'] ?? '', // Placeholder, requires additional API
+      programKeahlian: json['program_keahlian'] ?? '', // Placeholder
+      tahunMasuk: json['tahun_masuk'] ?? '', // Placeholder
+      noHp: json['no_hp'] ?? '', // Placeholder
+      email: json['email'] ?? '', // Placeholder
+      namaOrtu: json['nama_ortu'] ?? '', // Placeholder
+      noHpOrtu: json['no_hp_ortu'] ?? '', // Placeholder
+    );
+  }
 }
 
 class KaprogHomeScreen extends StatefulWidget {
@@ -65,164 +90,9 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
   String _searchQuery = '';
   List<Student> _filteredSiswaTerbaik = [];
   List<Student> _filteredSiswaBerat = [];
-
-  final List<Student> _siswaTerbaik = [
-    Student(
-      name: 'Ahmad Zaky',
-      kelas: 'XII RPL 1',
-      poin: 400,
-      prestasi: 'Juara 1 Hackathon Nasional',
-      avatar: Icons.person,
-      rank: 1,
-      status: 'Aman',
-      nis: '2023001',
-      ttl: 'Bandung, 15 Mei 2007',
-      jenkel: 'Laki-laki',
-      alamat: 'Jl. Merdeka No. 123, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456789',
-      email: 'ahmad.zaky@smk.sch.id',
-      namaOrtu: 'Budi Santoso',
-      noHpOrtu: '08129876543',
-    ),
-    Student(
-      name: 'Siti Aisyah',
-      kelas: 'XII RPL 2',
-      poin: 345,
-      prestasi: 'Juara 2 Desain Poster',
-      avatar: Icons.person,
-      rank: 2,
-      status: 'Aman',
-      nis: '2023002',
-      ttl: 'Jakarta, 20 April 2007',
-      jenkel: 'Perempuan',
-      alamat: 'Jl. Sudirman No. 45, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456790',
-      email: 'siti.aisyah@smk.sch.id',
-      namaOrtu: 'Ahmad Sudarjo',
-      noHpOrtu: '08129876544',
-    ),
-    Student(
-      name: 'Budi Santoso',
-      kelas: 'XII RPL 1',
-      poin: 300,
-      prestasi: 'Ketua Tim Jaringan Berprestasi',
-      avatar: Icons.person,
-      rank: 3,
-      status: 'Aman',
-      nis: '2023003',
-      ttl: 'Surabaya, 10 Januari 2007',
-      jenkel: 'Laki-laki',
-      alamat: 'Jl. Pahlawan No. 78, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456791',
-      email: 'budi.santoso@smk.sch.id',
-      namaOrtu: 'Sari Dewi',
-      noHpOrtu: '08129876545',
-    ),
-    Student(
-      name: 'Rina Amelia',
-      kelas: 'XII RPL 1',
-      poin: 290,
-      prestasi: 'Juara 1 Lomba Administrasi',
-      avatar: Icons.person,
-      rank: 4,
-      status: 'Aman',
-      nis: '2023004',
-      ttl: 'Medan, 25 Maret 2007',
-      jenkel: 'Perempuan',
-      alamat: 'Jl. Kemerdekaan No. 90, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456792',
-      email: 'rina.amelia@smk.sch.id',
-      namaOrtu: 'Hendra Wijaya',
-      noHpOrtu: '08129876546',
-    ),
-  ];
-
-  final List<Student> _siswaBerat = [
-    Student(
-      name: 'Dedi Kurniawan',
-      kelas: 'XII RPL 2',
-      poin: -50,
-      prestasi: 'Terlambat 3 kali',
-      avatar: Icons.person,
-      rank: 1,
-      status: 'Prioritas',
-      nis: '2023005',
-      ttl: 'Bandung, 12 Juni 2007',
-      jenkel: 'Laki-laki',
-      alamat: 'Jl. Raya No. 10, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456793',
-      email: 'dedi.kurniawan@smk.sch.id',
-      namaOrtu: 'Siti Aminah',
-      noHpOrtu: '08129876547',
-    ),
-    Student(
-      name: 'Lina Sari',
-      kelas: 'XII RPL 1',
-      poin: -30,
-      prestasi: 'Tidak memakai seragam lengkap',
-      avatar: Icons.person,
-      rank: 2,
-      status: 'Prioritas',
-      nis: '2023006',
-      ttl: 'Jakarta, 18 Februari 2007',
-      jenkel: 'Perempuan',
-      alamat: 'Jl. Veteran No. 20, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456794',
-      email: 'lina.sari@smk.sch.id',
-      namaOrtu: 'Dewi Lestari',
-      noHpOrtu: '08129876548',
-    ),
-    Student(
-      name: 'Rudi Hartono',
-      kelas: 'XII RPL 2',
-      poin: -75,
-      prestasi: 'Merokok di lingkungan sekolah',
-      avatar: Icons.person,
-      rank: 3,
-      status: 'Bermasalah',
-      nis: '2023007',
-      ttl: 'Surabaya, 5 April 2007',
-      jenkel: 'Laki-laki',
-      alamat: 'Jl. Diponegoro No. 30, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456795',
-      email: 'rudi.hartono@smk.sch.id',
-      namaOrtu: 'Hadi Susanto',
-      noHpOrtu: '08129876549',
-    ),
-    Student(
-      name: 'Mila Putri',
-      kelas: 'XII RPL 1',
-      poin: -25,
-      prestasi: 'Melanggar tata tertib kelas',
-      avatar: Icons.person,
-      rank: 4,
-      status: 'Bermasalah',
-      nis: '2023008',
-      ttl: 'Medan, 22 Januari 2007',
-      jenkel: 'Perempuan',
-      alamat: 'Jl. Gatot Subroto No. 40, Cimahi, Jawa Barat',
-      programKeahlian: 'Rekayasa Perangkat Lunak',
-      tahunMasuk: '2023',
-      noHp: '08123456796',
-      email: 'mila.putri@smk.sch.id',
-      namaOrtu: 'Rina Wulandari',
-      noHpOrtu: '08129876550',
-    ),
-  ];
+  String _jurusan = 'RPL'; // Default, will be updated from SharedPreferences
+  List<Student> _siswaTerbaik = [];
+  List<Student> _siswaBerat = [];
 
   @override
   void initState() {
@@ -235,14 +105,66 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
-    _filteredSiswaTerbaik = _siswaTerbaik;
-    _filteredSiswaBerat = _siswaBerat;
+    _loadJurusanAndData();
   }
 
   @override
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadJurusanAndData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _jurusan = prefs.getString('jurusan') ?? 'RPL';
+    });
+    await _fetchStudentData();
+  }
+
+  Future<void> _fetchStudentData() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final studentList =
+            (data['data']['data'] as List)
+                .where((s) => s['id_kelas'].startsWith(_jurusan))
+                .map((json) => Student.fromJson(json))
+                .toList();
+
+        _siswaTerbaik =
+            studentList.where((s) => s.poin >= 0).toList()
+              ..sort((a, b) => b.poin.compareTo(a.poin));
+        _siswaTerbaik = _siswaTerbaik.take(4).toList();
+        for (int i = 0; i < _siswaTerbaik.length; i++) {
+          _siswaTerbaik[i] = _siswaTerbaik[i].copyWith(rank: i + 1);
+        }
+
+        _siswaBerat =
+            studentList.where((s) => s.poin < 0).toList()
+              ..sort((a, b) => a.poin.compareTo(b.poin));
+        _siswaBerat = _siswaBerat.take(4).toList();
+        for (int i = 0; i < _siswaBerat.length; i++) {
+          _siswaBerat[i] = _siswaBerat[i].copyWith(rank: i + 1);
+        }
+
+        setState(() {
+          _filteredSiswaTerbaik = _siswaTerbaik;
+          _filteredSiswaBerat = _siswaBerat;
+        });
+      } else {
+        throw Exception('Failed to load student data');
+      }
+    } catch (e) {
+      setState(() {
+        _filteredSiswaTerbaik = [];
+        _filteredSiswaBerat = [];
+      });
+      // Handle error (e.g., show a snackbar or dialog)
+    }
   }
 
   void _filterSiswa(String query) {
@@ -306,7 +228,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle(
+        value: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.light,
         ),
@@ -322,6 +244,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
+                        // 🔹 HEADER
                         Container(
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
@@ -350,6 +273,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                             ),
                             child: Column(
                               children: [
+                                // 🔹 TOP BAR
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -411,6 +335,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                   ],
                                 ),
                                 const SizedBox(height: 24),
+                                // 🔹 GREETING
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Column(
@@ -428,7 +353,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
-                                        'Kelola program keahlian dengan optimal',
+                                        'Kelola $_jurusan dengan optimal',
                                         style: GoogleFonts.poppins(
                                           color: Colors.white.withOpacity(0.9),
                                           fontSize: 14,
@@ -439,6 +364,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 24),
+                                // 🔹 SEARCH BAR
                                 Container(
                                   height: 50,
                                   padding: const EdgeInsets.symmetric(
@@ -484,7 +410,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                             hintText:
                                                 'Cari siswa, kelas, atau aktivitas...',
                                             hintStyle: GoogleFonts.poppins(
-                                              color: const Color(0xFF9CA3AF),
+                                              color: Color(0xFF9CA3AF),
                                               fontSize: 15,
                                               fontWeight: FontWeight.w400,
                                             ),
@@ -493,7 +419,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                           ),
                                           style: GoogleFonts.poppins(
                                             fontSize: 15,
-                                            color: const Color(0xFF1F2937),
+                                            color: Color(0xFF1F2937),
                                           ),
                                         ),
                                       ),
@@ -501,6 +427,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 20),
+                                // 🔹 ACTION BUTTONS
                                 Row(
                                   children: [
                                     _buildActionButton('Umum', 0),
@@ -514,6 +441,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                             ),
                           ),
                         ),
+                        // 🔹 CONTENT
                         Padding(
                           padding: const EdgeInsets.all(20),
                           child: Column(
@@ -525,6 +453,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                 _buildSiswaBeratSection(),
                                 const SizedBox(height: 20),
                               ] else ...[
+                                // 🔹 Apresiasi Chart
                                 _buildEnhancedChartCard(
                                   'Grafik Apresiasi Siswa',
                                   'Pencapaian positif minggu ini',
@@ -565,6 +494,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                   true,
                                 ),
                                 const SizedBox(height: 20),
+                                // 🔹 Pelanggaran Chart
                                 _buildEnhancedChartCard(
                                   'Grafik Pelanggaran Siswa',
                                   'Monitoring pelanggaran minggu ini',
@@ -605,6 +535,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                   false,
                                 ),
                                 const SizedBox(height: 20),
+                                // 🔹 Activity Section
                                 GestureDetector(
                                   onTap: () {
                                     Navigator.push(
@@ -665,18 +596,14 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                                       fontSize: 18,
                                                       fontWeight:
                                                           FontWeight.w700,
-                                                      color: const Color(
-                                                        0xFF1F2937,
-                                                      ),
+                                                      color: Color(0xFF1F2937),
                                                     ),
                                                   ),
                                                   Text(
                                                     'Update terbaru dari sistem',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 12,
-                                                      color: const Color(
-                                                        0xFF6B7280,
-                                                      ),
+                                                      color: Color(0xFF6B7280),
                                                     ),
                                                   ),
                                                 ],
@@ -923,7 +850,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                         ),
                       ),
                       Text(
-                        'Top 4 siswa dengan pelanggaran terberat',
+                        'Top ${_filteredSiswaBerat.length} siswa dengan pelanggaran terberat',
                         style: GoogleFonts.poppins(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 12,
@@ -1816,6 +1743,30 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
           ],
         ),
       ),
+    );
+  }
+}
+
+extension StudentExtension on Student {
+  Student copyWith({int? rank}) {
+    return Student(
+      name: name,
+      kelas: kelas,
+      poin: poin,
+      prestasi: prestasi,
+      avatar: avatar,
+      rank: rank ?? this.rank,
+      status: status,
+      nis: nis,
+      ttl: ttl,
+      jenkel: jenkel,
+      alamat: alamat,
+      programKeahlian: programKeahlian,
+      tahunMasuk: tahunMasuk,
+      noHp: noHp,
+      email: email,
+      namaOrtu: namaOrtu,
+      noHpOrtu: noHpOrtu,
     );
   }
 }

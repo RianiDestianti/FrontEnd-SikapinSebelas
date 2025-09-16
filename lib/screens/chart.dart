@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChartDataItem {
   final double value;
@@ -30,59 +33,15 @@ class GrafikScreen extends StatefulWidget {
   State<GrafikScreen> createState() => _GrafikScreenState();
 }
 
-class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMixin {
+class _GrafikScreenState extends State<GrafikScreen>
+    with TickerProviderStateMixin {
   int _selectedPeriod = 0;
   int _selectedChartType = 0;
-
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-
-  final Map<String, List<ChartDataItem>> _apresiasiData = {
-    'minggu': [
-      ChartDataItem(value: 80.0, label: 'Sen', detail: 'Kebersihan: 30, Kedisiplinan: 25, Prestasi: 25'),
-      ChartDataItem(value: 120.0, label: 'Sel', detail: 'Kebersihan: 40, Kedisiplinan: 35, Prestasi: 45'),
-      ChartDataItem(value: 90.0, label: 'Rab', detail: 'Kebersihan: 35, Kedisiplinan: 30, Prestasi: 25'),
-      ChartDataItem(value: 40.0, label: 'Kam', detail: 'Kebersihan: 15, Kedisiplinan: 10, Prestasi: 15'),
-      ChartDataItem(value: 100.0, label: 'Jum', detail: 'Kebersihan: 35, Kedisiplinan: 30, Prestasi: 35'),
-    ],
-    'bulan': [
-      ChartDataItem(value: 320.0, label: 'Jan', detail: 'Total siswa: 85, Rata-rata: 3.8 poin'),
-      ChartDataItem(value: 480.0, label: 'Feb', detail: 'Total siswa: 85, Rata-rata: 5.6 poin'),
-      ChartDataItem(value: 360.0, label: 'Mar', detail: 'Total siswa: 85, Rata-rata: 4.2 poin'),
-      ChartDataItem(value: 420.0, label: 'Apr', detail: 'Total siswa: 85, Rata-rata: 4.9 poin'),
-      ChartDataItem(value: 380.0, label: 'Mei', detail: 'Total siswa: 85, Rata-rata: 4.5 poin'),
-      ChartDataItem(value: 450.0, label: 'Jun', detail: 'Total siswa: 85, Rata-rata: 5.3 poin'),
-    ],
-    'tahun': [
-      ChartDataItem(value: 1800.0, label: '2022', detail: 'Total: 1800 poin, Siswa aktif: 80'),
-      ChartDataItem(value: 2400.0, label: '2023', detail: 'Total: 2400 poin, Siswa aktif: 85'),
-      ChartDataItem(value: 1920.0, label: '2024', detail: 'Total: 1920 poin, Siswa aktif: 85'),
-    ],
-  };
-
-  final Map<String, List<ChartDataItem>> _pelanggaranData = {
-    'minggu': [
-      ChartDataItem(value: 60.0, label: 'Sen', detail: 'Terlambat: 25, Seragam: 20, Lainnya: 15'),
-      ChartDataItem(value: 25.0, label: 'Sel', detail: 'Terlambat: 10, Seragam: 8, Lainnya: 7'),
-      ChartDataItem(value: 15.0, label: 'Rab', detail: 'Terlambat: 8, Seragam: 4, Lainnya: 3'),
-      ChartDataItem(value: 10.0, label: 'Kam', detail: 'Terlambat: 5, Seragam: 3, Lainnya: 2'),
-      ChartDataItem(value: 20.0, label: 'Jum', detail: 'Terlambat: 12, Seragam: 5, Lainnya: 3'),
-    ],
-    'bulan': [
-      ChartDataItem(value: 240.0, label: 'Jan', detail: 'Total kasus: 48, Rata-rata: 2.8 per siswa'),
-      ChartDataItem(value: 100.0, label: 'Feb', detail: 'Total kasus: 20, Rata-rata: 1.2 per siswa'),
-      ChartDataItem(value: 60.0, label: 'Mar', detail: 'Total kasus: 12, Rata-rata: 0.7 per siswa'),
-      ChartDataItem(value: 45.0, label: 'Apr', detail: 'Total kasus: 9, Rata-rata: 0.5 per siswa'),
-      ChartDataItem(value: 35.0, label: 'Mei', detail: 'Total kasus: 7, Rata-rata: 0.4 per siswa'),
-      ChartDataItem(value: 25.0, label: 'Jun', detail: 'Total kasus: 5, Rata-rata: 0.3 per siswa'),
-    ],
-    'tahun': [
-      ChartDataItem(value: 960.0, label: '2022', detail: 'Total: 960 kasus, Siswa terlibat: 65'),
-      ChartDataItem(value: 720.0, label: '2023', detail: 'Total: 720 kasus, Siswa terlibat: 58'),
-      ChartDataItem(value: 520.0, label: '2024', detail: 'Total: 520 kasus, Siswa terlibat: 45'),
-    ],
-  };
+  String _teacherClassId = '';
+  List<ChartDataItem> _chartData = [];
 
   @override
   void initState() {
@@ -94,10 +53,14 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
     _animationController.forward();
+    _loadTeacherData();
   }
 
   @override
@@ -106,11 +69,87 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
     super.dispose();
   }
 
-  List<ChartDataItem> _getCurrentData() {
-    String period = ['minggu', 'bulan', 'tahun'][_selectedPeriod];
-    return widget.chartType == 'apresiasi'
-        ? _apresiasiData[period]!
-        : _pelanggaranData[period]!;
+  Future<void> _loadTeacherData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _teacherClassId = prefs.getString('id_kelas') ?? '';
+    });
+    await _fetchChartData();
+  }
+
+  Future<void> _fetchChartData() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'http://10.0.2.2:8000/api/${widget.chartType == 'apresiasi' ? 'skoring_penghargaan' : 'skoring_pelanggaran'}',
+        ),
+      );
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final penilaianData = jsonData['penilaian']['data'] as List<dynamic>;
+        final siswaData = jsonData['siswa'] as List<dynamic>;
+
+        Map<String, double> weeklyData = {};
+        Map<String, double> monthlyData = {};
+
+        for (var item in penilaianData) {
+          if (siswaData.any(
+            (s) => s['nis'] == item['nis'] && s['id_kelas'] == _teacherClassId,
+          )) {
+            DateTime date = DateTime.parse(item['created_at']);
+            String weekKey = '${date.year}-W${(date.day / 7).ceil()}';
+            String monthKey = '${date.year}-${date.month}';
+
+            weeklyData[weekKey] = (weeklyData[weekKey] ?? 0) + 1;
+            monthlyData[monthKey] = (monthlyData[monthKey] ?? 0) + 1;
+          }
+        }
+
+        setState(() {
+          _chartData =
+              _selectedPeriod == 0
+                  ? weeklyData.entries
+                      .map(
+                        (e) => ChartDataItem(
+                          value: e.value,
+                          label: e.key.split('-W')[1],
+                          detail: 'Total: ${e.value.toInt()} kasus',
+                        ),
+                      )
+                      .toList()
+                  : monthlyData.entries
+                      .map(
+                        (e) => ChartDataItem(
+                          value: e.value,
+                          label: _getMonthName(int.parse(e.key.split('-')[1])),
+                          detail: 'Total: ${e.value.toInt()} kasus',
+                        ),
+                      )
+                      .toList();
+          _chartData.sort((a, b) => a.label.compareTo(b.label));
+        });
+      }
+    } catch (e) {
+      print('Error fetching chart data: $e');
+    }
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[month - 1];
   }
 
   String _getPeriodLabel() {
@@ -128,7 +167,8 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
         backgroundColor: const Color(0xFFF8FAFC),
         body: LayoutBuilder(
           builder: (context, constraints) {
-            double maxWidth = constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
+            double maxWidth =
+                constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
             return Center(
               child: SizedBox(
                 width: maxWidth,
@@ -175,9 +215,10 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: widget.chartType == 'apresiasi'
-              ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
-              : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
+          colors:
+              widget.chartType == 'apresiasi'
+                  ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
+                  : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -190,7 +231,12 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 20, 20, 30),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          MediaQuery.of(context).padding.top + 20,
+          20,
+          30,
+        ),
         child: Column(
           children: [
             Row(
@@ -242,7 +288,9 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    widget.chartType == 'apresiasi' ? Icons.trending_up : Icons.warning_amber_rounded,
+                    widget.chartType == 'apresiasi'
+                        ? Icons.trending_up
+                        : Icons.warning_amber_rounded,
                     color: Colors.white,
                     size: 24,
                   ),
@@ -256,23 +304,51 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
   }
 
   Widget _buildStatisticsCards() {
-    List<ChartDataItem> data = _getCurrentData();
-    double total = data.fold(0.0, (sum, item) => sum + item.value);
-    double average = total / data.length;
-    double max = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    double total = _chartData.fold(0.0, (sum, item) => sum + item.value);
+    double average = _chartData.isNotEmpty ? total / _chartData.length : 0.0;
+    double max =
+        _chartData.isNotEmpty
+            ? _chartData.map((e) => e.value).reduce((a, b) => a > b ? a : b)
+            : 0.0;
 
     return Row(
       children: [
-        Expanded(child: _buildStatCard('Total', total.toInt().toString(), Icons.analytics_outlined, const Color(0xFF0083EE))),
+        Expanded(
+          child: _buildStatCard(
+            'Total',
+            total.toInt().toString(),
+            Icons.analytics_outlined,
+            const Color(0xFF0083EE),
+          ),
+        ),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('Rata-rata', average.toInt().toString(), Icons.trending_up, const Color(0xFF10B981))),
+        Expanded(
+          child: _buildStatCard(
+            'Rata-rata',
+            average.toInt().toString(),
+            Icons.trending_up,
+            const Color(0xFF10B981),
+          ),
+        ),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('Tertinggi', max.toInt().toString(), Icons.north, const Color(0xFFFFD700))),
+        Expanded(
+          child: _buildStatCard(
+            'Tertinggi',
+            max.toInt().toString(),
+            Icons.north,
+            const Color(0xFFFFD700),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -334,38 +410,55 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
         ],
       ),
       child: Row(
-        children: ['Minggu', 'Bulan', 'Tahun'].asMap().entries.map((entry) {
-          int index = entry.key;
-          String period = entry.value;
-          bool isActive = _selectedPeriod == index;
+        children:
+            ['Minggu', 'Bulan', 'Tahun'].asMap().entries.map((entry) {
+              int index = entry.key;
+              String period = entry.value;
+              bool isActive = _selectedPeriod == index;
 
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedPeriod = index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: isActive ? LinearGradient(
-                    colors: widget.chartType == 'apresiasi'
-                        ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
-                        : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
-                  ) : null,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  period,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    color: isActive ? Colors.white : const Color(0xFF6B7280),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedPeriod = index;
+                      _fetchChartData();
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient:
+                          isActive
+                              ? LinearGradient(
+                                colors:
+                                    widget.chartType == 'apresiasi'
+                                        ? [
+                                          const Color(0xFF61B8FF),
+                                          const Color(0xFF0083EE),
+                                        ]
+                                        : [
+                                          const Color(0xFFFF6B6D),
+                                          const Color(0xFFFF8E8F),
+                                        ],
+                              )
+                              : null,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      period,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        color:
+                            isActive ? Colors.white : const Color(0xFF6B7280),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
       ),
     );
   }
@@ -385,48 +478,54 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
         ],
       ),
       child: Row(
-        children: [
-          {'name': 'Bar', 'icon': Icons.bar_chart},
-          {'name': 'Line', 'icon': Icons.show_chart},
-          {'name': 'Pie', 'icon': Icons.pie_chart},
-        ].asMap().entries.map((entry) {
-          int index = entry.key;
-          Map<String, dynamic> chartType = entry.value;
-          bool isActive = _selectedChartType == index;
+        children:
+            [
+              {'name': 'Bar', 'icon': Icons.bar_chart},
+              {'name': 'Pie', 'icon': Icons.pie_chart},
+            ].asMap().entries.map((entry) {
+              int index = entry.key;
+              Map<String, dynamic> chartType = entry.value;
+              bool isActive = _selectedChartType == index;
 
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedChartType = index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: isActive ? const Color(0xFFF3F4F6) : null,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      chartType['icon'],
-                      color: isActive ? const Color(0xFF1F2937) : const Color(0xFF6B7280),
-                      size: 18,
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedChartType = index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isActive ? const Color(0xFFF3F4F6) : null,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      chartType['name'],
-                      style: GoogleFonts.poppins(
-                        color: isActive ? const Color(0xFF1F2937) : const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          chartType['icon'],
+                          color:
+                              isActive
+                                  ? const Color(0xFF1F2937)
+                                  : const Color(0xFF6B7280),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          chartType['name'],
+                          style: GoogleFonts.poppins(
+                            color:
+                                isActive
+                                    ? const Color(0xFF1F2937)
+                                    : const Color(0xFF6B7280),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
       ),
     );
   }
@@ -461,12 +560,19 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: widget.chartType == 'apresiasi'
-                        ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
-                        : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
+                    colors:
+                        widget.chartType == 'apresiasi'
+                            ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
+                            : [
+                              const Color(0xFFFF6B6D),
+                              const Color(0xFFFF8E8F),
+                            ],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -483,16 +589,17 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
           ),
           const SizedBox(height: 20),
           if (_selectedChartType == 0) _buildBarChart(),
-          if (_selectedChartType == 1) _buildLineChart(),
-          if (_selectedChartType == 2) _buildPieChart(),
+          if (_selectedChartType == 1) _buildPieChart(),
         ],
       ),
     );
   }
 
   Widget _buildBarChart() {
-    List<ChartDataItem> data = _getCurrentData();
-    double maxValue = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    double maxValue =
+        _chartData.isNotEmpty
+            ? _chartData.map((e) => e.value).reduce((a, b) => a > b ? a : b)
+            : 1.0;
 
     return Container(
       height: 200,
@@ -508,11 +615,41 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('${maxValue.toInt()}', style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF9CA3AF))),
-                      Text('${(maxValue * 0.75).toInt()}', style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF9CA3AF))),
-                      Text('${(maxValue * 0.5).toInt()}', style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF9CA3AF))),
-                      Text('${(maxValue * 0.25).toInt()}', style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF9CA3AF))),
-                      Text('0', style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF9CA3AF))),
+                      Text(
+                        '${maxValue.toInt()}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                      Text(
+                        '${(maxValue * 0.75).toInt()}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                      Text(
+                        '${(maxValue * 0.5).toInt()}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                      Text(
+                        '${(maxValue * 0.25).toInt()}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                      Text(
+                        '0',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -521,22 +658,30 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: data.map((item) {
-                      double value = item.value;
-                      double height = (value / maxValue) * 150;
-                      return Container(
-                        width: 32,
-                        height: height,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: widget.chartType == 'apresiasi'
-                                ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
-                                : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      );
-                    }).toList(),
+                    children:
+                        _chartData.map((item) {
+                          double value = item.value;
+                          double height = (value / maxValue) * 150;
+                          return Container(
+                            width: 32,
+                            height: height,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors:
+                                    widget.chartType == 'apresiasi'
+                                        ? [
+                                          const Color(0xFF61B8FF),
+                                          const Color(0xFF0083EE),
+                                        ]
+                                        : [
+                                          const Color(0xFFFF6B6D),
+                                          const Color(0xFFFF8E8F),
+                                        ],
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          );
+                        }).toList(),
                   ),
                 ),
               ],
@@ -549,16 +694,17 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: data.map((item) {
-                    return Text(
-                      item.label,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    );
-                  }).toList(),
+                  children:
+                      _chartData.map((item) {
+                        return Text(
+                          item.label,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: const Color(0xFF6B7280),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        );
+                      }).toList(),
                 ),
               ),
             ],
@@ -568,50 +714,8 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
     );
   }
 
-  Widget _buildLineChart() {
-    List<ChartDataItem> data = _getCurrentData();
-    double maxValue = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
-
-    return Container(
-      height: 200,
-      child: Column(
-        children: [
-          Expanded(
-            child: CustomPaint(
-              size: Size(double.infinity, 150),
-              painter: LineChartPainter(
-                data: data,
-                maxValue: maxValue,
-                gradient: LinearGradient(
-                  colors: widget.chartType == 'apresiasi'
-                      ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
-                      : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: data.map((item) {
-              return Text(
-                item.label,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: const Color(0xFF6B7280),
-                  fontWeight: FontWeight.w600,
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPieChart() {
-    List<ChartDataItem> data = _getCurrentData();
-    double total = data.fold(0.0, (sum, item) => sum + item.value);
+    double total = _chartData.fold(0.0, (sum, item) => sum + item.value);
 
     return Container(
       height: 250,
@@ -622,11 +726,24 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
             child: CustomPaint(
               size: const Size(150, 150),
               painter: PieChartPainter(
-                data: data,
+                data: _chartData,
                 total: total,
-                colors: widget.chartType == 'apresiasi'
-                    ? [const Color(0xFF61B8FF), const Color(0xFF0083EE), const Color(0xFF3B82F6), const Color(0xFF1E40AF), const Color(0xFF1E3A8A)]
-                    : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F), const Color(0xFFEF4444), const Color(0xFFDC2626), const Color(0xFFB91C1C)],
+                colors:
+                    widget.chartType == 'apresiasi'
+                        ? [
+                          const Color(0xFF61B8FF),
+                          const Color(0xFF0083EE),
+                          const Color(0xFF3B82F6),
+                          const Color(0xFF1E40AF),
+                          const Color(0xFF1E3A8A),
+                        ]
+                        : [
+                          const Color(0xFFFF6B6D),
+                          const Color(0xFFFF8E8F),
+                          const Color(0xFFEF4444),
+                          const Color(0xFFDC2626),
+                          const Color(0xFFB91C1C),
+                        ],
               ),
             ),
           ),
@@ -634,53 +751,67 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
             flex: 1,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: data.asMap().entries.map((entry) {
-                int index = entry.key;
-                ChartDataItem item = entry.value;
-                double percentage = (item.value / total) * 100;
-                Color color = widget.chartType == 'apresiasi'
-                    ? [const Color(0xFF61B8FF), const Color(0xFF0083EE), const Color(0xFF3B82F6), const Color(0xFF1E40AF), const Color(0xFF1E3A8A)][index % 5]
-                    : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F), const Color(0xFFEF4444), const Color(0xFFDC2626), const Color(0xFFB91C1C)][index % 5];
+              children:
+                  _chartData.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    ChartDataItem item = entry.value;
+                    double percentage = (item.value / total) * 100;
+                    Color color =
+                        widget.chartType == 'apresiasi'
+                            ? [
+                              const Color(0xFF61B8FF),
+                              const Color(0xFF0083EE),
+                              const Color(0xFF3B82F6),
+                              const Color(0xFF1E40AF),
+                              const Color(0xFF1E3A8A),
+                            ][index % 5]
+                            : [
+                              const Color(0xFFFF6B6D),
+                              const Color(0xFFFF8E8F),
+                              const Color(0xFFEF4444),
+                              const Color(0xFFDC2626),
+                              const Color(0xFFB91C1C),
+                            ][index % 5];
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.label,
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1F2937),
-                              ),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(2),
                             ),
-                            Text(
-                              '${percentage.toInt()}%',
-                              style: GoogleFonts.poppins(
-                                fontSize: 10,
-                                color: const Color(0xFF6B7280),
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.label,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1F2937),
+                                  ),
+                                ),
+                                Text(
+                                  '${percentage.toInt()}%',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    color: const Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
             ),
           ),
         ],
@@ -689,8 +820,6 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
   }
 
   Widget _buildDetailedAnalysis() {
-    List<ChartDataItem> data = _getCurrentData();
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -713,13 +842,21 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: widget.chartType == 'apresiasi'
-                        ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
-                        : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
+                    colors:
+                        widget.chartType == 'apresiasi'
+                            ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
+                            : [
+                              const Color(0xFFFF6B6D),
+                              const Color(0xFFFF8E8F),
+                            ],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.analytics_outlined, color: Colors.white, size: 20),
+                child: const Icon(
+                  Icons.analytics_outlined,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
@@ -733,7 +870,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
             ],
           ),
           const SizedBox(height: 16),
-          ...data.map((item) => _buildDetailItem(item)).toList(),
+          ..._chartData.map((item) => _buildDetailItem(item)).toList(),
         ],
       ),
     );
@@ -763,12 +900,19 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: widget.chartType == 'apresiasi'
-                        ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
-                        : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
+                    colors:
+                        widget.chartType == 'apresiasi'
+                            ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
+                            : [
+                              const Color(0xFFFF6B6D),
+                              const Color(0xFFFF8E8F),
+                            ],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -798,22 +942,27 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
   }
 
   Widget _buildTrendAnalysis() {
-    List<ChartDataItem> data = _getCurrentData();
-    double total = data.fold(0.0, (sum, item) => sum + item.value);
-    double average = total / data.length;
+    double total = _chartData.fold(0.0, (sum, item) => sum + item.value);
+    double average = _chartData.isNotEmpty ? total / _chartData.length : 0.0;
 
-    bool isIncreasing = data.length > 1 && data.last.value > data.first.value;
-    double changePercentage = data.length > 1
-        ? ((data.last.value - data.first.value) / data.first.value * 100).abs()
-        : 0;
+    bool isIncreasing =
+        _chartData.length > 1 && _chartData.last.value > _chartData.first.value;
+    double changePercentage =
+        _chartData.length > 1
+            ? ((_chartData.last.value - _chartData.first.value) /
+                    _chartData.first.value *
+                    100)
+                .abs()
+            : 0;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: widget.chartType == 'apresiasi'
-              ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
-              : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
+          colors:
+              widget.chartType == 'apresiasi'
+                  ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
+                  : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -837,7 +986,11 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.insights, color: Colors.white, size: 20),
+                child: const Icon(
+                  Icons.insights,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
@@ -878,7 +1031,10 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.2),
+                width: 1,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -898,8 +1054,8 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
                           ? 'Tren positif! Pertahankan program apresiasi yang sedang berjalan dan tingkatkan variasi reward untuk memotivasi siswa.'
                           : 'Perlu peningkatan program apresiasi. Pertimbangkan untuk menambah kegiatan motivasi dan sistem reward yang lebih menarik.'
                       : isIncreasing
-                          ? 'Perlu perhatian khusus! Tingkatkan pengawasan dan buat program pencegahan pelanggaran yang lebih efektif.'
-                          : 'Tren menurun sangat baik! Pertahankan sistem pengawasan dan terus tingkatkan program kedisiplinan.',
+                      ? 'Perlu perhatian khusus! Tingkatkan pengawasan dan buat program pencegahan pelanggaran yang lebih efektif.'
+                      : 'Tren menurun sangat baik! Pertahankan sistem pengawasan dan terus tingkatkan program kedisiplinan.',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: Colors.white.withOpacity(0.9),
@@ -915,7 +1071,12 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
     );
   }
 
-  Widget _buildTrendCard(String title, String value, IconData icon, Color textColor) {
+  Widget _buildTrendCard(
+    String title,
+    String value,
+    IconData icon,
+    Color textColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -949,61 +1110,6 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
   }
 }
 
-class LineChartPainter extends CustomPainter {
-  final List<ChartDataItem> data;
-  final double maxValue;
-  final Gradient gradient;
-
-  LineChartPainter({
-    required this.data,
-    required this.maxValue,
-    required this.gradient,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..shader = gradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-    final pointPaint = Paint()
-      ..shader = gradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.fill;
-
-    for (int i = 0; i < data.length; i++) {
-      double x = (i / (data.length - 1)) * size.width;
-      double y = size.height - (data[i].value / maxValue) * size.height;
-
-      if (i == 0) {
-        path.moveTo(x,
-
- y);
-      } else {
-        path.lineTo(x, y);
-      }
-
-      canvas.drawCircle(Offset(x, y), 4, pointPaint);
-
-      canvas.drawCircle(
-        Offset(x, y),
-        4,
-        Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
-      );
-    }
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
 class PieChartPainter extends CustomPainter {
   final List<ChartDataItem> data;
   final double total;
@@ -1024,9 +1130,10 @@ class PieChartPainter extends CustomPainter {
     for (int i = 0; i < data.length; i++) {
       double sweepAngle = (data[i].value / total) * 2 * 3.14159;
 
-      final paint = Paint()
-        ..color = colors[i % colors.length]
-        ..style = PaintingStyle.fill;
+      final paint =
+          Paint()
+            ..color = colors[i % colors.length]
+            ..style = PaintingStyle.fill;
 
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
