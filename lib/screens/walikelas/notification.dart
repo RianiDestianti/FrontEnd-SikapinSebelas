@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import 'detail.dart';
 
 class NotifikasiScreen extends StatefulWidget {
@@ -15,115 +19,14 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   String _selectedFilter = 'Semua';
-
-  final List<Map<String, dynamic>> _notificationsData = [
-    {
-      'id': '1',
-      'title': 'Pelanggaran Baru - Ahmad Lutfi Khairul',
-      'subtitle': 'Terlambat masuk kelas',
-      'message':
-          'Ahmad Lutfi Khairul dilaporkan terlambat masuk kelas lebih dari 15 menit oleh Pak Budi (Guru Piket). Poin: -10',
-      'time': '5 menit yang lalu',
-      'type': 'violation',
-      'isRead': false,
-      'student': 'Ahmad Lutfi Khairul',
-      'action': 'Pelanggaran Kedisiplinan',
-      'reporter': 'Pak Budi (Guru Piket)',
-      'points': -10,
-      'isTreatedByBK': false,
-    },
-    {
-      'id': '2',
-      'title': 'Status Berubah - Ahmad Lutfi Khairul',
-      'subtitle': 'Prioritas → Aman (Sudah ditangani BK)',
-      'message':
-          'Ahmad Lutfi Khairul telah ditangani oleh Bu Sari (Guru BK). Status berubah dari Prioritas menjadi Aman setelah konseling.',
-      'time': '10 menit yang lalu',
-      'type': 'bk_treatment',
-      'isRead': false,
-      'student': 'Ahmad Lutfi Khairul',
-      'action': 'Penanganan BK',
-      'bkTeacher': 'Bu Sari (Guru BK)',
-      'statusChange': 'Prioritas → Aman',
-    },
-    {
-      'id': '3',
-      'title': 'Apresiasi Baru - Eka Putri',
-      'subtitle': 'Juara 1 Olimpiade Matematika',
-      'message':
-          'Eka Putri mendapat apresiasi dari Kepala Sekolah atas prestasi Juara 1 Olimpiade Matematika Tingkat Kota. Poin: +30',
-      'time': '15 menit yang lalu',
-      'type': 'appreciation',
-      'isRead': false,
-      'student': 'Eka Putri',
-      'action': 'Prestasi Akademik',
-      'giver': 'Kepala Sekolah',
-      'points': 30,
-    },
-    {
-      'id': '4',
-      'title': 'Pelanggaran Baru - Budi Santoso',
-      'subtitle': 'Tidak mengumpulkan tugas',
-      'message':
-          'Budi Santoso dilaporkan tidak mengumpulkan tugas matematika oleh Bu Ani (Guru Matematika). Poin: -8',
-      'time': '30 menit yang lalu',
-      'type': 'violation',
-      'isRead': true,
-      'student': 'Budi Santoso',
-      'action': 'Pelanggaran Tugas',
-      'reporter': 'Bu Ani (Guru Matematika)',
-      'points': -8,
-      'isTreatedByBK': false,
-    },
-    {
-      'id': '5',
-      'title': 'Apresiasi Baru - Siti Rahma',
-      'subtitle': 'Membantu kegiatan bakti sosial',
-      'message':
-          'Siti Rahma mendapat apresiasi dari Bu Lisa (Guru OSIS) karena aktif membantu kegiatan bakti sosial sekolah. Poin: +15',
-      'time': '1 jam yang lalu',
-      'type': 'appreciation',
-      'isRead': true,
-      'student': 'Siti Rahma',
-      'action': 'Kegiatan Sosial',
-      'giver': 'Bu Lisa (Guru OSIS)',
-      'points': 15,
-    },
-    {
-      'id': '6',
-      'title': 'Pelanggaran Berulang - Dani Kurniawan',
-      'subtitle': 'Pelanggaran ke-3 bulan ini',
-      'message':
-          'Dani Kurniawan dilaporkan tidak memakai seragam sesuai ketentuan oleh Bu Sari (Guru BK). Ini merupakan pelanggaran ke-3 bulan ini. Poin: -5. Perlu penanganan segera!',
-      'time': '2 jam yang lalu',
-      'type': 'violation_repeat',
-      'isRead': false,
-      'student': 'Dani Kurniawan',
-      'action': 'Pelanggaran Berulang',
-      'reporter': 'Bu Sari (Guru BK)',
-      'points': -5,
-      'repeatCount': 3,
-      'isTreatedByBK': false,
-    },
-    {
-      'id': '7',
-      'title': 'Apresiasi Baru - Ahmad Lutfi Khairul',
-      'subtitle': 'Membantu teman belajar',
-      'message':
-          'Ahmad Lutfi Khairul mendapat apresiasi dari Pak Rahman (Wali Kelas) karena membantu teman yang kesulitan belajar. Poin: +10',
-      'time': '3 jam yang lalu',
-      'type': 'appreciation',
-      'isRead': true,
-      'student': 'Ahmad Lutfi Khairul',
-      'action': 'Sikap Positif',
-      'giver': 'Pak Rahman (Wali Kelas)',
-      'points': 10,
-    },
-  ];
+  List<Map<String, dynamic>> _notificationsData = [];
+  bool _isLoading = true;
+  String _mostCriticalStatus = 'Aman';
 
   @override
   void initState() {
     super.initState();
+    timeago.setLocaleMessages('id', timeago.IdMessages());
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -132,6 +35,79 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
+    _fetchNotifications();
+  }
+
+  Future<void> _fetchNotifications() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final response = await http.get(
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/notifikasi'),
+      );
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final notifications = jsonData['data'] as List<dynamic>;
+
+        final readStatuses =
+            prefs.getStringList('notification_read_status') ?? [];
+
+        final notificationList =
+            notifications.map((notif) {
+              final createdAt = DateTime.parse(
+                notif['tanggal_Mulai_Perbaikan'],
+              );
+              final time = timeago.format(createdAt, locale: 'id');
+              final isRead = readStatuses.contains(
+                notif['id_intervensi'].toString(),
+              );
+              return {
+                'id': notif['id_intervensi'].toString(),
+                'title': notif['nama_intervensi'],
+                'message': notif['isi_intervensi'],
+                'time': time,
+                'type': 'bk_treatment',
+                'isRead': isRead,
+                'student': 'Siswa NIS ${notif['nis']}',
+                'action': 'Penanganan BK',
+                'bkTeacher': 'Guru BK NIP ${notif['nip_bk']}',
+                'statusChange': notif['status'],
+                'nis': notif['nis'].toString(),
+              };
+            }).toList();
+
+        String mostCriticalStatus = 'Aman';
+        if (notificationList.any(
+          (n) => n['statusChange'] != 'Dalam Bimbingan',
+        )) {
+          mostCriticalStatus = 'Bermasalah';
+        }
+
+        setState(() {
+          _notificationsData = notificationList;
+          _mostCriticalStatus = mostCriticalStatus;
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load notifications: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching notifications: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal memuat notifikasi',
+            style: GoogleFonts.poppins(fontSize: 14),
+          ),
+          backgroundColor: const Color(0xFFFF6B6D),
+        ),
+      );
+    }
   }
 
   @override
@@ -156,21 +132,31 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
   int get _unreadCount =>
       _notificationsData.where((notif) => !notif['isRead']).length;
 
-  void _markAsRead(String notificationId) {
+  void _markAsRead(String notificationId) async {
     setState(() {
       final index = _notificationsData.indexWhere(
         (notif) => notif['id'] == notificationId,
       );
       if (index != -1) _notificationsData[index]['isRead'] = true;
     });
+    final prefs = await SharedPreferences.getInstance();
+    final readStatuses = prefs.getStringList('notification_read_status') ?? [];
+    if (!readStatuses.contains(notificationId)) {
+      readStatuses.add(notificationId);
+      await prefs.setStringList('notification_read_status', readStatuses);
+    }
   }
 
-  void _markAllAsRead() {
+  void _markAllAsRead() async {
     setState(() {
       for (var notif in _notificationsData) {
         notif['isRead'] = true;
       }
     });
+    final prefs = await SharedPreferences.getInstance();
+    final readStatuses =
+        _notificationsData.map((n) => n['id'].toString()).toList();
+    await prefs.setStringList('notification_read_status', readStatuses);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -184,56 +170,34 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
     );
   }
 
-  String _getStudentStatus(String type, Map<String, dynamic> notification) {
-    switch (type) {
-      case 'violation':
-      case 'violation_repeat':
-        if (type == 'violation_repeat' ||
-            (notification.containsKey('repeatCount') &&
-                notification['repeatCount'] > 2)) {
-          return 'Prioritas';
-        }
-        return 'Bermasalah';
-      case 'bk_treatment':
-        return 'Aman';
-      case 'appreciation':
-        return 'Aman';
-      default:
-        return 'Aman';
-    }
+  String _getStudentStatus(String status) {
+    return status == 'Dalam Bimbingan' ? 'Aman' : 'Bermasalah';
+  }
+
+  List<Color> _getBackgroundGradient(String status) {
+    return status == 'Aman'
+        ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
+        : [const Color(0xFFFF6B6D), const Color(0xFFEA580C)];
+  }
+
+  Color _getBackgroundShadowColor(String status) {
+    return status == 'Aman' ? const Color(0x200083EE) : const Color(0x20FF6B6D);
   }
 
   void _navigateToStudentDetail(Map<String, dynamic> notification) {
     final studentData = {
       'name': notification['student'],
-      'status': _getStudentStatus(notification['type'], notification),
-      'class': 'XI RPL 2',
+      'status': _getStudentStatus(notification['statusChange']),
+      'nis': notification['nis'],
+      'class': 'Kelas Tidak Diketahui',
     };
-
-    String? initialTab;
-    switch (notification['type']) {
-      case 'violation':
-      case 'violation_repeat':
-      case 'bk_treatment':
-        initialTab = 'pelanggaran';
-        break;
-      case 'appreciation':
-        initialTab = 'apresiasi';
-        break;
-      default:
-        initialTab = null;
-    }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DetailScreen(student: studentData),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final backgroundGradient = _getBackgroundGradient(_mostCriticalStatus);
+    final shadowColor = _getBackgroundShadowColor(_mostCriticalStatus);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -257,21 +221,21 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
                     child: Column(
                       children: [
                         Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                              colors: backgroundGradient,
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            borderRadius: BorderRadius.only(
+                            borderRadius: const BorderRadius.only(
                               bottomLeft: Radius.circular(32),
                               bottomRight: Radius.circular(32),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Color(0x200083EE),
+                                color: shadowColor,
                                 blurRadius: 20,
-                                offset: Offset(0, 10),
+                                offset: const Offset(0, 10),
                               ),
                             ],
                           ),
@@ -352,7 +316,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
                                     Container(
                                       padding: EdgeInsets.all(padding * 0.6),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
+                                        gradient: LinearGradient(
+                                          colors: backgroundGradient,
+                                        ),
                                         borderRadius: BorderRadius.circular(16),
                                       ),
                                       child: const Icon(
@@ -399,36 +365,48 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
                         Expanded(
                           child: Padding(
                             padding: EdgeInsets.all(padding),
-                            child: ContentWidget(
-                              filteredNotifications: _filteredNotifications,
-                              selectedFilter: _selectedFilter,
-                              onFilterChanged:
-                                  (filter) =>
-                                      setState(() => _selectedFilter = filter),
-                              onNotificationTap: (notif) {
-                                if (!notif['isRead']) _markAsRead(notif['id']);
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  shape: const RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20),
+                            child:
+                                _isLoading
+                                    ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                    : ContentWidget(
+                                      filteredNotifications:
+                                          _filteredNotifications,
+                                      selectedFilter: _selectedFilter,
+                                      onFilterChanged:
+                                          (filter) => setState(
+                                            () => _selectedFilter = filter,
+                                          ),
+                                      onNotificationTap: (notif) {
+                                        if (!notif['isRead'])
+                                          _markAsRead(notif['id']);
+                                        showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          shape: const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(20),
+                                            ),
+                                          ),
+                                          builder:
+                                              (
+                                                context,
+                                              ) => NotificationDetailWidget(
+                                                notification: notif,
+                                                padding: padding,
+                                                fontSize: fontSize,
+                                                onStudentTap:
+                                                    () =>
+                                                        _navigateToStudentDetail(
+                                                          notif,
+                                                        ),
+                                              ),
+                                        );
+                                      },
+                                      padding: padding,
+                                      fontSize: fontSize,
                                     ),
-                                  ),
-                                  builder:
-                                      (context) => NotificationDetailWidget(
-                                        notification: notif,
-                                        padding: padding,
-                                        fontSize: fontSize,
-                                        onStudentTap:
-                                            () =>
-                                                _navigateToStudentDetail(notif),
-                                      ),
-                                );
-                              },
-                              padding: padding,
-                              fontSize: fontSize,
-                            ),
                           ),
                         ),
                       ],
@@ -543,7 +521,7 @@ class ContentWidget extends StatelessWidget {
         Expanded(
           child:
               filteredNotifications.isEmpty
-                  ? EmptyStateWidget(fontSize: fontSize)
+                  ? EmptyStateWidget(fontSize: fontSize, status: 'Aman')
                   : ListView.builder(
                     itemCount: filteredNotifications.length,
                     itemBuilder:
@@ -628,8 +606,23 @@ class FilterBottomSheet extends StatelessWidget {
 
 class EmptyStateWidget extends StatelessWidget {
   final double fontSize;
+  final String status;
 
-  const EmptyStateWidget({super.key, required this.fontSize});
+  const EmptyStateWidget({
+    super.key,
+    required this.fontSize,
+    required this.status,
+  });
+
+  List<Color> _getBackgroundGradient(String status) {
+    return status == 'Aman'
+        ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
+        : [const Color(0xFFFF6B6D), const Color(0xFFEA580C)];
+  }
+
+  Color _getBackgroundShadowColor(String status) {
+    return status == 'Aman' ? const Color(0x200083EE) : const Color(0x20FF6B6D);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -641,13 +634,20 @@ class EmptyStateWidget extends StatelessWidget {
             width: fontSize * 7.5,
             height: fontSize * 7.5,
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
+              gradient: LinearGradient(colors: _getBackgroundGradient(status)),
               borderRadius: BorderRadius.circular(fontSize * 3.75),
+              boxShadow: [
+                BoxShadow(
+                  color: _getBackgroundShadowColor(status),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: Icon(
               Icons.notifications_off_rounded,
               size: fontSize * 3.75,
-              color: Colors.grey[400],
+              color: Colors.white,
             ),
           ),
           SizedBox(height: fontSize * 1.5),
@@ -656,7 +656,7 @@ class EmptyStateWidget extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: fontSize * 1.1,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: const Color(0xFF1F2937),
             ),
           ),
           SizedBox(height: fontSize * 0.5),
@@ -664,7 +664,7 @@ class EmptyStateWidget extends StatelessWidget {
             'Semua notifikasi akan muncul di sini',
             style: GoogleFonts.poppins(
               fontSize: fontSize * 0.9,
-              color: Colors.grey[500],
+              color: const Color(0xFF9CA3AF),
             ),
           ),
         ],
@@ -687,44 +687,27 @@ class NotificationCardWidget extends StatelessWidget {
     required this.fontSize,
   });
 
-  Color _getTypeColor(String type) {
-    return switch (type) {
-      'violation' => const Color(0xFFFF6B6D),
-      'violation_repeat' => const Color(0xFFDC2626),
-      'appreciation' => const Color(0xFF10B981),
-      'bk_treatment' => const Color(0xFF3B82F6),
-      _ => const Color(0xFF6B7280),
-    };
+  Color _getTypeColor(String status) {
+    return status == 'Dalam Bimbingan'
+        ? const Color(0xFF3B82F6)
+        : const Color(0xFFEA580C);
   }
 
-  IconData _getTypeIcon(String type) {
-    return switch (type) {
-      'violation' => Icons.warning_rounded,
-      'violation_repeat' => Icons.priority_high_rounded,
-      'appreciation' => Icons.emoji_events_rounded,
-      'bk_treatment' => Icons.psychology_rounded,
-      _ => Icons.notifications_rounded,
-    };
+  IconData _getTypeIcon(String status) {
+    return status == 'Dalam Bimbingan'
+        ? Icons.psychology_rounded
+        : Icons.warning_rounded;
   }
 
-  String _getTypeLabel(String type) {
-    return switch (type) {
-      'violation' => 'PELANGGARAN',
-      'violation_repeat' => 'BERULANG',
-      'appreciation' => 'APRESIASI',
-      'bk_treatment' => 'PENANGANAN BK',
-      _ => 'NOTIFIKASI',
-    };
+  String _getTypeLabel(String status) {
+    return status == 'Dalam Bimbingan' ? 'PENANGANAN BK' : 'INTERVENSI';
   }
 
   @override
   Widget build(BuildContext context) {
     final isRead = notification['isRead'];
-    final type = notification['type'];
-    final isUrgent =
-        type == 'violation_repeat' ||
-        (notification.containsKey('repeatCount') &&
-            notification['repeatCount'] > 2);
+    final status = notification['statusChange'];
+    final isUrgent = status != 'Dalam Bimbingan';
 
     return GestureDetector(
       onTap: onTap,
@@ -737,14 +720,14 @@ class NotificationCardWidget extends StatelessWidget {
             color:
                 isRead
                     ? const Color(0xFFE5E7EB)
-                    : _getTypeColor(type).withOpacity(0.3),
+                    : _getTypeColor(status).withOpacity(0.3),
             width: isRead ? 1 : 2,
           ),
           boxShadow: [
             BoxShadow(
               color:
                   isUrgent
-                      ? const Color(0xFFDC2626).withOpacity(0.1)
+                      ? const Color(0xFFEA580C).withOpacity(0.1)
                       : Colors.black.withOpacity(0.04),
               blurRadius: isUrgent ? 12 : 8,
               offset: const Offset(0, 2),
@@ -763,12 +746,12 @@ class NotificationCardWidget extends StatelessWidget {
                     width: fontSize * 3,
                     height: fontSize * 3,
                     decoration: BoxDecoration(
-                      color: _getTypeColor(type).withOpacity(0.1),
+                      color: _getTypeColor(status).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
-                      _getTypeIcon(type),
-                      color: _getTypeColor(type),
+                      _getTypeIcon(status),
+                      color: _getTypeColor(status),
                       size: fontSize * 1.5,
                     ),
                   ),
@@ -785,15 +768,15 @@ class NotificationCardWidget extends StatelessWidget {
                                 vertical: padding * 0.2,
                               ),
                               decoration: BoxDecoration(
-                                color: _getTypeColor(type).withOpacity(0.1),
+                                color: _getTypeColor(status).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                _getTypeLabel(type),
+                                _getTypeLabel(status),
                                 style: GoogleFonts.poppins(
                                   fontSize: fontSize * 0.6,
                                   fontWeight: FontWeight.w800,
-                                  color: _getTypeColor(type),
+                                  color: _getTypeColor(status),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -804,7 +787,7 @@ class NotificationCardWidget extends StatelessWidget {
                                 width: fontSize * 0.5,
                                 height: fontSize * 0.5,
                                 decoration: BoxDecoration(
-                                  color: _getTypeColor(type),
+                                  color: _getTypeColor(status),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                               ),
@@ -821,7 +804,7 @@ class NotificationCardWidget extends StatelessWidget {
                         ),
                         SizedBox(height: padding * 0.2),
                         Text(
-                          notification['subtitle'],
+                          notification['student'],
                           style: GoogleFonts.poppins(
                             fontSize: fontSize * 0.9,
                             fontWeight: FontWeight.w500,
@@ -870,7 +853,7 @@ class NotificationCardWidget extends StatelessWidget {
                         vertical: padding * 0.2,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFDC2626).withOpacity(0.1),
+                        color: const Color(0xFFEA580C).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
@@ -879,7 +862,7 @@ class NotificationCardWidget extends StatelessWidget {
                           Icon(
                             Icons.priority_high,
                             size: fontSize * 0.7,
-                            color: const Color(0xFFDC2626),
+                            color: const Color(0xFFEA580C),
                           ),
                           SizedBox(width: padding * 0.2),
                           Text(
@@ -887,7 +870,7 @@ class NotificationCardWidget extends StatelessWidget {
                             style: GoogleFonts.poppins(
                               fontSize: fontSize * 0.6,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFFDC2626),
+                              color: const Color(0xFFEA580C),
                             ),
                           ),
                         ],
@@ -918,40 +901,16 @@ class NotificationDetailWidget extends StatelessWidget {
     required this.onStudentTap,
   });
 
-  Color _getTypeColor(String type) {
-    return switch (type) {
-      'violation' => const Color(0xFFFF6B6D),
-      'violation_repeat' => const Color(0xFFDC2626),
-      'appreciation' => const Color(0xFF10B981),
-      'bk_treatment' => const Color(0xFF3B82F6),
-      _ => const Color(0xFF6B7280),
-    };
+  Color _getTypeColor(String status) {
+    return status == 'Dalam Bimbingan'
+        ? const Color(0xFF3B82F6)
+        : const Color(0xFFEA580C);
   }
 
-  IconData _getTypeIcon(String type) {
-    return switch (type) {
-      'violation' => Icons.warning_rounded,
-      'violation_repeat' => Icons.priority_high_rounded,
-      'appreciation' => Icons.emoji_events_rounded,
-      'bk_treatment' => Icons.psychology_rounded,
-      _ => Icons.notifications_rounded,
-    };
-  }
-
-  bool _shouldShowStudentButton(String type) {
-    return type == 'violation' ||
-        type == 'violation_repeat' ||
-        type == 'appreciation' ||
-        type == 'bk_treatment';
-  }
-
-  String _getButtonText(String type) {
-    return switch (type) {
-      'violation' || 'violation_repeat' => 'Lihat Pelanggaran',
-      'appreciation' => 'Lihat Apresiasi',
-      'bk_treatment' => 'Lihat Detail Siswa',
-      _ => 'Lihat Detail',
-    };
+  IconData _getTypeIcon(String status) {
+    return status == 'Dalam Bimbingan'
+        ? Icons.psychology_rounded
+        : Icons.warning_rounded;
   }
 
   @override
@@ -968,12 +927,14 @@ class NotificationDetailWidget extends StatelessWidget {
                 width: fontSize * 3.75,
                 height: fontSize * 3.75,
                 decoration: BoxDecoration(
-                  color: _getTypeColor(notification['type']).withOpacity(0.1),
+                  color: _getTypeColor(
+                    notification['statusChange'],
+                  ).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
-                  _getTypeIcon(notification['type']),
-                  color: _getTypeColor(notification['type']),
+                  _getTypeIcon(notification['statusChange']),
+                  color: _getTypeColor(notification['statusChange']),
                   size: fontSize * 1.9,
                 ),
               ),
@@ -1017,12 +978,12 @@ class NotificationDetailWidget extends StatelessWidget {
                     padding: EdgeInsets.all(padding),
                     decoration: BoxDecoration(
                       color: _getTypeColor(
-                        notification['type'],
+                        notification['statusChange'],
                       ).withOpacity(0.05),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _getTypeColor(
-                          notification['type'],
+                          notification['statusChange'],
                         ).withOpacity(0.2),
                       ),
                     ),
@@ -1051,7 +1012,6 @@ class NotificationDetailWidget extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: padding),
-
                   Row(
                     children: [
                       Expanded(
@@ -1121,274 +1081,74 @@ class NotificationDetailWidget extends StatelessWidget {
                       ),
                     ],
                   ),
-
                   SizedBox(height: padding),
-                  if (notification['type'] == 'violation' ||
-                      notification['type'] == 'violation_repeat') ...[
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(padding * 0.8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEF2F2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFFECACA)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.person_outline,
-                                size: fontSize,
-                                color: const Color(0xFFDC2626),
-                              ),
-                              SizedBox(width: padding * 0.4),
-                              Text(
-                                'Pelapor',
-                                style: GoogleFonts.poppins(
-                                  fontSize: fontSize * 0.9,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFFDC2626),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: padding * 0.3),
-                          Text(
-                            notification['reporter'],
-                            style: GoogleFonts.poppins(
-                              fontSize: fontSize * 0.8,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF991B1B),
-                            ),
-                          ),
-                          if (notification.containsKey('points')) ...[
-                            SizedBox(height: padding * 0.4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.remove_circle_outline,
-                                  size: fontSize * 0.9,
-                                  color: const Color(0xFFDC2626),
-                                ),
-                                SizedBox(width: padding * 0.2),
-                                Text(
-                                  'Poin: ${notification['points']}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: fontSize * 0.8,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFFDC2626),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                          if (notification.containsKey('repeatCount')) ...[
-                            SizedBox(height: padding * 0.4),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: padding * 0.4,
-                                vertical: padding * 0.2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFDC2626).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'Pelanggaran ke-${notification['repeatCount']} bulan ini',
-                                style: GoogleFonts.poppins(
-                                  fontSize: fontSize * 0.7,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFDC2626),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(padding * 0.8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F9FF),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFBAE6FD)),
                     ),
-                  ],
-
-                  if (notification['type'] == 'appreciation') ...[
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(padding * 0.8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDF4),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFBBF7D0)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.person_outline,
-                                size: fontSize,
-                                color: const Color(0xFF059669),
-                              ),
-                              SizedBox(width: padding * 0.4),
-                              Text(
-                                'Pemberi Apresiasi',
-                                style: GoogleFonts.poppins(
-                                  fontSize: fontSize * 0.9,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF059669),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: padding * 0.3),
-                          Text(
-                            notification['giver'],
-                            style: GoogleFonts.poppins(
-                              fontSize: fontSize * 0.8,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF047857),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.psychology,
+                              size: fontSize,
+                              color: const Color(0xFF0284C7),
                             ),
-                          ),
-                          if (notification.containsKey('points')) ...[
-                            SizedBox(height: padding * 0.4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.add_circle_outline,
-                                  size: fontSize * 0.9,
-                                  color: const Color(0xFF059669),
-                                ),
-                                SizedBox(width: padding * 0.2),
-                                Text(
-                                  'Poin: +${notification['points']}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: fontSize * 0.8,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF059669),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  if (notification['type'] == 'bk_treatment') ...[
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(padding * 0.8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0F9FF),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFBAE6FD)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.psychology,
-                                size: fontSize,
+                            SizedBox(width: padding * 0.4),
+                            Text(
+                              'Guru BK',
+                              style: GoogleFonts.poppins(
+                                fontSize: fontSize * 0.9,
+                                fontWeight: FontWeight.w600,
                                 color: const Color(0xFF0284C7),
                               ),
-                              SizedBox(width: padding * 0.4),
-                              Text(
-                                'Guru BK',
-                                style: GoogleFonts.poppins(
-                                  fontSize: fontSize * 0.9,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF0284C7),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: padding * 0.3),
-                          Text(
-                            notification['bkTeacher'],
-                            style: GoogleFonts.poppins(
-                              fontSize: fontSize * 0.8,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF0369A1),
-                            ),
-                          ),
-                          if (notification.containsKey('statusChange')) ...[
-                            SizedBox(height: padding * 0.4),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: padding * 0.4,
-                                vertical: padding * 0.2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF0284C7).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'Status: ${notification['statusChange']}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: fontSize * 0.7,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF0284C7),
-                                ),
-                              ),
                             ),
                           ],
-                        ],
-                      ),
+                        ),
+                        SizedBox(height: padding * 0.3),
+                        Text(
+                          notification['bkTeacher'],
+                          style: GoogleFonts.poppins(
+                            fontSize: fontSize * 0.8,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF0369A1),
+                          ),
+                        ),
+                        SizedBox(height: padding * 0.4),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: padding * 0.4,
+                            vertical: padding * 0.2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0284C7).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Status: ${notification['statusChange']}',
+                            style: GoogleFonts.poppins(
+                              fontSize: fontSize * 0.7,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0284C7),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
           ),
-          if (_shouldShowStudentButton(notification['type'])) ...[
-            SizedBox(height: padding),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      onStudentTap();
-                    },
-                    icon: Icon(
-                      _getButtonIcon(notification['type']),
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    label: Text(
-                      _getButtonText(notification['type']),
-                      style: GoogleFonts.poppins(
-                        fontSize: fontSize * 0.9,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _getTypeColor(notification['type']),
-                      padding: EdgeInsets.symmetric(vertical: padding * 0.6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+          SizedBox(height: padding),
         ],
       ),
     );
-  }
-
-  IconData _getButtonIcon(String type) {
-    return switch (type) {
-      'violation' || 'violation_repeat' => Icons.warning,
-      'appreciation' => Icons.star_outline,
-      'bk_treatment' => Icons.person_outline,
-      _ => Icons.visibility_outlined,
-    };
   }
 }
