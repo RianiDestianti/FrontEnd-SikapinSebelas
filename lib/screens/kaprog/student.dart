@@ -750,45 +750,22 @@ class _SiswaScreenState extends State<SiswaScreen>
       final response = await http.get(
         Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
       );
-      final pelanggaranResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran'),
-      );
-      final peringatanResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/peringatan'),
-      );
 
-      if (response.statusCode == 200 &&
-          pelanggaranResponse.statusCode == 200 &&
-          peringatanResponse.statusCode == 200) {
+      if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
-        final pelanggaranData = jsonDecode(pelanggaranResponse.body);
-        final peringatanData = jsonDecode(peringatanResponse.body);
         final studentsData = jsonData['data']['data'] as List<dynamic>;
-        final pelanggaranList =
-            pelanggaranData['penilaian']['data'] as List<dynamic>;
-        final peringatanList = peringatanData['data'] as List<dynamic>;
 
         final studentList =
             studentsData.map((student) {
               final studentMap = student as Map<String, dynamic>;
-              final violationCount =
-                  pelanggaranList
-                      .where((p) => p['nis'] == student['nis'])
-                      .length;
-              final warningCount =
-                  peringatanList
-                      .where((p) => p['nis'] == student['nis'])
-                      .length;
               final poinTotal = (student['poin_total'] ?? 0) as num;
 
-              String status;
-              if (warningCount > 0 || poinTotal <= -20) {
-                status = 'Prioritas';
-              } else if (violationCount > 0 || poinTotal < 0) {
-                status = 'Bermasalah';
-              } else {
-                status = 'Aman';
-              }
+              String status =
+                  poinTotal >= 0
+                      ? 'Aman'
+                      : poinTotal >= -20
+                      ? 'Bermasalah'
+                      : 'Prioritas';
 
               return {
                 'nis': student['nis'],
@@ -796,9 +773,6 @@ class _SiswaScreenState extends State<SiswaScreen>
                 'id_kelas': student['id_kelas'],
                 'status': status,
                 'points': poinTotal,
-                'absent': 0, 
-                'violations': violationCount,
-                'warnings': warningCount,
               };
             }).toList();
 
