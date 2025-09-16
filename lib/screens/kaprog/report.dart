@@ -110,7 +110,7 @@ class _LaporanKaprogState extends State<LaporanKaprog>
                             orElse: () => {'nama_kelas': 'Unknown'},
                           )['nama_kelas'],
                       'scores':
-                          [], // Placeholder, can be expanded with API calls to skoring_penghargaan and skoring_pelanggaran
+                          [], 
                     },
                   )
                   .toList();

@@ -45,7 +45,7 @@ class NoteUtils {
         final responseData = jsonDecode(response.body);
         if (responseData['success']) {
           final noteData = Note(
-            studentName: '', // Update if needed
+            studentName: '', 
             className: className,
             date: date,
             note: isiCatatan,

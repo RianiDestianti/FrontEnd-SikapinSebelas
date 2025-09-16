@@ -104,7 +104,6 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen>
   List<ChartDataItem> get _filteredData {
     List<ChartDataItem> filtered = List.from(widget.data);
 
-    // Apply filters
     if (_selectedFilter == 1) {
       double avg =
           widget.data.map((e) => e.value).reduce((a, b) => a + b) /
@@ -117,7 +116,6 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen>
       filtered = filtered.where((item) => item.value <= avg).toList();
     }
 
-    // Apply sorting
     filtered.sort((a, b) {
       int comparison = 0;
       switch (_sortBy) {

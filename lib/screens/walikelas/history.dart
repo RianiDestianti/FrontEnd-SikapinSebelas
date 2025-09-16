@@ -87,7 +87,6 @@ class _HistoryScreenState extends State<HistoryScreen>
     });
 
     try {
-      // Fetch appreciation and violation scoring data
       final skoringPenghargaanResponse = await http.get(
         Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis'),
       );
@@ -116,7 +115,6 @@ class _HistoryScreenState extends State<HistoryScreen>
 
         List<HistoryItem> historyList = [];
 
-        // Process appreciations
         if (skoringPenghargaanData['penilaian']['data'].isNotEmpty &&
             penghargaanData['success']) {
           final appreciations = penghargaanData['data'];
@@ -140,10 +138,10 @@ class _HistoryScreenState extends State<HistoryScreen>
                   description: appreciation['alasan'],
                   date: appreciation['tanggal_penghargaan'],
                   time: eval['created_at'].substring(11, 16),
-                  points: 30, // Assuming a fixed point value, adjust as needed
+                  points: 30, 
                   icon: Icons.star,
                   color: const Color(0xFF10B981),
-                  pemberi: 'Wakasek', // Adjust based on API data if available
+                  pemberi: 'Wakasek', 
                   isNew: true,
                   isPelanggaran: false,
                   createdAt: DateTime.parse(eval['created_at']),
@@ -153,7 +151,6 @@ class _HistoryScreenState extends State<HistoryScreen>
           }
         }
 
-        // Process violations
         if (skoringPelanggaranData['penilaian']['data'].isNotEmpty &&
             peringatanData['success']) {
           final violations = peringatanData['data'];
@@ -175,10 +172,10 @@ class _HistoryScreenState extends State<HistoryScreen>
                   description: violation['alasan'],
                   date: violation['tanggal_sp'],
                   time: eval['created_at'].substring(11, 16),
-                  points: -20, // Assuming a fixed point value, adjust as needed
+                  points: -20, 
                   icon: Icons.warning,
                   color: const Color(0xFFFF6B6D),
-                  pelapor: 'BK', // Adjust based on API data if available
+                  pelapor: 'BK', 
                   isNew: true,
                   isPelanggaran: true,
                   createdAt: DateTime.parse(eval['created_at']),

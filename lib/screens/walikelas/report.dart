@@ -368,7 +368,6 @@ class _LaporanScreenState extends State<LaporanScreen>
         }
       }
 
-      // Fetch violations
       final peringatanResponse = await http
           .get(
             Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran?nis=$nis'),
@@ -430,7 +429,6 @@ class _LaporanScreenState extends State<LaporanScreen>
         }
       }
     } catch (e) {
-      // Handle errors silently for scores
     }
     return scores;
   }

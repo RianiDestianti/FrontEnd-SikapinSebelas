@@ -222,7 +222,7 @@ class _DetailScreenState extends State<DetailScreen>
       );
       isLoadingStudent = false;
       fetchAppreciations(widget.student['nis']);
-      fetchViolations(widget.student['nis']); // Pass nis parameter
+      fetchViolations(widget.student['nis']); 
     } catch (e) {
       setState(() {
         errorMessageStudent = 'Terjadi kesalahan: $e';
@@ -397,13 +397,11 @@ class _DetailScreenState extends State<DetailScreen>
             );
             if (aspek == null || aspek['jenis_poin'] != 'Pelanggaran') continue;
 
-            // Find the closest matching violation based on date proximity
             final evalDate = DateTime.parse(
               eval['created_at'].substring(0, 10),
             );
             final matchingViolation = violations.firstWhere((v) {
               final violationDate = DateTime.parse(v['tanggal_sp']);
-              // Allow a 2-day window for date mismatch
               return (violationDate.difference(evalDate).inDays.abs() <= 2) ||
                   v['alasan'].toLowerCase().contains(
                     aspek['uraian'].toLowerCase(),
@@ -495,7 +493,7 @@ class _DetailScreenState extends State<DetailScreen>
             total: totalPoints,
             status: status,
             date:
-                'Sampai ${DateTime.now().toString().split(' ')[0]}', // e.g., "2025-09-15"
+                'Sampai ${DateTime.now().toString().split(' ')[0]}', 
           ),
         ];
         isLoadingAppreciations = false;
@@ -844,7 +842,6 @@ class _DetailScreenState extends State<DetailScreen>
                                               const SizedBox(width: 12),
                                               Expanded(
                                                 child: GestureDetector(
-                                                  // In _DetailScreenState, inside the GestureDetector for "Catatan BK"
                                                   onTap: () {
                                                     showBKNotePopup(
                                                       context,

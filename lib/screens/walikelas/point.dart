@@ -13,21 +13,44 @@ class PointUtils {
     required String idAspekPenilaian,
     required String date,
     required String category,
+    required String description,
+    required int points,
     required BuildContext context,
+    String? token, 
   }) async {
     if (idPenilaian.isEmpty ||
         nis.isEmpty ||
         idAspekPenilaian.isEmpty ||
         date.isEmpty ||
         category.isEmpty) {
-      _showErrorSnackBar(context, 'Mohon lengkapi semua field yang diperlukan');
+      print('Validation failed: Some fields are empty');
+      if (context.mounted) {
+        _showErrorSnackBar(
+          context,
+          'Mohon lengkapi semua field yang diperlukan',
+        );
+      }
       return null;
     }
 
     try {
+      final endpoint =
+          type == 'Apresiasi'
+              ? 'http://10.0.2.2:8000/api/skoring_penghargaan'
+              : 'http://10.0.2.2:8000/api/skoring_pelanggaran';
+      print('Sending POST request to $endpoint');
+      print(
+        'Request body: ${jsonEncode({'id_penilaian': idPenilaian, 'nis': nis, 'id_aspekpenilaian': idAspekPenilaian})}',
+      );
+
+      final headers = {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      };
+
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse(endpoint),
+        headers: headers,
         body: jsonEncode({
           'id_penilaian': idPenilaian,
           'nis': nis,
@@ -35,36 +58,77 @@ class PointUtils {
         }),
       );
 
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
-        final pointData = Point(
-          type: type,
-          studentName: studentName,
-          className: '',
-          date: date,
-          description: '',
-          category: category,
-        );
+        try {
+          final responseData = jsonDecode(response.body);
+          if (responseData['success'] == true ||
+              responseData['message'].contains('berhasil')) {
+            final pointData = Point(
+              type: type,
+              studentName: studentName,
+              nis: nis,
+              className: '',
+              date: date,
+              description: description,
+              category: category,
+              points: points,
+              idPenilaian: idPenilaian,
+            );
 
-        print(
-          'Point data: ${pointData.type}, ${pointData.studentName}, ${pointData.className}, ${pointData.date}, ${pointData.description}, ${pointData.category}',
-        );
-
-        _showSuccessSnackBar(
-          context,
-          'Poin berhasil ditambahkan untuk $studentName',
-        );
-        return pointData;
+            if (context.mounted) {
+              _showSuccessSnackBar(
+                context,
+                'Poin $type berhasil ditambahkan untuk $studentName',
+              );
+            }
+            return pointData;
+          } else {
+            if (context.mounted) {
+              _showErrorSnackBar(
+                context,
+                responseData['message'] ?? 'Gagal menambahkan poin',
+              );
+            }
+            return null;
+          }
+        } catch (e) {
+          print('JSON decode error: $e');
+          if (context.mounted) {
+            _showErrorSnackBar(
+              context,
+              'Invalid server response: Expected JSON, received invalid data',
+            );
+          }
+          return null;
+        }
       } else {
-        final errorData = jsonDecode(response.body);
-        _showErrorSnackBar(
-          context,
-          errorData['message'] ?? 'Gagal menambahkan poin',
-        );
+        try {
+          final errorData = jsonDecode(response.body);
+          if (context.mounted) {
+            _showErrorSnackBar(
+              context,
+              errorData['message'] ??
+                  'Gagal menghubungi server: ${response.statusCode}',
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            _showErrorSnackBar(
+              context,
+              'Gagal menghubungi server: ${response.statusCode}',
+            );
+          }
+        }
         return null;
       }
     } catch (e) {
-      _showErrorSnackBar(context, 'Terjadi kesalahan: $e');
+      print('Error during HTTP request: $e');
+      if (context.mounted) {
+        _showErrorSnackBar(context, 'Terjadi kesalahan: $e');
+      }
       return null;
     }
   }
@@ -203,7 +267,9 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
   }
 
   String _generateIdPenilaian() {
-    return DateTime.now().millisecondsSinceEpoch.toString();
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final shortId = (timestamp % 1000000000).toString().padLeft(9, '0');
+    return shortId;
   }
 
   Future<void> fetchAspekPenilaian() async {
@@ -274,6 +340,17 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
       (aspek) => aspek['id_aspekpenilaian'].toString() == _selectedCategory,
       orElse: () => {},
     );
+    if (selectedAspek.isEmpty) {
+      setState(() => _isSubmitting = false);
+      PointUtils._showErrorSnackBar(context, 'Kategori tidak valid');
+      return;
+    }
+    print(
+      'Submitting point: type=$_selectedPointType, nis=${_nisController.text}, '
+      'idPenilaian=${_idPenilaianController.text}, idAspekPenilaian=$_selectedCategory, '
+      'category=${selectedAspek['kategori']}, description=${selectedAspek['uraian']}, '
+      'points=${selectedAspek['indikator_poin']}',
+    );
     final point = await PointUtils.submitPoint(
       type: _selectedPointType,
       studentName: _nameController.text,
@@ -282,7 +359,10 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
       idAspekPenilaian: _selectedCategory,
       date: _dateController.text,
       category: selectedAspek['kategori'] ?? '',
+      description: selectedAspek['uraian'] ?? '',
+      points: int.parse(selectedAspek['indikator_poin'].toString()),
       context: context,
+      // No token, as confirmed
     );
     setState(() => _isSubmitting = false);
     if (point != null) {

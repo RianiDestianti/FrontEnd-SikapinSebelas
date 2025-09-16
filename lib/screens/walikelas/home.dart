@@ -146,10 +146,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 'type': parts[0],
                 'title': parts[1],
                 'subtitle': parts[2],
-                'time': parts[3], // Keep as String for display
+                'time': parts[3], 
                 'timeObj': DateTime.parse(
                   parts[3],
-                ), // Parse to DateTime for sorting
+                ), 
                 'badge': 'SELESAI',
                 'badgeColor':
                     parts[0] == 'Penghargaan'
@@ -184,9 +184,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     List<String> activities = prefs.getStringList('user_activities') ?? [];
     String time = DateTime.now().toString().split('.')[0];
     String activity = '$type|$title|$subtitle|$time';
-    activities.insert(0, activity); // Add new activity at the beginning
+    activities.insert(0, activity); 
     if (activities.length > 10) {
-      activities = activities.sublist(0, 10); // Keep only latest 10 activities
+      activities = activities.sublist(0, 10); 
     }
     await prefs.setStringList('user_activities', activities);
     await _loadLocalActivityData();
@@ -258,7 +258,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _filteredSiswaTerbaik = _siswaTerbaik;
         _filteredSiswaBerat = _siswaBerat;
 
-        // Log refresh action
         await _addLocalActivity(
           'Sistem',
           'Data Diperbarui',
@@ -395,7 +394,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
     });
 
-    // Log search action
     if (query.isNotEmpty) {
       _addLocalActivity(
         'Pencarian',
@@ -420,7 +418,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
       ),
     ).then((_) {
-      // Log navigation to detail screen
       _addLocalActivity(
         'Navigasi',
         'Detail Siswa',

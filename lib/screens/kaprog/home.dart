@@ -55,20 +55,20 @@ class Student {
       name: json['nama_siswa'] ?? 'Unknown',
       kelas: json['id_kelas'] ?? 'Unknown',
       poin: json['poin_total'] ?? 0,
-      prestasi: '', // To be populated from penghargaan/peringatan if needed
+      prestasi: '', 
       avatar: Icons.person,
-      rank: 0, // To be calculated
+      rank: 0, 
       status: (json['poin_total'] ?? 0) < 0 ? 'Bermasalah' : 'Aman',
       nis: json['nis'].toString(),
-      ttl: json['ttl'] ?? '', // Placeholder, requires additional API
-      jenkel: json['jenkel'] ?? '', // Placeholder, requires additional API
-      alamat: json['alamat'] ?? '', // Placeholder, requires additional API
-      programKeahlian: json['program_keahlian'] ?? '', // Placeholder
-      tahunMasuk: json['tahun_masuk'] ?? '', // Placeholder
-      noHp: json['no_hp'] ?? '', // Placeholder
-      email: json['email'] ?? '', // Placeholder
-      namaOrtu: json['nama_ortu'] ?? '', // Placeholder
-      noHpOrtu: json['no_hp_ortu'] ?? '', // Placeholder
+      ttl: json['ttl'] ?? '', 
+      jenkel: json['jenkel'] ?? '', 
+      alamat: json['alamat'] ?? '', 
+      programKeahlian: json['program_keahlian'] ?? '', 
+      tahunMasuk: json['tahun_masuk'] ?? '', 
+      noHp: json['no_hp'] ?? '', 
+      email: json['email'] ?? '', 
+      namaOrtu: json['nama_ortu'] ?? '', 
+      noHpOrtu: json['no_hp_ortu'] ?? '', 
     );
   }
 }
@@ -90,7 +90,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
   String _searchQuery = '';
   List<Student> _filteredSiswaTerbaik = [];
   List<Student> _filteredSiswaBerat = [];
-  String _jurusan = 'RPL'; // Default, will be updated from SharedPreferences
+  String _jurusan = 'RPL'; 
   List<Student> _siswaTerbaik = [];
   List<Student> _siswaBerat = [];
 
@@ -163,7 +163,6 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
         _filteredSiswaTerbaik = [];
         _filteredSiswaBerat = [];
       });
-      // Handle error (e.g., show a snackbar or dialog)
     }
   }
 
@@ -244,7 +243,6 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        // 🔹 HEADER
                         Container(
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
@@ -335,7 +333,6 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                   ],
                                 ),
                                 const SizedBox(height: 24),
-                                // 🔹 GREETING
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Column(
@@ -453,7 +450,6 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                 _buildSiswaBeratSection(),
                                 const SizedBox(height: 20),
                               ] else ...[
-                                // 🔹 Apresiasi Chart
                                 _buildEnhancedChartCard(
                                   'Grafik Apresiasi Siswa',
                                   'Pencapaian positif minggu ini',
@@ -494,7 +490,6 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                   true,
                                 ),
                                 const SizedBox(height: 20),
-                                // 🔹 Pelanggaran Chart
                                 _buildEnhancedChartCard(
                                   'Grafik Pelanggaran Siswa',
                                   'Monitoring pelanggaran minggu ini',
@@ -535,7 +530,6 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
                                   false,
                                 ),
                                 const SizedBox(height: 20),
-                                // 🔹 Activity Section
                                 GestureDetector(
                                   onTap: () {
                                     Navigator.push(

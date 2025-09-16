@@ -3,7 +3,7 @@ class Note {
   final String className;
   final String date;
   final String note;
-  final String title; // Added for judul_catatan
+  final String title; 
 
   Note({
     required this.studentName,
