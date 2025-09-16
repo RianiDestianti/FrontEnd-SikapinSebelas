@@ -844,10 +844,13 @@ class _DetailScreenState extends State<DetailScreen>
                                               const SizedBox(width: 12),
                                               Expanded(
                                                 child: GestureDetector(
+                                                  // In _DetailScreenState, inside the GestureDetector for "Catatan BK"
                                                   onTap: () {
                                                     showBKNotePopup(
                                                       context,
                                                       detailedStudent.name,
+                                                      detailedStudent.nis,
+                                                      detailedStudent.kelas,
                                                     );
                                                   },
                                                   child: Container(

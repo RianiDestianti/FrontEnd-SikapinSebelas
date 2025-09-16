@@ -1,41 +1,80 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/models/note.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class NoteUtils {
   static Future<Note?> submitNote({
-    required String studentName,
+    required String nis,
+    required String judulCatatan,
     required String className,
     required String date,
-    required String note,
+    required String isiCatatan,
     required BuildContext context,
   }) async {
-    if (studentName.isEmpty ||
+    if (nis.isEmpty ||
+        judulCatatan.isEmpty ||
         className.isEmpty ||
         date.isEmpty ||
-        note.isEmpty) {
+        isiCatatan.isEmpty) {
+      print('Validation failed: Some fields are empty');
       _showErrorSnackBar(context, 'Mohon lengkapi semua field yang diperlukan');
       return null;
     }
 
-    await Future.delayed(const Duration(milliseconds: 1500));
+    try {
+      print('Sending POST request to http://10.0.2.2:8000/api/AddCatatan/$nis');
+      print(
+        'Request body: ${jsonEncode({'judul_catatan': judulCatatan, 'isi_catatan': isiCatatan})}',
+      );
 
-    final noteData = Note(
-      studentName: studentName,
-      className: className,
-      date: date,
-      note: note,
-    );
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/api/AddCatatan/$nis'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'judul_catatan': judulCatatan,
+          'isi_catatan': isiCatatan,
+        }),
+      );
 
-    print(
-      'BK Note data: ${noteData.studentName}, ${noteData.className}, ${noteData.date}, ${noteData.note}',
-    );
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
-    _showSuccessSnackBar(
-      context,
-      'Catatan BK berhasil ditambahkan untuk $studentName',
-    );
-    return noteData;
+      if (response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        if (responseData['success']) {
+          final noteData = Note(
+            studentName: '', // Update if needed
+            className: className,
+            date: date,
+            note: isiCatatan,
+            title: judulCatatan,
+          );
+
+          _showSuccessSnackBar(context, 'Catatan BK berhasil ditambahkan');
+          return noteData;
+        } else {
+          _showErrorSnackBar(
+            context,
+            responseData['message'] ?? 'Gagal menambahkan catatan',
+          );
+          return null;
+        }
+      } else {
+        final responseData = jsonDecode(response.body);
+        _showErrorSnackBar(
+          context,
+          responseData['message'] ??
+              'Gagal menghubungi server: ${response.statusCode}',
+        );
+        return null;
+      }
+    } catch (e) {
+      print('Error during HTTP request: $e');
+      _showErrorSnackBar(context, 'Terjadi kesalahan: $e');
+      return null;
+    }
   }
 
   static void _showErrorSnackBar(BuildContext context, String message) {
@@ -97,8 +136,15 @@ class NoteUtils {
 
 class BKNotePopup extends StatefulWidget {
   final String studentName;
+  final String nis;
+  final String className;
 
-  const BKNotePopup({Key? key, required this.studentName}) : super(key: key);
+  const BKNotePopup({
+    Key? key,
+    required this.studentName,
+    required this.nis,
+    required this.className,
+  }) : super(key: key);
 
   @override
   State<BKNotePopup> createState() => _BKNotePopupState();
@@ -117,6 +163,7 @@ class _BKNotePopupState extends State<BKNotePopup>
   final TextEditingController _classController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
   bool _isSubmitting = false;
 
   @override
@@ -124,7 +171,7 @@ class _BKNotePopupState extends State<BKNotePopup>
     super.initState();
     _initializeAnimations();
     _nameController.text = widget.studentName;
-    _classController.text = 'XII RPL 2'; // Set default class
+    _classController.text = widget.className;
     _dateController.text = DateTime.now().toString().split(' ')[0];
   }
 
@@ -164,6 +211,7 @@ class _BKNotePopupState extends State<BKNotePopup>
     _classController.dispose();
     _dateController.dispose();
     _noteController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -172,17 +220,23 @@ class _BKNotePopupState extends State<BKNotePopup>
   }
 
   void _submitNote() async {
+    print('Starting note submission...');
     setState(() => _isSubmitting = true);
     final note = await NoteUtils.submitNote(
-      studentName: _nameController.text,
+      nis: widget.nis,
+      judulCatatan: _titleController.text,
       className: _classController.text,
       date: _dateController.text,
-      note: _noteController.text,
+      isiCatatan: _noteController.text,
       context: context,
     );
+    print('Submission result: $note');
     setState(() => _isSubmitting = false);
     if (note != null) {
+      print('Note submitted successfully, closing dialog');
       _closeDialog();
+    } else {
+      print('Note submission failed');
     }
   }
 
@@ -228,6 +282,7 @@ class _BKNotePopupState extends State<BKNotePopup>
                     classController: _classController,
                     dateController: _dateController,
                     noteController: _noteController,
+                    titleController: _titleController,
                     isSubmitting: _isSubmitting,
                     onClose: _closeDialog,
                     onSubmit: _submitNote,
@@ -248,6 +303,7 @@ class NoteDialogContent extends StatelessWidget {
   final TextEditingController classController;
   final TextEditingController dateController;
   final TextEditingController noteController;
+  final TextEditingController titleController;
   final bool isSubmitting;
   final VoidCallback onClose;
   final VoidCallback onSubmit;
@@ -259,6 +315,7 @@ class NoteDialogContent extends StatelessWidget {
     required this.classController,
     required this.dateController,
     required this.noteController,
+    required this.titleController,
     required this.isSubmitting,
     required this.onClose,
     required this.onSubmit,
@@ -290,6 +347,7 @@ class NoteDialogContent extends StatelessWidget {
             classController: classController,
             dateController: dateController,
             noteController: noteController,
+            titleController: titleController,
             onDateTap: onDateTap,
           ),
           ActionButtons(
@@ -297,6 +355,74 @@ class NoteDialogContent extends StatelessWidget {
             onCancel: onClose,
             onSubmit: onSubmit,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class FormSection extends StatelessWidget {
+  final TextEditingController nameController;
+  final TextEditingController classController;
+  final TextEditingController dateController;
+  final TextEditingController noteController;
+  final TextEditingController titleController;
+  final VoidCallback onDateTap;
+
+  const FormSection({
+    Key? key,
+    required this.nameController,
+    required this.classController,
+    required this.dateController,
+    required this.noteController,
+    required this.titleController,
+    required this.onDateTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          CustomTextField(
+            controller: nameController,
+            hint: 'Nama Lengkap',
+            icon: Icons.person_outline,
+            readOnly: true,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: classController,
+            hint: 'Kelas',
+            icon: Icons.school_outlined,
+            readOnly: true,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: titleController,
+            hint: 'Judul Catatan',
+            icon: Icons.title,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: dateController,
+            hint: 'Tanggal',
+            icon: Icons.calendar_today_outlined,
+            readOnly: true,
+            onTap: onDateTap,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: noteController,
+            hint: 'Catatan untuk BK (perilaku, kondisi psikologi, dll)',
+            icon: Icons.edit_note,
+            maxLines: 4,
+            fillColor: const Color(0xFFFEF2F2),
+            borderColor: const Color(0xFFFECACA),
+          ),
+          const SizedBox(height: 24),
+          const InfoCard(),
         ],
       ),
     );
@@ -371,64 +497,6 @@ class HeaderSection extends StatelessWidget {
               child: const Icon(Icons.close, color: Colors.white, size: 20),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class FormSection extends StatelessWidget {
-  final TextEditingController nameController;
-  final TextEditingController classController;
-  final TextEditingController dateController;
-  final TextEditingController noteController;
-  final VoidCallback onDateTap;
-
-  const FormSection({
-    Key? key,
-    required this.nameController,
-    required this.classController,
-    required this.dateController,
-    required this.noteController,
-    required this.onDateTap,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          CustomTextField(
-            controller: nameController,
-            hint: 'Nama Lengkap',
-            icon: Icons.person_outline,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            controller: classController,
-            hint: 'Kelas',
-            icon: Icons.school_outlined,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            controller: dateController,
-            hint: 'Tanggal',
-            icon: Icons.calendar_today_outlined,
-            readOnly: true,
-            onTap: onDateTap,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            controller: noteController,
-            hint: 'Catatan untuk BK (perilaku, kondisi psikologi, dll)',
-            icon: Icons.edit_note,
-            maxLines: 4,
-            fillColor: const Color(0xFFFEF2F2),
-            borderColor: const Color(0xFFFECACA),
-          ),
-          const SizedBox(height: 24),
-          const InfoCard(),
         ],
       ),
     );
@@ -652,14 +720,23 @@ class ActionButtons extends StatelessWidget {
   }
 }
 
-void showBKNotePopup(BuildContext context, String studentName) {
+void showBKNotePopup(
+  BuildContext context,
+  String studentName,
+  String nis,
+  String className,
+) {
   showDialog(
     context: context,
     barrierDismissible: false,
     builder: (BuildContext context) {
       return Material(
         color: Colors.transparent,
-        child: BKNotePopup(studentName: studentName),
+        child: BKNotePopup(
+          studentName: studentName,
+          nis: nis,
+          className: className,
+        ),
       );
     },
   );

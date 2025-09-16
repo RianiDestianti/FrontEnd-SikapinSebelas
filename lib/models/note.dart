@@ -3,11 +3,13 @@ class Note {
   final String className;
   final String date;
   final String note;
+  final String title; // Added for judul_catatan
 
   Note({
     required this.studentName,
     required this.className,
     required this.date,
     required this.note,
+    required this.title,
   });
 }
