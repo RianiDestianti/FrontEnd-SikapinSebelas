@@ -42,6 +42,8 @@ class _GrafikScreenState extends State<GrafikScreen>
   late Animation<Offset> _slideAnimation;
   String _teacherClassId = '';
   List<ChartDataItem> _chartData = [];
+  bool isLoading = true;
+  String? errorMessage;
 
   @override
   void initState() {
@@ -69,23 +71,67 @@ class _GrafikScreenState extends State<GrafikScreen>
     super.dispose();
   }
 
-  Future<void> _loadTeacherData() async {
+  Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
+  Future<void> _loadTeacherData() async {
     setState(() {
-      _teacherClassId = prefs.getString('id_kelas') ?? '';
+      isLoading = true;
+      errorMessage = null;
     });
-    await _fetchChartData();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _teacherClassId = prefs.getString('id_kelas') ?? '';
+      });
+      await _fetchChartData();
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Terjadi kesalahan saat memuat data guru: $e';
+        isLoading = false;
+      });
+    }
   }
 
   Future<void> _fetchChartData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
     try {
+      final token = await _getToken();
+      if (token == null) {
+        setState(() {
+          errorMessage = 'Token tidak ditemukan, silakan login ulang';
+          isLoading = false;
+        });
+        return;
+      }
+
       final response = await http.get(
         Uri.parse(
-          'http://10.0.2.2:8000/api/${widget.chartType == 'apresiasi' ? 'skoring_penghargaan' : 'skoring_pelanggaran'}',
+          'http://sikapin.student.smkn11bdg.sch.id/api/${widget.chartType == 'apresiasi' ? 'skoring_penghargaan' : 'skoring_pelanggaran'}',
         ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
       );
+
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
+        if (jsonData['success'] != true) {
+          setState(() {
+            errorMessage = jsonData['message'] ?? 'Gagal memuat data';
+            isLoading = false;
+          });
+          return;
+        }
+
         final penilaianData = jsonData['penilaian']['data'] as List<dynamic>;
         final siswaData = jsonData['siswa'] as List<dynamic>;
 
@@ -127,10 +173,19 @@ class _GrafikScreenState extends State<GrafikScreen>
                       )
                       .toList();
           _chartData.sort((a, b) => a.label.compareTo(b.label));
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Gagal mengambil data (${response.statusCode})';
+          isLoading = false;
         });
       }
     } catch (e) {
-      print('Error fetching chart data: $e');
+      setState(() {
+        errorMessage = 'Terjadi kesalahan: $e';
+        isLoading = false;
+      });
     }
   }
 
@@ -158,6 +213,30 @@ class _GrafikScreenState extends State<GrafikScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (errorMessage != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                errorMessage!,
+                style: GoogleFonts.poppins(color: Colors.red),
+              ),
+              ElevatedButton(
+                onPressed: _loadTeacherData,
+                child: Text('Coba Lagi', style: GoogleFonts.poppins()),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -588,8 +667,12 @@ class _GrafikScreenState extends State<GrafikScreen>
             ],
           ),
           const SizedBox(height: 20),
-          if (_selectedChartType == 0) _buildBarChart(),
-          if (_selectedChartType == 1) _buildPieChart(),
+          if (_chartData.isEmpty)
+            _buildEmptyState('Tidak ada data untuk periode ini')
+          else if (_selectedChartType == 0)
+            _buildBarChart()
+          else
+            _buildPieChart(),
         ],
       ),
     );
@@ -755,7 +838,8 @@ class _GrafikScreenState extends State<GrafikScreen>
                   _chartData.asMap().entries.map((entry) {
                     int index = entry.key;
                     ChartDataItem item = entry.value;
-                    double percentage = (item.value / total) * 100;
+                    double percentage =
+                        total > 0 ? (item.value / total) * 100 : 0;
                     Color color =
                         widget.chartType == 'apresiasi'
                             ? [
@@ -870,7 +954,10 @@ class _GrafikScreenState extends State<GrafikScreen>
             ],
           ),
           const SizedBox(height: 16),
-          ..._chartData.map((item) => _buildDetailItem(item)).toList(),
+          if (_chartData.isEmpty)
+            _buildEmptyState('Tidak ada data untuk analisis')
+          else
+            ..._chartData.map((item) => _buildDetailItem(item)).toList(),
         ],
       ),
     );
@@ -1108,6 +1195,53 @@ class _GrafikScreenState extends State<GrafikScreen>
       ),
     );
   }
+
+  Widget _buildEmptyState(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors:
+                    widget.chartType == 'apresiasi'
+                        ? [const Color(0xFF61B8FF), const Color(0xFF0083EE)]
+                        : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)],
+              ),
+              borderRadius: BorderRadius.circular(40),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Icon(
+              widget.chartType == 'apresiasi' ? Icons.star : Icons.warning,
+              color: Colors.white,
+              size: 40,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF6B7280),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class PieChartPainter extends CustomPainter {
@@ -1128,7 +1262,7 @@ class PieChartPainter extends CustomPainter {
     double startAngle = -90 * (3.14159 / 180);
 
     for (int i = 0; i < data.length; i++) {
-      double sweepAngle = (data[i].value / total) * 2 * 3.14159;
+      double sweepAngle = total > 0 ? (data[i].value / total) * 2 * 3.14159 : 0;
 
       final paint =
           Paint()

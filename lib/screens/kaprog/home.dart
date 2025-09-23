@@ -244,7 +244,7 @@ class _KaprogHomeScreenState extends State<KaprogHomeScreen>
   Future<void> _fetchStudentData() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/akumulasi'),
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;

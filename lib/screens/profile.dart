@@ -1,8 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:skoring/models/profile.dart';
-import 'package:skoring/screens/introduction/onboarding.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -52,10 +53,9 @@ class _ProfileScreenState extends State<ProfileScreen>
       final name = prefs.getString('name') ?? 'Unknown';
       final email = prefs.getString('email') ?? 'Unknown';
       final joinDate = prefs.getString('joinDate') ?? 'Unknown';
-      String roleLabel =
-          role == '3'
-              ? 'Wali Kelas'
-              : role == '4'
+      String roleLabel = role == '3'
+          ? 'Wali Kelas'
+          : role == '4'
               ? 'Kaprog'
               : 'Unknown';
 
@@ -89,85 +89,78 @@ class _ProfileScreenState extends State<ProfileScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => LogoutDialog(onLogout: _handleLogout),
+      builder: (BuildContext dialogContext) =>
+          LogoutDialog(
+            onLogout: _handleLogoutSuccess,
+            parentContext: context, // ✅ kirim parent context
+          ),
     );
   }
 
-  void _handleLogout() {
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil('/introduction', (route) => false);
+  void _handleLogoutSuccess() {
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil('/login', (route) => false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:
-          _isLoading
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF0083EE)),
+            )
+          : _errorMessage != null
               ? Center(
-                child: CircularProgressIndicator(color: Color(0xFF0083EE)),
-              )
-              : _errorMessage != null
-              ? Center(
-                child: Text(
-                  _errorMessage!,
-                  style: GoogleFonts.poppins(color: Colors.red),
-                ),
-              )
-              : Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+                  child: Text(
+                    _errorMessage!,
+                    style: GoogleFonts.poppins(color: Colors.red),
                   ),
-                ),
-                child: SafeArea(
-                  top: true,
-                  bottom: false,
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Column(
-                      children: [
-                        HeaderSection(onBack: () => Navigator.pop(context)),
-                        if (_profile != null)
-                          Expanded(
-                            child: ProfileContentSection(
-                              profile: _profile!,
-                              profileFields: _getProfileFields(_profile!.role),
-                              onLogoutTap: _showLogoutDialog,
-                              buttonController: _buttonController,
+                )
+              : Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                  child: SafeArea(
+                    top: true,
+                    bottom: false,
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Column(
+                        children: [
+                          HeaderSection(onBack: () => Navigator.pop(context)),
+                          if (_profile != null)
+                            Expanded(
+                              child: ProfileContentSection(
+                                profile: _profile!,
+                                profileFields: _getProfileFields(_profile!.role),
+                                onLogoutTap: _showLogoutDialog,
+                                buttonController: _buttonController,
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
     );
   }
 
   List<ProfileField> _getProfileFields(String role) {
     return [
       ProfileField(label: 'NIP', icon: Icons.badge_outlined, key: 'nip'),
-      ProfileField(
-        label: 'Username',
-        icon: Icons.person_outline,
-        key: 'username',
-      ),
+      ProfileField(label: 'Username', icon: Icons.person_outline, key: 'username'),
       ProfileField(label: 'Email', icon: Icons.email_outlined, key: 'email'),
-      ProfileField(
-        label: 'Menjabat Sejak',
-        icon: Icons.calendar_today_outlined,
-        key: 'joinDate',
-      ),
+      ProfileField(label: 'Menjabat Sejak', icon: Icons.calendar_today_outlined, key: 'joinDate'),
     ];
   }
 }
 
 class HeaderSection extends StatelessWidget {
   final VoidCallback onBack;
-
   const HeaderSection({super.key, required this.onBack});
 
   @override
@@ -264,17 +257,16 @@ class ProfileContentSection extends StatelessWidget {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(
-                  children:
-                      profileFields.asMap().entries.map((entry) {
-                        int index = entry.key;
-                        ProfileField field = entry.value;
-                        return ProfileFieldCard(
-                          label: field.label,
-                          value: _getFieldValue(field.key, profile),
-                          icon: field.icon,
-                          index: index,
-                        );
-                      }).toList(),
+                  children: profileFields.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    ProfileField field = entry.value;
+                    return ProfileFieldCard(
+                      label: field.label,
+                      value: _getFieldValue(field.key, profile),
+                      icon: field.icon,
+                      index: index,
+                    );
+                  }).toList(),
                 ),
               ),
             ),
@@ -307,7 +299,6 @@ class ProfileContentSection extends StatelessWidget {
 
 class ProfileHeader extends StatelessWidget {
   final Profile profile;
-
   const ProfileHeader({super.key, required this.profile});
 
   @override
@@ -353,7 +344,7 @@ class ProfileHeader extends StatelessWidget {
                     BoxShadow(
                       color: const Color(0xFF0083EE).withOpacity(0.3),
                       blurRadius: 15,
-                      offset: Offset(0, 5),
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
@@ -455,7 +446,6 @@ class ProfileFieldCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final int index;
-
   const ProfileFieldCard({
     super.key,
     required this.label,
@@ -561,10 +551,9 @@ class ProfileFieldCard extends StatelessWidget {
                       color: const Color(0xFF10B981).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(iconSize * 0.2),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.lock_outline,
-                      color: const Color(0xFF9CA3AF),
-                      size: iconSize * 0.33,
+                      color: Color(0xFF9CA3AF),
                     ),
                   ),
                 ],
@@ -632,23 +621,13 @@ class LogoutButton extends StatelessWidget {
                 child: InkWell(
                   onTap: onTap,
                   borderRadius: BorderRadius.circular(padding * 0.5),
-                  child: Container(
+                  child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: padding),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: EdgeInsets.all(padding * 0.2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFF6B6B).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(padding * 0.25),
-                          ),
-                          child: Icon(
-                            Icons.logout_rounded,
-                            color: const Color(0xFFFF6B6B),
-                            size: iconSize,
-                          ),
-                        ),
+                        Icon(Icons.logout_rounded,
+                            color: const Color(0xFFFF6B6B), size: iconSize * 1.3),
                         SizedBox(width: padding * 0.3),
                         Text(
                           'Logout',
@@ -672,120 +651,88 @@ class LogoutButton extends StatelessWidget {
   }
 }
 
-class LogoutDialog extends StatelessWidget {
+class LogoutDialog extends StatefulWidget {
   final VoidCallback onLogout;
+  final BuildContext parentContext; // ✅ ditambah
 
-  const LogoutDialog({super.key, required this.onLogout});
+  const LogoutDialog({
+    super.key,
+    required this.onLogout,
+    required this.parentContext,
+  });
+
+  @override
+  State<LogoutDialog> createState() => _LogoutDialogState();
+}
+
+class _LogoutDialogState extends State<LogoutDialog> {
+  bool _isLoggingOut = false;
+
+  Future<void> _logout() async {
+    setState(() => _isLoggingOut = true);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/logout'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        await prefs.clear();
+        widget.onLogout();
+      } else {
+        final data = json.decode(response.body);
+        _showErrorSnackbar(widget.parentContext,
+            data['message'] ?? 'Logout gagal, coba lagi.');
+      }
+    } catch (e) {
+      _showErrorSnackbar(widget.parentContext, 'Terjadi kesalahan: $e');
+    } finally {
+      if (mounted) setState(() => _isLoggingOut = false);
+    }
+  }
+
+  void _showErrorSnackbar(BuildContext parentContext, String message) {
+    ScaffoldMessenger.of(parentContext).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final fontSize = screenWidth * 0.05;
-    final iconSize = screenWidth * 0.15;
-    final padding = screenWidth * 0.05;
-
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(padding * 1.2),
-      ),
-      elevation: 20,
-      backgroundColor: Colors.white,
-      title: Column(
-        children: [
-          Container(
-            width: iconSize,
-            height: iconSize,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(iconSize * 0.5),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF6B6B).withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.logout_rounded,
-              color: Colors.white,
-              size: iconSize * 0.47,
-            ),
-          ),
-          SizedBox(height: padding * 0.4),
-          Text(
-            'Konfirmasi Logout',
-            style: GoogleFonts.poppins(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF1F2937),
-            ),
-          ),
-        ],
-      ),
-      content: Text(
-        'Apakah Anda yakin ingin keluar dari aplikasi?',
-        textAlign: TextAlign.center,
-        style: GoogleFonts.poppins(
-          fontSize: fontSize * 0.8,
-          color: const Color(0xFF6B7280),
-          height: 1.5,
-        ),
-      ),
+      title: Text('Konfirmasi Logout',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+      content: Text('Apakah Anda yakin ingin keluar?',
+          style: GoogleFonts.poppins()),
       actions: [
-        Row(
-          children: [
-            Expanded(
-              child: TextButton(
-                onPressed: () => Navigator.pop(context),
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: padding * 0.8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(padding * 0.6),
-                  ),
-                ),
-                child: Text(
-                  'Batal',
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF6B7280),
-                    fontWeight: FontWeight.w600,
-                    fontSize: fontSize * 0.9,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: padding * 0.3),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  onLogout();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF6B6B),
-                  padding: EdgeInsets.symmetric(vertical: padding * 0.8),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(padding * 0.6),
-                  ),
-                ),
-                child: Text(
-                  'Logout',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: fontSize * 0.9,
-                  ),
-                ),
-              ),
-            ),
-          ],
+        TextButton(
+          onPressed: _isLoggingOut ? null : () => Navigator.pop(context),
+          child: Text('Batal',
+              style: GoogleFonts.poppins(color: Colors.grey[600])),
+        ),
+        ElevatedButton(
+          onPressed: _isLoggingOut ? null : _logout,
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          child: _isLoggingOut
+              ? const SizedBox(
+                  width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : Text('Logout',
+                  style: GoogleFonts.poppins(color: Colors.white)),
         ),
       ],
     );
   }
+}
+
+class ProfileField {
+  final String label;
+  final IconData icon;
+  final String key;
+  ProfileField({required this.label, required this.icon, required this.key});
 }

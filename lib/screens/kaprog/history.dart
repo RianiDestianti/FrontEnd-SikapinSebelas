@@ -86,17 +86,17 @@ class _KaprogHistoryScreenState extends State<KaprogHistoryScreen>
     try {
       final nis = widget.student['nis'].toString();
       final skoringPelanggaranResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran?nis=$nis'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis'),
       );
       final peringatanResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/peringatan'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/peringatan'),
       );
 
       final skoringPenghargaanResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis'),
       );
       final penghargaanResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/Penghargaan'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/Penghargaan'),
       );
 
       if (skoringPelanggaranResponse.statusCode == 200 &&

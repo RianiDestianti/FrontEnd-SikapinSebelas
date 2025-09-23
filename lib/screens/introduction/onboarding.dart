@@ -151,11 +151,17 @@ class _IntroductionScreenState extends State<IntroductionScreen>
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
-    setState(() {
+  setState(() {
+    // Only allow upward swipes (negative values)
+    if (details.delta.dy < 0) {
       _swipeOffset += details.delta.dy;
-      _swipeOffset = _swipeOffset.clamp(-100.0, 0.0);
-    });
-  }
+    } else {
+      // Gradual reset for downward swipes
+      _swipeOffset = _swipeOffset * 0.9;
+    }
+    _swipeOffset = _swipeOffset.clamp(-100.0, 0.0);
+  });
+}
 
   void _onPanEnd(DragEndDetails details) {
     if (_swipeOffset < -50) {
@@ -682,7 +688,7 @@ class _LoginFormState extends State<_LoginForm> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://10.0.2.2:8000/api/login"),
+        Uri.parse("http://sikapin.student.smkn11bdg.sch.id/api/login"),
         body: {"nip": nip, "password": password},
       );
 
@@ -690,6 +696,11 @@ class _LoginFormState extends State<_LoginForm> {
 
       if (response.statusCode == 200 && data['status'] == true) {
         final prefs = await SharedPreferences.getInstance();
+
+        // Simpan token Sanctum
+        await prefs.setString('token', data['token']);
+
+        // Simpan data user
         await prefs.setString(
           'walikelas_id',
           data['detail']['nip_walikelas']?.toString() ?? '',
@@ -714,8 +725,8 @@ class _LoginFormState extends State<_LoginForm> {
           data['detail']['jurusan'] ?? 'Unknown',
         );
 
+        // Cek role
         String role = data['role'].toString();
-
         if (role == '3') {
           Navigator.pushNamed(context, '/walikelas');
         } else if (role == '4') {

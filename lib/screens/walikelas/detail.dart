@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'point.dart';
 import 'note.dart';
 import 'history.dart';
@@ -177,7 +178,6 @@ class _DetailScreenState extends State<DetailScreen>
   String? errorMessageAppreciations;
   String? errorMessageViolations;
   String? errorMessageStudent;
-  Map<String, dynamic>? kelasData;
   List<dynamic> aspekPenilaianData = [];
 
   @override
@@ -220,7 +220,9 @@ class _DetailScreenState extends State<DetailScreen>
         poinPelanggaran: widget.student['poinPelanggaran']?.abs() ?? 0,
         poinTotal: widget.student['points'] ?? 0,
       );
-      isLoadingStudent = false;
+      setState(() {
+        isLoadingStudent = false;
+      });
       fetchAppreciations(widget.student['nis']);
       fetchViolations(widget.student['nis']);
     } catch (e) {
@@ -231,22 +233,54 @@ class _DetailScreenState extends State<DetailScreen>
     }
   }
 
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
   Future<void> fetchAspekPenilaian() async {
+    setState(() {
+      errorMessageStudent = null;
+    });
+
     try {
+      final token = await _getToken();
+      if (token == null) {
+        setState(() {
+          errorMessageStudent = 'Token tidak ditemukan, silakan login ulang';
+        });
+        return;
+      }
+
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/aspekpenilaian'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
       );
+
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         if (jsonData['success']) {
           setState(() {
             aspekPenilaianData = jsonData['data'];
           });
+        } else {
+          setState(() {
+            errorMessageStudent =
+                jsonData['message'] ?? 'Gagal memuat data aspek penilaian';
+          });
         }
+      } else {
+        setState(() {
+          errorMessageStudent =
+              'Gagal mengambil data aspek penilaian (${response.statusCode})';
+        });
       }
     } catch (e) {
       setState(() {
-        errorMessageStudent = 'Gagal mengambil data aspek penilaian: $e';
+        errorMessageStudent = 'Terjadi kesalahan: $e';
       });
     }
   }
@@ -258,15 +292,39 @@ class _DetailScreenState extends State<DetailScreen>
     });
 
     try {
+      final token = await _getToken();
+      if (token == null) {
+        setState(() {
+          errorMessageAppreciations =
+              'Token tidak ditemukan, silakan login ulang';
+          isLoadingAppreciations = false;
+        });
+        return;
+      }
+
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis'),
+        Uri.parse(
+          'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis',
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
       );
+
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         if (jsonData['penilaian']['data'].isNotEmpty) {
           final appreciationsResponse = await http.get(
-            Uri.parse('http://10.0.2.2:8000/api/Penghargaan'),
+            Uri.parse(
+              'http://sikapin.student.smkn11bdg.sch.id/api/Penghargaan',
+            ),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Accept': 'application/json',
+            },
           );
+
           if (appreciationsResponse.statusCode == 200) {
             final appreciationsData = jsonDecode(appreciationsResponse.body);
             if (appreciationsData['success']) {
@@ -328,14 +386,16 @@ class _DetailScreenState extends State<DetailScreen>
               });
             } else {
               setState(() {
-                errorMessageAppreciations = appreciationsData['message'];
+                errorMessageAppreciations =
+                    appreciationsData['message'] ??
+                    'Gagal memuat data penghargaan';
                 isLoadingAppreciations = false;
               });
             }
           } else {
             setState(() {
               errorMessageAppreciations =
-                  'Gagal mengambil data penghargaan dari server';
+                  'Gagal mengambil data penghargaan (${appreciationsResponse.statusCode})';
               isLoadingAppreciations = false;
             });
           }
@@ -350,7 +410,7 @@ class _DetailScreenState extends State<DetailScreen>
       } else {
         setState(() {
           errorMessageAppreciations =
-              'Gagal mengambil data penilaian penghargaan dari server';
+              'Gagal mengambil data penilaian penghargaan (${response.statusCode})';
           isLoadingAppreciations = false;
         });
       }
@@ -369,11 +429,31 @@ class _DetailScreenState extends State<DetailScreen>
     });
 
     try {
+      final token = await _getToken();
+      if (token == null) {
+        setState(() {
+          errorMessageViolations = 'Token tidak ditemukan, silakan login ulang';
+          isLoadingViolations = false;
+        });
+        return;
+      }
+
       final skoringResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran?nis=$nis'),
+        Uri.parse(
+          'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis',
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
       );
+
       final peringatanResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/peringatan'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/peringatan'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
       );
 
       if (skoringResponse.statusCode == 200 &&
@@ -448,7 +528,7 @@ class _DetailScreenState extends State<DetailScreen>
       } else {
         setState(() {
           errorMessageViolations =
-              'Gagal mengambil data pelanggaran dari server';
+              'Gagal mengambil data pelanggaran (Skoring: ${skoringResponse.statusCode}, Peringatan: ${peringatanResponse.statusCode})';
           isLoadingViolations = false;
         });
       }

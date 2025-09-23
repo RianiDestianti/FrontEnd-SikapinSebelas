@@ -57,7 +57,7 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
     });
     try {
       final aspekResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/aspekpenilaian'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian'),
       );
       if (aspekResponse.statusCode == 200) {
         final aspekJson = jsonDecode(aspekResponse.body);
@@ -70,19 +70,19 @@ class _KaprogDetailScreenState extends State<KaprogDetailScreen>
 
       final nis = widget.student['nis'].toString();
       final skoringPelanggaranResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran?nis=$nis'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis'),
       );
       final skoringPenghargaanResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis'),
       );
       final peringatanResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/peringatan'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/peringatan'),
       );
       final penghargaanResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/Penghargaan'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/Penghargaan'),
       );
       final akumulasiResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/akumulasi'),
       );
 
       if (skoringPelanggaranResponse.statusCode == 200 &&

@@ -36,8 +36,8 @@ class PointUtils {
     try {
       final endpoint =
           type == 'Apresiasi'
-              ? 'http://10.0.2.2:8000/api/skoring_penghargaan'
-              : 'http://10.0.2.2:8000/api/skoring_pelanggaran';
+              ? 'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan'
+              : 'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran';
       print('Sending POST request to $endpoint');
       print(
         'Request body: ${jsonEncode({'id_penilaian': idPenilaian, 'nis': nis, 'id_aspekpenilaian': idAspekPenilaian})}',
@@ -280,7 +280,7 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
 
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/aspekpenilaian'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian'),
       );
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);

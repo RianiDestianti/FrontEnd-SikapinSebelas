@@ -66,13 +66,12 @@ class _ProgramKeahlianScreenState extends State<ProgramKeahlianScreen> {
     });
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/kelas'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/kelas'),
       );
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final kelasData = jsonData['data'] as List<dynamic>;
 
-        // Group classes by jurusan and create jurusan list
         final jurusanMap = <String, Map<String, dynamic>>{};
         for (var kelas in kelasData) {
           final jurusan = kelas['jurusan'] as String;
@@ -748,7 +747,7 @@ class _SiswaScreenState extends State<SiswaScreen>
     });
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/akumulasi'),
       );
 
       if (response.statusCode == 200) {

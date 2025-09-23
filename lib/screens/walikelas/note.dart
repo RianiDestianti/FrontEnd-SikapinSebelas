@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skoring/models/note.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -24,14 +25,25 @@ class NoteUtils {
     }
 
     try {
-      print('Sending POST request to http://10.0.2.2:8000/api/AddCatatan/$nis');
+      // Ambil token dari SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      print('Sending POST request to http://sikapin.student.smkn11bdg.sch.id/api/AddCatatan/$nis');
       print(
-        'Request body: ${jsonEncode({'judul_catatan': judulCatatan, 'isi_catatan': isiCatatan})}',
+        'Request body: ${jsonEncode({
+          'judul_catatan': judulCatatan,
+          'isi_catatan': isiCatatan,
+        })}',
       );
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/api/AddCatatan/$nis'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/AddCatatan/$nis'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token', // kirim Sanctum token
+          'Accept': 'application/json',
+        },
         body: jsonEncode({
           'judul_catatan': judulCatatan,
           'isi_catatan': isiCatatan,
@@ -43,9 +55,9 @@ class NoteUtils {
 
       if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-        if (responseData['success']) {
+        if (responseData['success'] == true) {
           final noteData = Note(
-            studentName: '', 
+            studentName: '', // bisa diisi dari response kalau ada
             className: className,
             date: date,
             note: isiCatatan,
@@ -76,63 +88,29 @@ class NoteUtils {
       return null;
     }
   }
-
-  static void _showErrorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFFEF4444),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
-  }
-
-  static void _showSuccessSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(
-              Icons.check_circle_outline,
-              color: Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF10B981),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
-  }
 }
+
+void _showErrorSnackBar(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.red,
+    ),
+  );
+}
+
+void _showSuccessSnackBar(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.green,
+    ),
+  );
+}
+
+
+
+
 
 class BKNotePopup extends StatefulWidget {
   final String studentName;

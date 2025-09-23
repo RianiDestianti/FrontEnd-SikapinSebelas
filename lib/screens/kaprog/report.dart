@@ -66,26 +66,26 @@ class _LaporanKaprogState extends State<LaporanKaprog>
 
     try {
       final akumulasiResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/akumulasi'),
       );
       final akumulasiData = jsonDecode(akumulasiResponse.body);
       if (!akumulasiData['success'])
         throw Exception('Failed to fetch akumulasi');
 
       final aspekResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/aspekpenilaian'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian'),
       );
       final aspekData = jsonDecode(aspekResponse.body);
       if (!aspekData['success'])
         throw Exception('Failed to fetch aspek penilaian');
 
       final penghargaanResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan'),
       );
       final penghargaanData = jsonDecode(penghargaanResponse.body);
 
       final pelanggaranResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran'),
+        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran'),
       );
       final pelanggaranData = jsonDecode(pelanggaranResponse.body);
 
