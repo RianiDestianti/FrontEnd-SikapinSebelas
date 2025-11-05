@@ -92,7 +92,7 @@ Future<void> _loadProfile() async {
       builder: (BuildContext dialogContext) =>
           LogoutDialog(
             onLogout: _handleLogoutSuccess,
-            parentContext: context, // ✅ kirim parent context
+            parentContext: context, 
           ),
     );
   }
@@ -653,7 +653,7 @@ class LogoutButton extends StatelessWidget {
 
 class LogoutDialog extends StatefulWidget {
   final VoidCallback onLogout;
-  final BuildContext parentContext; // ✅ ditambah
+  final BuildContext parentContext; 
 
   const LogoutDialog({
     super.key,
@@ -684,7 +684,6 @@ Future<void> _logout() async {
       Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/logout?nip=$nip'),
       headers: {
         'Accept': 'application/json',
-        // TOKEN SUDAH DIHAPUS
       },
     );
 
@@ -693,7 +692,7 @@ Future<void> _logout() async {
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success'] == true) {
-        await prefs.clear(); // Hapus semua data
+        await prefs.clear();
         widget.onLogout();
       } else {
         _showErrorSnackbar(widget.parentContext, data['message'] ?? 'Logout gagal.');

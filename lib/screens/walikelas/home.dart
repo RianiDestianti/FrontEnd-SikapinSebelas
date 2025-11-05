@@ -17,6 +17,7 @@ import 'package:intl/intl.dart';
 class Student {
   final String name;
   final String kelas;
+  final String programKeahlian;
   final int poin;
   final String prestasi;
   final IconData avatar;
@@ -27,6 +28,7 @@ class Student {
   Student({
     required this.name,
     required this.kelas,
+    required this.programKeahlian, 
     required this.poin,
     required this.prestasi,
     required this.avatar,
@@ -239,6 +241,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 name: siswa['nama_siswa'],
                 kelas: kelas,
                 poin: poin,
+                programKeahlian: siswa['program_keahlian'] ?? 'Unknown', // TAMBAHKAN
                 prestasi: prestasi,
                 avatar: Icons.person,
                 rank: index + 1,
@@ -416,27 +419,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _navigateToDetailScreen(Student siswa) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => DetailScreen(
-              student: {
-                'name': siswa.name,
-                'status': siswa.status,
-                'nis': siswa.nis.toString(),
-                'kelas': siswa.kelas,
-              },
-            ),
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => DetailScreen(
+        student: {
+          'name': siswa.name,
+          'status': siswa.status,
+          'nis': siswa.nis.toString(),
+          'kelas': siswa.kelas,
+          'programKeahlian': siswa.kelas, // sementara gunakan kelas, atau ambil dari API
+          'poinApresiasi': siswa.poin > 0 ? siswa.poin : 0,
+          'poinPelanggaran': siswa.poin < 0 ? siswa.poin.abs() : 0,
+          'points': siswa.poin, // sesuai yang dipakai di DetailScreen
+        },
       ),
-    ).then((_) {
-      _addLocalActivity(
-        'Navigasi',
-        'Detail Siswa',
-        'Mengakses detail siswa: ${siswa.name}',
-      );
-    });
-  }
+    ),
+  ).then((_) {
+    _addLocalActivity(
+      'Navigasi',
+      'Detail Siswa',
+      'Mengakses detail siswa: ${siswa.name}',
+    );
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -985,7 +991,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
                       Text(
-                        'Top 4 siswa dengan poin tertinggi',
+                        'Top siswa dengan poin tertinggi',
                         style: GoogleFonts.poppins(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 12,
@@ -1089,7 +1095,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
                       Text(
-                        'Top 4 siswa dengan pelanggaran terberat',
+                        'Top siswa dengan pelanggaran terberat',
                         style: GoogleFonts.poppins(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 12,

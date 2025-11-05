@@ -102,8 +102,6 @@ class _HistoryScreenState extends State<HistoryScreen>
     super.dispose();
   }
 
-  // HAPUS _getToken() — TIDAK DIPAKAI LAGI
-
   Future<void> fetchAspekPenilaian() async {
     setState(() {
       isLoading = true;
@@ -191,7 +189,6 @@ class _HistoryScreenState extends State<HistoryScreen>
 
         List<HistoryItem> historyList = [];
 
-        // === Apresiasi ===
         if (skoringPenghargaanData['penilaian']['data'].isNotEmpty) {
           final appreciations = penghargaanData['data'];
           final evaluations = skoringPenghargaanData['penilaian']['data']
@@ -249,7 +246,6 @@ class _HistoryScreenState extends State<HistoryScreen>
           }
         }
 
-        // === Pelanggaran ===
         if (skoringPelanggaranData['penilaian']['data'].isNotEmpty) {
           final violations = peringatanData['data'];
           final evaluations = skoringPelanggaranData['penilaian']['data']

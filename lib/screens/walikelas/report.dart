@@ -305,7 +305,6 @@ class _LaporanScreenState extends State<LaporanScreen>
     if (nis.isEmpty) return [];
     List<StudentScore> scores = [];
     try {
-      // Fetch appreciations
       final penghargaanResponse = await http
           .get(
             Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis'),

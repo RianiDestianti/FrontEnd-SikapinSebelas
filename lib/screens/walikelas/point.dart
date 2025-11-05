@@ -34,7 +34,6 @@ class PointUtils {
     }
 
     try {
-      // Ambil nip & id_kelas dari SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final nip = prefs.getString('walikelas_id') ?? '';
       final idKelas = prefs.getString('id_kelas') ?? '';
@@ -64,7 +63,6 @@ class PointUtils {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          // TOKEN SUDAH DIHAPUS
         },
         body: jsonEncode({
           'id_penilaian': idPenilaian,
@@ -386,7 +384,6 @@ Future<void> fetchAspekPenilaian() async {
       description: selectedAspek['uraian'] ?? '',
       points: int.parse(selectedAspek['indikator_poin'].toString()),
       context: context,
-      // No token, as confirmed
     );
     setState(() => _isSubmitting = false);
     if (point != null) {

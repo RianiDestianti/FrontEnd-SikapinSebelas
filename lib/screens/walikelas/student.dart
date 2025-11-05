@@ -131,7 +131,6 @@ Future<void> fetchKelas() async {
       uri,
       headers: {
         'Accept': 'application/json',
-        // TOKEN SUDAH DIHAPUS
       },
     );
 
@@ -200,7 +199,6 @@ Future<void> fetchSiswa() async {
       uri,
       headers: {
         'Accept': 'application/json',
-        // TOKEN SUDAH DIHAPUS
       },
     );
 

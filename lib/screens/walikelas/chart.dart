@@ -72,8 +72,6 @@ class _GrafikScreenState extends State<GrafikScreen>
     super.dispose();
   }
 
-  // HAPUS _getToken() — TIDAK DIPAKAI LAGI
-
   Future<void> _loadTeacherData() async {
     setState(() {
       isLoading = true;
@@ -115,7 +113,6 @@ class _GrafikScreenState extends State<GrafikScreen>
           ? 'skoring_penghargaan'
           : 'skoring_pelanggaran';
 
-      // PAKAI QUERY PARAMETER (lebih aman untuk GET)
       final uri = Uri.parse(
         'http://sikapin.student.smkn11bdg.sch.id/api/$endpoint?nip=$_nipWalikelas&id_kelas=$_teacherClassId',
       );

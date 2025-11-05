@@ -25,7 +25,6 @@ class NoteUtils {
     }
 
     try {
-      // Ambil nip & id_kelas dari SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final nip = prefs.getString('walikelas_id') ?? '';
       final idKelas = prefs.getString('id_kelas') ?? '';
@@ -114,8 +113,6 @@ void _showSuccessSnackBar(BuildContext context, String message) {
     ),
   );
 }
-
-
 
 class BKNotePopup extends StatefulWidget {
   final String studentName;

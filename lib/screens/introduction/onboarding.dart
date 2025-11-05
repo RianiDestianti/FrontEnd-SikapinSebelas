@@ -152,11 +152,9 @@ class _IntroductionScreenState extends State<IntroductionScreen>
 
   void _onPanUpdate(DragUpdateDetails details) {
   setState(() {
-    // Only allow upward swipes (negative values)
     if (details.delta.dy < 0) {
       _swipeOffset += details.delta.dy;
     } else {
-      // Gradual reset for downward swipes
       _swipeOffset = _swipeOffset * 0.9;
     }
     _swipeOffset = _swipeOffset.clamp(-100.0, 0.0);
