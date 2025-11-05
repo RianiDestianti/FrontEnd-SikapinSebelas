@@ -108,10 +108,10 @@ class _SiswaScreenState extends State<SiswaScreen>
     });
   }
 
-  Future<void> fetchKelas() async {
-  if (walikelasId == null) {
+Future<void> fetchKelas() async {
+  if (walikelasId == null || idKelas == null) {
     setState(() {
-      errorMessageKelas = 'ID walikelas tidak ditemukan';
+      errorMessageKelas = 'Data guru tidak lengkap. Silakan login ulang.';
       isLoadingKelas = false;
     });
     return;
@@ -123,25 +123,19 @@ class _SiswaScreenState extends State<SiswaScreen>
   });
 
   try {
-    // Ambil token dari SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
-    if (token == null) {
-      setState(() {
-        errorMessageKelas = 'Token tidak ditemukan, silakan login ulang';
-        isLoadingKelas = false;
-      });
-      return;
-    }
+    final uri = Uri.parse(
+      'http://sikapin.student.smkn11bdg.sch.id/api/kelas?nip=$walikelasId&id_kelas=$idKelas',
+    );
 
     final response = await http.get(
-      Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/kelas'),
+      uri,
       headers: {
-        'Authorization': 'Bearer $token',
         'Accept': 'application/json',
+        // TOKEN SUDAH DIHAPUS
       },
     );
+
+    print('GET $uri -> ${response.statusCode}');
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
@@ -150,18 +144,11 @@ class _SiswaScreenState extends State<SiswaScreen>
         if (data.isNotEmpty) {
           setState(() {
             kelasList = data.map((json) => Kelas.fromJson(json)).toList();
-            selectedKelas = idKelas != null
-                ? kelasList.firstWhere(
-                    (kelas) => kelas.idKelas == idKelas,
-                    orElse: () => kelasList.isNotEmpty
-                        ? kelasList.first
-                        : throw Exception('No valid class found'),
-                  )
-                : (kelasList.isNotEmpty ? kelasList.first : null);
+            selectedKelas = kelasList.firstWhere(
+              (kelas) => kelas.idKelas == idKelas,
+              orElse: () => kelasList.first,
+            );
             isLoadingKelas = false;
-            if (selectedKelas == null) {
-              errorMessageKelas = 'Kelas terkait tidak ditemukan';
-            }
           });
         } else {
           setState(() {
@@ -171,18 +158,18 @@ class _SiswaScreenState extends State<SiswaScreen>
         }
       } else {
         setState(() {
-          errorMessageKelas = jsonData['message'];
+          errorMessageKelas = jsonData['message'] ?? 'Gagal memuat kelas';
           isLoadingKelas = false;
         });
       }
     } else {
       setState(() {
-        errorMessageKelas =
-            'Gagal mengambil data kelas (${response.statusCode})';
+        errorMessageKelas = 'Gagal mengambil data kelas (${response.statusCode})';
         isLoadingKelas = false;
       });
     }
   } catch (e) {
+    print('Error fetchKelas: $e');
     setState(() {
       errorMessageKelas = 'Terjadi kesalahan: $e';
       isLoadingKelas = false;
@@ -190,31 +177,34 @@ class _SiswaScreenState extends State<SiswaScreen>
   }
 }
 
+Future<void> fetchSiswa() async {
+  if (walikelasId == null || idKelas == null) {
+    setState(() {
+      errorMessageSiswa = 'Data guru tidak lengkap. Silakan login ulang.';
+      isLoadingSiswa = false;
+    });
+    return;
+  }
 
- Future<void> fetchSiswa() async {
   setState(() {
     isLoadingSiswa = true;
     errorMessageSiswa = null;
   });
 
   try {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token'); // ambil token login
-    if (token == null) {
-      setState(() {
-        errorMessageSiswa = 'Token tidak ditemukan, silakan login ulang';
-        isLoadingSiswa = false;
-      });
-      return;
-    }
+    final uri = Uri.parse(
+      'http://sikapin.student.smkn11bdg.sch.id/api/siswa?nip=$walikelasId&id_kelas=$idKelas',
+    );
 
     final response = await http.get(
-      Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/siswa'),
+      uri,
       headers: {
-        'Authorization': 'Bearer $token', // masukkan token di header
         'Accept': 'application/json',
+        // TOKEN SUDAH DIHAPUS
       },
     );
+
+    print('GET $uri -> ${response.statusCode}');
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
@@ -232,19 +222,18 @@ class _SiswaScreenState extends State<SiswaScreen>
       }
     } else {
       setState(() {
-        errorMessageSiswa =
-            'Gagal mengambil data siswa (${response.statusCode})';
+        errorMessageSiswa = 'Gagal mengambil data siswa (${response.statusCode})';
         isLoadingSiswa = false;
       });
     }
   } catch (e) {
+    print('Error fetchSiswa: $e');
     setState(() {
       errorMessageSiswa = 'Terjadi kesalahan: $e';
       isLoadingSiswa = false;
     });
   }
 }
-
 
   @override
   void dispose() {

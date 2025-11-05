@@ -25,24 +25,32 @@ class NoteUtils {
     }
 
     try {
-      // Ambil token dari SharedPreferences
+      // Ambil nip & id_kelas dari SharedPreferences
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+      final nip = prefs.getString('walikelas_id') ?? '';
+      final idKelas = prefs.getString('id_kelas') ?? '';
 
-      print('Sending POST request to http://sikapin.student.smkn11bdg.sch.id/api/AddCatatan/$nis');
-      print(
-        'Request body: ${jsonEncode({
-          'judul_catatan': judulCatatan,
-          'isi_catatan': isiCatatan,
-        })}',
+      if (nip.isEmpty || idKelas.isEmpty) {
+        _showErrorSnackBar(context, 'Data guru tidak lengkap. Silakan login ulang.');
+        return null;
+      }
+
+      final url = Uri.parse(
+        'http://sikapin.student.smkn11bdg.sch.id/api/AddCatatan/$nis?nip=$nip&id_kelas=$idKelas',
       );
 
+      print('Sending POST request to $url');
+      print('Request body: ${jsonEncode({
+            'judul_catatan': judulCatatan,
+            'isi_catatan': isiCatatan,
+          })}');
+
       final response = await http.post(
-        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/AddCatatan/$nis'),
+        url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', // kirim Sanctum token
           'Accept': 'application/json',
+          // TOKEN DIHAPUS TOTAL
         },
         body: jsonEncode({
           'judul_catatan': judulCatatan,
@@ -57,7 +65,7 @@ class NoteUtils {
         final responseData = jsonDecode(response.body);
         if (responseData['success'] == true) {
           final noteData = Note(
-            studentName: '', // bisa diisi dari response kalau ada
+            studentName: '',
             className: className,
             date: date,
             note: isiCatatan,
@@ -77,8 +85,7 @@ class NoteUtils {
         final responseData = jsonDecode(response.body);
         _showErrorSnackBar(
           context,
-          responseData['message'] ??
-              'Gagal menghubungi server: ${response.statusCode}',
+          responseData['message'] ?? 'Gagal menghubungi server: ${response.statusCode}',
         );
         return null;
       }
@@ -107,8 +114,6 @@ void _showSuccessSnackBar(BuildContext context, String message) {
     ),
   );
 }
-
-
 
 
 

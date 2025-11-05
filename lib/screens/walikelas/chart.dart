@@ -41,6 +41,7 @@ class _GrafikScreenState extends State<GrafikScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   String _teacherClassId = '';
+  String _nipWalikelas = ''; // NIP dari login
   List<ChartDataItem> _chartData = [];
   bool isLoading = true;
   String? errorMessage;
@@ -71,10 +72,7 @@ class _GrafikScreenState extends State<GrafikScreen>
     super.dispose();
   }
 
-  Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token');
-  }
+  // HAPUS _getToken() — TIDAK DIPAKAI LAGI
 
   Future<void> _loadTeacherData() async {
     setState(() {
@@ -86,11 +84,21 @@ class _GrafikScreenState extends State<GrafikScreen>
       final prefs = await SharedPreferences.getInstance();
       setState(() {
         _teacherClassId = prefs.getString('id_kelas') ?? '';
+        _nipWalikelas = prefs.getString('walikelas_id') ?? '';
       });
+
+      if (_teacherClassId.isEmpty || _nipWalikelas.isEmpty) {
+        setState(() {
+          errorMessage = 'Data guru tidak lengkap. Silakan login ulang.';
+          isLoading = false;
+        });
+        return;
+      }
+
       await _fetchChartData();
     } catch (e) {
       setState(() {
-        errorMessage = 'Terjadi kesalahan saat memuat data guru: $e';
+        errorMessage = 'Gagal memuat data: $e';
         isLoading = false;
       });
     }
@@ -103,21 +111,18 @@ class _GrafikScreenState extends State<GrafikScreen>
     });
 
     try {
-      final token = await _getToken();
-      if (token == null) {
-        setState(() {
-          errorMessage = 'Token tidak ditemukan, silakan login ulang';
-          isLoading = false;
-        });
-        return;
-      }
+      final endpoint = widget.chartType == 'apresiasi'
+          ? 'skoring_penghargaan'
+          : 'skoring_pelanggaran';
+
+      // PAKAI QUERY PARAMETER (lebih aman untuk GET)
+      final uri = Uri.parse(
+        'http://sikapin.student.smkn11bdg.sch.id/api/$endpoint?nip=$_nipWalikelas&id_kelas=$_teacherClassId',
+      );
 
       final response = await http.get(
-        Uri.parse(
-          'http://sikapin.student.smkn11bdg.sch.id/api/${widget.chartType == 'apresiasi' ? 'skoring_penghargaan' : 'skoring_pelanggaran'}',
-        ),
+        uri,
         headers: {
-          'Authorization': 'Bearer $token',
           'Accept': 'application/json',
         },
       );
@@ -143,8 +148,8 @@ class _GrafikScreenState extends State<GrafikScreen>
             (s) => s['nis'] == item['nis'] && s['id_kelas'] == _teacherClassId,
           )) {
             DateTime date = DateTime.parse(item['created_at']);
-            String weekKey = '${date.year}-W${(date.day / 7).ceil()}';
-            String monthKey = '${date.year}-${date.month}';
+            String weekKey = '${date.year}-W${((date.day + 6) / 7).ceil()}'; // Minggu ISO
+            String monthKey = '${date.year}-${date.month.toString().padLeft(2, '0')}';
 
             weeklyData[weekKey] = (weeklyData[weekKey] ?? 0) + 1;
             monthlyData[monthKey] = (monthlyData[monthKey] ?? 0) + 1;
@@ -152,26 +157,26 @@ class _GrafikScreenState extends State<GrafikScreen>
         }
 
         setState(() {
-          _chartData =
-              _selectedPeriod == 0
-                  ? weeklyData.entries
-                      .map(
-                        (e) => ChartDataItem(
-                          value: e.value,
-                          label: e.key.split('-W')[1],
-                          detail: 'Total: ${e.value.toInt()} kasus',
-                        ),
-                      )
-                      .toList()
-                  : monthlyData.entries
-                      .map(
-                        (e) => ChartDataItem(
-                          value: e.value,
-                          label: _getMonthName(int.parse(e.key.split('-')[1])),
-                          detail: 'Total: ${e.value.toInt()} kasus',
-                        ),
-                      )
-                      .toList();
+          _chartData = _selectedPeriod == 0
+              ? weeklyData.entries
+                  .map(
+                    (e) => ChartDataItem(
+                      value: e.value,
+                      label: e.key.split('-W')[1],
+                      detail: 'Total: ${e.value.toInt()} kasus',
+                    ),
+                  )
+                  .toList()
+              : monthlyData.entries
+                  .map(
+                    (e) => ChartDataItem(
+                      value: e.value,
+                      label: _getMonthName(int.parse(e.key.split('-')[1])),
+                      detail: 'Total: ${e.value.toInt()} kasus',
+                    ),
+                  )
+                  .toList();
+
           _chartData.sort((a, b) => a.label.compareTo(b.label));
           isLoading = false;
         });
@@ -191,18 +196,8 @@ class _GrafikScreenState extends State<GrafikScreen>
 
   String _getMonthName(int month) {
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
     ];
     return months[month - 1];
   }
@@ -210,6 +205,7 @@ class _GrafikScreenState extends State<GrafikScreen>
   String _getPeriodLabel() {
     return ['Minggu Ini', 'Bulan Ini', 'Tahun Ini'][_selectedPeriod];
   }
+
 
   @override
   Widget build(BuildContext context) {

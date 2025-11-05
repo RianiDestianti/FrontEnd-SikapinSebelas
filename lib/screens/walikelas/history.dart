@@ -43,7 +43,6 @@ class HistoryItem {
 
 class HistoryScreen extends StatefulWidget {
   final Map<String, dynamic> student;
-
   const HistoryScreen({Key? key, required this.student}) : super(key: key);
 
   @override
@@ -54,20 +53,20 @@ class _HistoryScreenState extends State<HistoryScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-
   String _selectedFilter = 'Semua';
   String _selectedTimeFilter = 'Semua';
   bool _showOnlyNew = false;
-
   List<HistoryItem> allHistory = [];
   bool isLoading = true;
   String? errorMessage;
   List<dynamic> aspekPenilaianData = [];
 
+  String _nipWalikelas = '';
+  String _idKelas = '';
+
   @override
   void initState() {
     super.initState();
-
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -75,8 +74,25 @@ class _HistoryScreenState extends State<HistoryScreen>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-
     _animationController.forward();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nipWalikelas = prefs.getString('walikelas_id') ?? '';
+      _idKelas = prefs.getString('id_kelas') ?? '';
+    });
+
+    if (_nipWalikelas.isEmpty || _idKelas.isEmpty) {
+      setState(() {
+        errorMessage = 'Data guru tidak lengkap. Silakan login ulang.';
+        isLoading = false;
+      });
+      return;
+    }
+
     fetchAspekPenilaian();
   }
 
@@ -86,33 +102,20 @@ class _HistoryScreenState extends State<HistoryScreen>
     super.dispose();
   }
 
-  Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token');
-  }
+  // HAPUS _getToken() — TIDAK DIPAKAI LAGI
 
   Future<void> fetchAspekPenilaian() async {
     setState(() {
       isLoading = true;
       errorMessage = null;
     });
-
     try {
-      final token = await _getToken();
-      if (token == null) {
-        setState(() {
-          errorMessage = 'Token tidak ditemukan, silakan login ulang';
-          isLoading = false;
-        });
-        return;
-      }
-
+      final uri = Uri.parse(
+        'http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian?nip=$_nipWalikelas&id_kelas=$_idKelas',
+      );
       final response = await http.get(
-        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
+        uri,
+        headers: {'Accept': 'application/json'},
       );
 
       if (response.statusCode == 200) {
@@ -124,15 +127,13 @@ class _HistoryScreenState extends State<HistoryScreen>
           await fetchHistory(widget.student['nis']);
         } else {
           setState(() {
-            errorMessage =
-                jsonData['message'] ?? 'Gagal mengambil data aspek penilaian';
+            errorMessage = jsonData['message'] ?? 'Gagal mengambil aspek penilaian';
             isLoading = false;
           });
         }
       } else {
         setState(() {
-          errorMessage =
-              'Gagal mengambil data aspek penilaian (${response.statusCode})';
+          errorMessage = 'Gagal mengambil data (${response.statusCode})';
           isLoading = false;
         });
       }
@@ -149,60 +150,31 @@ class _HistoryScreenState extends State<HistoryScreen>
       isLoading = true;
       errorMessage = null;
     });
-
     try {
-      final token = await _getToken();
-      if (token == null) {
-        setState(() {
-          errorMessage = 'Token tidak ditemukan, silakan login ulang';
-          isLoading = false;
-        });
-        return;
-      }
+      final skoringPenghargaanUri = Uri.parse(
+        'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
+      );
+      final skoringPelanggaranUri = Uri.parse(
+        'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
+      );
+      final penghargaanUri = Uri.parse(
+        'http://sikapin.student.smkn11bdg.sch.id/api/Penghargaan?nip=$_nipWalikelas&id_kelas=$_idKelas',
+      );
+      final peringatanUri = Uri.parse(
+        'http://sikapin.student.smkn11bdg.sch.id/api/peringatan?nip=$_nipWalikelas&id_kelas=$_idKelas',
+      );
 
-      final skoringPenghargaanResponse = await http.get(
-        Uri.parse(
-          'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis',
-        ),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-      );
-      final skoringPelanggaranResponse = await http.get(
-        Uri.parse(
-          'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis',
-        ),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-      );
-      final penghargaanResponse = await http.get(
-        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/Penghargaan'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-      );
-      final peringatanResponse = await http.get(
-        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/peringatan'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-      );
+      final skoringPenghargaanResponse = await http.get(skoringPenghargaanUri, headers: {'Accept': 'application/json'});
+      final skoringPelanggaranResponse = await http.get(skoringPelanggaranUri, headers: {'Accept': 'application/json'});
+      final penghargaanResponse = await http.get(penghargaanUri, headers: {'Accept': 'application/json'});
+      final peringatanResponse = await http.get(peringatanUri, headers: {'Accept': 'application/json'});
 
       if (skoringPenghargaanResponse.statusCode == 200 &&
           skoringPelanggaranResponse.statusCode == 200 &&
           penghargaanResponse.statusCode == 200 &&
           peringatanResponse.statusCode == 200) {
-        final skoringPenghargaanData = jsonDecode(
-          skoringPenghargaanResponse.body,
-        );
-        final skoringPelanggaranData = jsonDecode(
-          skoringPelanggaranResponse.body,
-        );
+        final skoringPenghargaanData = jsonDecode(skoringPenghargaanResponse.body);
+        final skoringPelanggaranData = jsonDecode(skoringPelanggaranResponse.body);
         final penghargaanData = jsonDecode(penghargaanResponse.body);
         final peringatanData = jsonDecode(peringatanResponse.body);
 
@@ -211,8 +183,7 @@ class _HistoryScreenState extends State<HistoryScreen>
             !penghargaanData['success'] ||
             !peringatanData['success']) {
           setState(() {
-            errorMessage =
-                'Gagal memuat data: Salah satu respons API tidak berhasil';
+            errorMessage = 'Gagal memuat data: Salah satu API gagal';
             isLoading = false;
           });
           return;
@@ -220,13 +191,12 @@ class _HistoryScreenState extends State<HistoryScreen>
 
         List<HistoryItem> historyList = [];
 
-        // Fetch Appreciations
+        // === Apresiasi ===
         if (skoringPenghargaanData['penilaian']['data'].isNotEmpty) {
           final appreciations = penghargaanData['data'];
-          final evaluations =
-              skoringPenghargaanData['penilaian']['data']
-                  .where((eval) => eval['nis'].toString() == nis)
-                  .toList();
+          final evaluations = skoringPenghargaanData['penilaian']['data']
+              .where((eval) => eval['nis'].toString() == nis)
+              .toList();
 
           for (var eval in evaluations) {
             final aspek = aspekPenilaianData.firstWhere(
@@ -236,13 +206,12 @@ class _HistoryScreenState extends State<HistoryScreen>
             if (aspek == null || aspek['jenis_poin'] != 'Apresiasi') continue;
 
             final appreciation = appreciations.firstWhere(
-              (a) =>
-                  DateTime.parse(a['tanggal_penghargaan']).isAtSameMomentAs(
-                    DateTime.parse(eval['created_at'].substring(0, 10)),
-                  ) ||
-                  a['alasan'].toLowerCase().contains(
-                    aspek['uraian'].toLowerCase(),
-                  ),
+              (a) {
+                final evalDate = DateTime.parse(eval['created_at'].substring(0, 10));
+                final appDate = DateTime.parse(a['tanggal_penghargaan']);
+                return (appDate.difference(evalDate).inDays.abs() <= 2) ||
+                    a['alasan'].toLowerCase().contains(aspek['uraian'].toLowerCase());
+              },
               orElse: () => null,
             );
 
@@ -254,28 +223,22 @@ class _HistoryScreenState extends State<HistoryScreen>
                   description: aspek['uraian'],
                   date: appreciation['tanggal_penghargaan'],
                   time: eval['created_at'].substring(11, 16),
-                  points:
-                      aspek['indikator_poin'] ??
+                  points: aspek['indikator_poin'] ??
                       (appreciation['level_penghargaan'] == 'PH1'
                           ? 10
                           : appreciation['level_penghargaan'] == 'PH2'
-                          ? 20
-                          : 30),
+                              ? 20
+                              : 30),
                   icon: Icons.star,
                   color: const Color(0xFF10B981),
-                  pemberi:
-                      eval['nip_wakasek'] != null
-                          ? 'Wakasek'
-                          : eval['nip_walikelas'] != null
+                  pemberi: eval['nip_wakasek'] != null
+                      ? 'Wakasek'
+                      : eval['nip_walikelas'] != null
                           ? 'Walikelas'
                           : eval['nip_bk'] != null
-                          ? 'BK'
-                          : 'Tidak diketahui',
-                  isNew:
-                      DateTime.now()
-                          .difference(DateTime.parse(eval['created_at']))
-                          .inDays <
-                      7,
+                              ? 'BK'
+                              : 'Tidak diketahui',
+                  isNew: DateTime.now().difference(DateTime.parse(eval['created_at'])).inDays < 7,
                   isPelanggaran: false,
                   createdAt: DateTime.parse(eval['created_at']),
                   pelanggaranKe: aspek['pelanggaran_ke'],
@@ -286,13 +249,12 @@ class _HistoryScreenState extends State<HistoryScreen>
           }
         }
 
-        // Fetch Violations
+        // === Pelanggaran ===
         if (skoringPelanggaranData['penilaian']['data'].isNotEmpty) {
           final violations = peringatanData['data'];
-          final evaluations =
-              skoringPelanggaranData['penilaian']['data']
-                  .where((eval) => eval['nis'].toString() == nis)
-                  .toList();
+          final evaluations = skoringPelanggaranData['penilaian']['data']
+              .where((eval) => eval['nis'].toString() == nis)
+              .toList();
 
           for (var eval in evaluations) {
             final aspek = aspekPenilaianData.firstWhere(
@@ -301,16 +263,15 @@ class _HistoryScreenState extends State<HistoryScreen>
             );
             if (aspek == null || aspek['jenis_poin'] != 'Pelanggaran') continue;
 
-            final evalDate = DateTime.parse(
-              eval['created_at'].substring(0, 10),
+            final evalDate = DateTime.parse(eval['created_at'].substring(0, 10));
+            final matchingViolation = violations.firstWhere(
+              (v) {
+                final violationDate = DateTime.parse(v['tanggal_sp']);
+                return (violationDate.difference(evalDate).inDays.abs() <= 2) ||
+                    v['alasan'].toLowerCase().contains(aspek['uraian'].toLowerCase());
+              },
+              orElse: () => null,
             );
-            final matchingViolation = violations.firstWhere((v) {
-              final violationDate = DateTime.parse(v['tanggal_sp']);
-              return (violationDate.difference(evalDate).inDays.abs() <= 2) ||
-                  v['alasan'].toLowerCase().contains(
-                    aspek['uraian'].toLowerCase(),
-                  );
-            }, orElse: () => null);
 
             if (matchingViolation != null) {
               historyList.add(
@@ -320,28 +281,22 @@ class _HistoryScreenState extends State<HistoryScreen>
                   description: aspek['uraian'],
                   date: matchingViolation['tanggal_sp'],
                   time: eval['created_at'].substring(11, 16),
-                  points:
-                      aspek['indikator_poin'] ??
+                  points: aspek['indikator_poin'] ??
                       (matchingViolation['level_sp'] == 'SP1'
                           ? 10
                           : matchingViolation['level_sp'] == 'SP2'
-                          ? 20
-                          : 30),
+                              ? 20
+                              : 30),
                   icon: Icons.warning,
                   color: const Color(0xFFFF6B6D),
-                  pelapor:
-                      eval['nip_wakasek'] != null
-                          ? 'Wakasek'
-                          : eval['nip_walikelas'] != null
+                  pelapor: eval['nip_wakasek'] != null
+                      ? 'Wakasek'
+                      : eval['nip_walikelas'] != null
                           ? 'Walikelas'
                           : eval['nip_bk'] != null
-                          ? 'BK'
-                          : 'Tidak diketahui',
-                  isNew:
-                      DateTime.now()
-                          .difference(DateTime.parse(eval['created_at']))
-                          .inDays <
-                      7,
+                              ? 'BK'
+                              : 'Tidak diketahui',
+                  isNew: DateTime.now().difference(DateTime.parse(eval['created_at'])).inDays < 7,
                   isPelanggaran: true,
                   createdAt: DateTime.parse(eval['created_at']),
                   pelanggaranKe: aspek['pelanggaran_ke'],
@@ -369,6 +324,7 @@ class _HistoryScreenState extends State<HistoryScreen>
       });
     }
   }
+
 
   void _sortHistory() {
     allHistory.sort((a, b) {

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skoring/models/point.dart';
 
 class PointUtils {
@@ -16,7 +17,6 @@ class PointUtils {
     required String description,
     required int points,
     required BuildContext context,
-    String? token, 
   }) async {
     if (idPenilaian.isEmpty ||
         nis.isEmpty ||
@@ -34,23 +34,38 @@ class PointUtils {
     }
 
     try {
-      final endpoint =
-          type == 'Apresiasi'
-              ? 'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan'
-              : 'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran';
+      // Ambil nip & id_kelas dari SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final nip = prefs.getString('walikelas_id') ?? '';
+      final idKelas = prefs.getString('id_kelas') ?? '';
+
+      if (nip.isEmpty || idKelas.isEmpty) {
+        if (context.mounted) {
+          _showErrorSnackBar(context, 'Data guru tidak lengkap. Silakan login ulang.');
+        }
+        return null;
+      }
+
+      final endpoint = type == 'Apresiasi'
+          ? 'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nip=$nip&id_kelas=$idKelas'
+          : 'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nip=$nip&id_kelas=$idKelas';
+
       print('Sending POST request to $endpoint');
       print(
-        'Request body: ${jsonEncode({'id_penilaian': idPenilaian, 'nis': nis, 'id_aspekpenilaian': idAspekPenilaian})}',
+        'Request body: ${jsonEncode({
+          'id_penilaian': idPenilaian,
+          'nis': nis,
+          'id_aspekpenilaian': idAspekPenilaian,
+        })}',
       );
-
-      final headers = {
-        'Content-Type': 'application/json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      };
 
       final response = await http.post(
         Uri.parse(endpoint),
-        headers: headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          // TOKEN SUDAH DIHAPUS
+        },
         body: jsonEncode({
           'id_penilaian': idPenilaian,
           'nis': nis,
@@ -65,7 +80,7 @@ class PointUtils {
         try {
           final responseData = jsonDecode(response.body);
           if (responseData['success'] == true ||
-              responseData['message'].contains('berhasil')) {
+              (responseData['message']?.toString().contains('berhasil') ?? false)) {
             final pointData = Point(
               type: type,
               studentName: studentName,
@@ -110,8 +125,7 @@ class PointUtils {
           if (context.mounted) {
             _showErrorSnackBar(
               context,
-              errorData['message'] ??
-                  'Gagal menghubungi server: ${response.statusCode}',
+              errorData['message'] ?? 'Gagal menghubungi server: ${response.statusCode}',
             );
           }
         } catch (e) {
@@ -164,11 +178,7 @@ class PointUtils {
       SnackBar(
         content: Row(
           children: [
-            const Icon(
-              Icons.check_circle_outline,
-              color: Colors.white,
-              size: 20,
-            ),
+            const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -272,51 +282,65 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
     return shortId;
   }
 
-  Future<void> fetchAspekPenilaian() async {
-    setState(() {
-      _isLoadingCategories = true;
-      _errorMessageCategories = null;
-    });
+Future<void> fetchAspekPenilaian() async {
+  setState(() {
+    _isLoadingCategories = true;
+    _errorMessageCategories = null;
+  });
 
-    try {
-      final response = await http.get(
-        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian'),
-      );
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-        if (jsonData['success']) {
-          setState(() {
-            _aspekPenilaian = List<Map<String, dynamic>>.from(jsonData['data']);
-            if (_aspekPenilaian.isNotEmpty) {
-              _selectedCategory =
-                  _aspekPenilaian
-                      .firstWhere(
-                        (aspek) => aspek['jenis_poin'] == _selectedPointType,
-                        orElse: () => _aspekPenilaian[0],
-                      )['id_aspekpenilaian']
-                      .toString();
-            }
-            _isLoadingCategories = false;
-          });
-        } else {
-          setState(() {
-            _errorMessageCategories = jsonData['message'];
-            _isLoadingCategories = false;
-          });
-        }
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final nip = prefs.getString('walikelas_id') ?? '';
+    final idKelas = prefs.getString('id_kelas') ?? '';
+
+    if (nip.isEmpty || idKelas.isEmpty) {
+      setState(() {
+        _errorMessageCategories = 'Data guru tidak lengkap. Silakan login ulang.';
+        _isLoadingCategories = false;
+      });
+      return;
+    }
+
+    final uri = Uri.parse(
+      'http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian?nip=$nip&id_kelas=$idKelas',
+    );
+
+    final response = await http.get(uri, headers: {'Accept': 'application/json'});
+
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body);
+      if (jsonData['success']) {
+        setState(() {
+          _aspekPenilaian = List<Map<String, dynamic>>.from(jsonData['data']);
+          if (_aspekPenilaian.isNotEmpty) {
+            _selectedCategory = _aspekPenilaian
+                .firstWhere(
+                  (aspek) => aspek['jenis_poin'] == _selectedPointType,
+                  orElse: () => _aspekPenilaian[0],
+                )['id_aspekpenilaian']
+                .toString();
+          }
+          _isLoadingCategories = false;
+        });
       } else {
         setState(() {
-          _errorMessageCategories = 'Gagal mengambil data aspek penilaian';
+          _errorMessageCategories = jsonData['message'];
           _isLoadingCategories = false;
         });
       }
-    } catch (e) {
+    } else {
       setState(() {
-        _errorMessageCategories = 'Terjadi kesalahan: $e';
+        _errorMessageCategories = 'Gagal mengambil data aspek penilaian';
         _isLoadingCategories = false;
       });
     }
+  } catch (e) {
+    setState(() {
+      _errorMessageCategories = 'Terjadi kesalahan: $e';
+      _isLoadingCategories = false;
+    });
   }
+}
 
   @override
   void dispose() {

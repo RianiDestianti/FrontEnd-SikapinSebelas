@@ -45,39 +45,39 @@ class _ProfileScreenState extends State<ProfileScreen>
     _loadProfile().then((_) => _animationController.forward());
   }
 
-  Future<void> _loadProfile() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final nip = prefs.getString('walikelas_id');
-      final role = prefs.getString('role');
-      final name = prefs.getString('name') ?? 'Unknown';
-      final email = prefs.getString('email') ?? 'Unknown';
-      final joinDate = prefs.getString('joinDate') ?? 'Unknown';
-      String roleLabel = role == '3'
-          ? 'Wali Kelas'
-          : role == '4'
-              ? 'Kaprog'
-              : 'Unknown';
+Future<void> _loadProfile() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final nip = prefs.getString('walikelas_id') ?? 'Unknown';
+    final role = prefs.getString('role') ?? 'Unknown';
+    final name = prefs.getString('name') ?? 'Unknown';
+    final email = prefs.getString('email') ?? 'Unknown';
+    final joinDate = prefs.getString('joinDate') ?? 'Unknown';
 
-      setState(() {
-        _profile = Profile(
-          name: name,
-          role: roleLabel,
-          nip: nip ?? 'Unknown',
-          username: name,
-          email: email,
-          joinDate: joinDate,
-        );
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Gagal memuat profil: $e';
-        _isLoading = false;
-      });
-    }
+    String roleLabel = role == '3'
+        ? 'Wali Kelas'
+        : role == '4'
+            ? 'Kaprog'
+            : 'Unknown';
+
+    setState(() {
+      _profile = Profile(
+        name: name,
+        role: roleLabel,
+        nip: nip,
+        username: name,
+        email: email,
+        joinDate: joinDate,
+      );
+      _isLoading = false;
+    });
+  } catch (e) {
+    setState(() {
+      _errorMessage = 'Gagal memuat profil: $e';
+      _isLoading = false;
+    });
   }
-
+}
   @override
   void dispose() {
     _animationController.dispose();
@@ -668,34 +668,47 @@ class LogoutDialog extends StatefulWidget {
 class _LogoutDialogState extends State<LogoutDialog> {
   bool _isLoggingOut = false;
 
-  Future<void> _logout() async {
-    setState(() => _isLoggingOut = true);
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+Future<void> _logout() async {
+  setState(() => _isLoggingOut = true);
+  final prefs = await SharedPreferences.getInstance();
+  final nip = prefs.getString('walikelas_id') ?? '';
 
-    try {
-      final response = await http.post(
-        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/logout'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-      );
+  if (nip.isEmpty) {
+    _showErrorSnackbar(widget.parentContext, 'Data guru tidak ditemukan.');
+    if (mounted) setState(() => _isLoggingOut = false);
+    return;
+  }
 
-      if (response.statusCode == 200) {
-        await prefs.clear();
+  try {
+    final response = await http.post(
+      Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/logout?nip=$nip'),
+      headers: {
+        'Accept': 'application/json',
+        // TOKEN SUDAH DIHAPUS
+      },
+    );
+
+    print('Logout response: ${response.statusCode} - ${response.body}');
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['success'] == true) {
+        await prefs.clear(); // Hapus semua data
         widget.onLogout();
       } else {
-        final data = json.decode(response.body);
-        _showErrorSnackbar(widget.parentContext,
-            data['message'] ?? 'Logout gagal, coba lagi.');
+        _showErrorSnackbar(widget.parentContext, data['message'] ?? 'Logout gagal.');
       }
-    } catch (e) {
-      _showErrorSnackbar(widget.parentContext, 'Terjadi kesalahan: $e');
-    } finally {
-      if (mounted) setState(() => _isLoggingOut = false);
+    } else {
+      final data = json.decode(response.body);
+      _showErrorSnackbar(widget.parentContext, data['message'] ?? 'Gagal logout.');
     }
+  } catch (e) {
+    print('Logout error: $e');
+    _showErrorSnackbar(widget.parentContext, 'Terjadi kesalahan: $e');
+  } finally {
+    if (mounted) setState(() => _isLoggingOut = false);
   }
+}
 
   void _showErrorSnackbar(BuildContext parentContext, String message) {
     ScaffoldMessenger.of(parentContext).showSnackBar(

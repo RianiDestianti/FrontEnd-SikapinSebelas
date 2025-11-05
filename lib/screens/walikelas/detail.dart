@@ -154,7 +154,6 @@ class AccumulationHistory {
 
 class DetailScreen extends StatefulWidget {
   final Map<String, dynamic> student;
-
   const DetailScreen({Key? key, required this.student}) : super(key: key);
 
   @override
@@ -167,7 +166,6 @@ class _DetailScreenState extends State<DetailScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   int _selectedTab = 0;
-
   late Student detailedStudent;
   List<ViolationHistory> pelanggaranHistory = [];
   List<AppreciationHistory> apresiasiHistory = [];
@@ -180,10 +178,12 @@ class _DetailScreenState extends State<DetailScreen>
   String? errorMessageStudent;
   List<dynamic> aspekPenilaianData = [];
 
+  String _nipWalikelas = '';
+  String _idKelas = '';
+
   @override
   void initState() {
     super.initState();
-
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -197,8 +197,25 @@ class _DetailScreenState extends State<DetailScreen>
     ).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
     );
-
     _animationController.forward();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nipWalikelas = prefs.getString('walikelas_id') ?? '';
+      _idKelas = prefs.getString('id_kelas') ?? '';
+    });
+
+    if (_nipWalikelas.isEmpty || _idKelas.isEmpty) {
+      setState(() {
+        errorMessageStudent = 'Data guru tidak lengkap. Silakan login ulang.';
+        isLoadingStudent = false;
+      });
+      return;
+    }
+
     initializeStudentData();
     fetchAspekPenilaian();
   }
@@ -208,7 +225,6 @@ class _DetailScreenState extends State<DetailScreen>
       isLoadingStudent = true;
       errorMessageStudent = null;
     });
-
     try {
       detailedStudent = Student(
         name: widget.student['name'],
@@ -233,31 +249,19 @@ class _DetailScreenState extends State<DetailScreen>
     }
   }
 
-  Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token');
-  }
+  // HAPUS _getToken() — TIDAK DIPAKAI LAGI
 
   Future<void> fetchAspekPenilaian() async {
     setState(() {
       errorMessageStudent = null;
     });
-
     try {
-      final token = await _getToken();
-      if (token == null) {
-        setState(() {
-          errorMessageStudent = 'Token tidak ditemukan, silakan login ulang';
-        });
-        return;
-      }
-
+      final uri = Uri.parse(
+        'http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian?nip=$_nipWalikelas&id_kelas=$_idKelas',
+      );
       final response = await http.get(
-        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
+        uri,
+        headers: {'Accept': 'application/json'},
       );
 
       if (response.statusCode == 200) {
@@ -268,14 +272,12 @@ class _DetailScreenState extends State<DetailScreen>
           });
         } else {
           setState(() {
-            errorMessageStudent =
-                jsonData['message'] ?? 'Gagal memuat data aspek penilaian';
+            errorMessageStudent = jsonData['message'] ?? 'Gagal memuat aspek penilaian';
           });
         }
       } else {
         setState(() {
-          errorMessageStudent =
-              'Gagal mengambil data aspek penilaian (${response.statusCode})';
+          errorMessageStudent = 'Gagal mengambil data (${response.statusCode})';
         });
       }
     } catch (e) {
@@ -290,49 +292,33 @@ class _DetailScreenState extends State<DetailScreen>
       isLoadingAppreciations = true;
       errorMessageAppreciations = null;
     });
-
     try {
-      final token = await _getToken();
-      if (token == null) {
-        setState(() {
-          errorMessageAppreciations =
-              'Token tidak ditemukan, silakan login ulang';
-          isLoadingAppreciations = false;
-        });
-        return;
-      }
-
+      final uri = Uri.parse(
+        'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
+      );
       final response = await http.get(
-        Uri.parse(
-          'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis',
-        ),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
+        uri,
+        headers: {'Accept': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         if (jsonData['penilaian']['data'].isNotEmpty) {
+          final appreciationsUri = Uri.parse(
+            'http://sikapin.student.smkn11bdg.sch.id/api/Penghargaan?nip=$_nipWalikelas&id_kelas=$_idKelas',
+          );
           final appreciationsResponse = await http.get(
-            Uri.parse(
-              'http://sikapin.student.smkn11bdg.sch.id/api/Penghargaan',
-            ),
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Accept': 'application/json',
-            },
+            appreciationsUri,
+            headers: {'Accept': 'application/json'},
           );
 
           if (appreciationsResponse.statusCode == 200) {
             final appreciationsData = jsonDecode(appreciationsResponse.body);
             if (appreciationsData['success']) {
               List<dynamic> appreciations = appreciationsData['data'];
-              List<dynamic> studentEvaluations =
-                  jsonData['penilaian']['data']
-                      .where((eval) => eval['nis'].toString() == nis)
-                      .toList();
+              List<dynamic> studentEvaluations = jsonData['penilaian']['data']
+                  .where((eval) => eval['nis'].toString() == nis)
+                  .toList();
 
               List<AppreciationHistory> filteredAppreciations = [];
               for (var eval in studentEvaluations) {
@@ -340,37 +326,32 @@ class _DetailScreenState extends State<DetailScreen>
                   (a) => a['id_aspekpenilaian'] == eval['id_aspekpenilaian'],
                   orElse: () => null,
                 );
-                if (aspek == null || aspek['jenis_poin'] != 'Apresiasi')
-                  continue;
+                if (aspek == null || aspek['jenis_poin'] != 'Apresiasi') continue;
 
                 final appreciation = appreciations.firstWhere(
-                  (a) =>
-                      DateTime.parse(a['tanggal_penghargaan']).isAtSameMomentAs(
-                        DateTime.parse(eval['created_at'].substring(0, 10)),
-                      ) ||
-                      a['alasan'].toLowerCase().contains(
-                        aspek['uraian'].toLowerCase(),
-                      ),
+                  (a) {
+                    final evalDate = DateTime.parse(eval['created_at'].substring(0, 10));
+                    final appDate = DateTime.parse(a['tanggal_penghargaan']);
+                    return (appDate.difference(evalDate).inDays.abs() <= 2) ||
+                        a['alasan'].toLowerCase().contains(aspek['uraian'].toLowerCase());
+                  },
                   orElse: () => null,
                 );
 
                 if (appreciation != null) {
-                  final apiAppreciation = ApiAppreciation.fromJson(
-                    appreciation,
-                  );
+                  final apiAppreciation = ApiAppreciation.fromJson(appreciation);
                   filteredAppreciations.add(
                     AppreciationHistory(
                       type: apiAppreciation.levelPenghargaan,
                       description: aspek['uraian'],
                       date: apiAppreciation.tanggalPenghargaan,
                       time: eval['created_at'].substring(11, 16),
-                      points:
-                          aspek['indikator_poin'] ??
+                      points: aspek['indikator_poin'] ??
                           (apiAppreciation.levelPenghargaan == 'PH1'
                               ? 10
                               : apiAppreciation.levelPenghargaan == 'PH2'
-                              ? 20
-                              : 30),
+                                  ? 20
+                                  : 30),
                       icon: Icons.star,
                       color: const Color(0xFF10B981),
                       kategori: aspek['kategori'],
@@ -378,7 +359,6 @@ class _DetailScreenState extends State<DetailScreen>
                   );
                 }
               }
-
               setState(() {
                 apresiasiHistory = filteredAppreciations;
                 isLoadingAppreciations = false;
@@ -386,31 +366,26 @@ class _DetailScreenState extends State<DetailScreen>
               });
             } else {
               setState(() {
-                errorMessageAppreciations =
-                    appreciationsData['message'] ??
-                    'Gagal memuat data penghargaan';
+                errorMessageAppreciations = appreciationsData['message'] ?? 'Gagal memuat penghargaan';
                 isLoadingAppreciations = false;
               });
             }
           } else {
             setState(() {
-              errorMessageAppreciations =
-                  'Gagal mengambil data penghargaan (${appreciationsResponse.statusCode})';
+              errorMessageAppreciations = 'Gagal mengambil data penghargaan (${appreciationsResponse.statusCode})';
               isLoadingAppreciations = false;
             });
           }
         } else {
           setState(() {
-            errorMessageAppreciations =
-                'Tidak ada data penghargaan untuk siswa ini';
+            errorMessageAppreciations = 'Tidak ada data penghargaan untuk siswa ini';
             isLoadingAppreciations = false;
             calculateAccumulations();
           });
         }
       } else {
         setState(() {
-          errorMessageAppreciations =
-              'Gagal mengambil data penilaian penghargaan (${response.statusCode})';
+          errorMessageAppreciations = 'Gagal mengambil penilaian (${response.statusCode})';
           isLoadingAppreciations = false;
         });
       }
@@ -427,47 +402,26 @@ class _DetailScreenState extends State<DetailScreen>
       isLoadingViolations = true;
       errorMessageViolations = null;
     });
-
     try {
-      final token = await _getToken();
-      if (token == null) {
-        setState(() {
-          errorMessageViolations = 'Token tidak ditemukan, silakan login ulang';
-          isLoadingViolations = false;
-        });
-        return;
-      }
-
-      final skoringResponse = await http.get(
-        Uri.parse(
-          'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis',
-        ),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
+      final skoringUri = Uri.parse(
+        'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
+      );
+      final peringatanUri = Uri.parse(
+        'http://sikapin.student.smkn11bdg.sch.id/api/peringatan?nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
 
-      final peringatanResponse = await http.get(
-        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/peringatan'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-      );
+      final skoringResponse = await http.get(skoringUri, headers: {'Accept': 'application/json'});
+      final peringatanResponse = await http.get(peringatanUri, headers: {'Accept': 'application/json'});
 
-      if (skoringResponse.statusCode == 200 &&
-          peringatanResponse.statusCode == 200) {
+      if (skoringResponse.statusCode == 200 && peringatanResponse.statusCode == 200) {
         final skoringData = jsonDecode(skoringResponse.body);
         final peringatanData = jsonDecode(peringatanResponse.body);
 
-        if (skoringData['penilaian']['data'].isNotEmpty &&
-            peringatanData['success']) {
+        if (skoringData['penilaian']['data'].isNotEmpty && peringatanData['success']) {
           List<dynamic> violations = peringatanData['data'];
-          List<dynamic> studentEvaluations =
-              skoringData['penilaian']['data']
-                  .where((eval) => eval['nis'].toString() == nis)
-                  .toList();
+          List<dynamic> studentEvaluations = skoringData['penilaian']['data']
+              .where((eval) => eval['nis'].toString() == nis)
+              .toList();
 
           List<ViolationHistory> filteredViolations = [];
           for (var eval in studentEvaluations) {
@@ -477,16 +431,15 @@ class _DetailScreenState extends State<DetailScreen>
             );
             if (aspek == null || aspek['jenis_poin'] != 'Pelanggaran') continue;
 
-            final evalDate = DateTime.parse(
-              eval['created_at'].substring(0, 10),
+            final evalDate = DateTime.parse(eval['created_at'].substring(0, 10));
+            final matchingViolation = violations.firstWhere(
+              (v) {
+                final violationDate = DateTime.parse(v['tanggal_sp']);
+                return (violationDate.difference(evalDate).inDays.abs() <= 2) ||
+                    v['alasan'].toLowerCase().contains(aspek['uraian'].toLowerCase());
+              },
+              orElse: () => null,
             );
-            final matchingViolation = violations.firstWhere((v) {
-              final violationDate = DateTime.parse(v['tanggal_sp']);
-              return (violationDate.difference(evalDate).inDays.abs() <= 2) ||
-                  v['alasan'].toLowerCase().contains(
-                    aspek['uraian'].toLowerCase(),
-                  );
-            }, orElse: () => null);
 
             if (matchingViolation != null) {
               final apiViolation = ApiViolation.fromJson(matchingViolation);
@@ -496,13 +449,12 @@ class _DetailScreenState extends State<DetailScreen>
                   description: aspek['uraian'],
                   date: apiViolation.tanggalSp,
                   time: eval['created_at'].substring(11, 16),
-                  points:
-                      aspek['indikator_poin'] ??
+                  points: aspek['indikator_poin'] ??
                       (apiViolation.levelSp == 'SP1'
                           ? 10
                           : apiViolation.levelSp == 'SP2'
-                          ? 20
-                          : 30),
+                              ? 20
+                              : 30),
                   icon: Icons.warning,
                   color: const Color(0xFFFF6B6D),
                   pelanggaranKe: aspek['pelanggaran_ke'],
@@ -511,7 +463,6 @@ class _DetailScreenState extends State<DetailScreen>
               );
             }
           }
-
           setState(() {
             pelanggaranHistory = filteredViolations;
             isLoadingViolations = false;
@@ -519,16 +470,14 @@ class _DetailScreenState extends State<DetailScreen>
           });
         } else {
           setState(() {
-            errorMessageViolations =
-                'Tidak ada data pelanggaran untuk siswa ini';
+            errorMessageViolations = 'Tidak ada data pelanggaran untuk siswa ini';
             isLoadingViolations = false;
             calculateAccumulations();
           });
         }
       } else {
         setState(() {
-          errorMessageViolations =
-              'Gagal mengambil data pelanggaran (Skoring: ${skoringResponse.statusCode}, Peringatan: ${peringatanResponse.statusCode})';
+          errorMessageViolations = 'Gagal mengambil data (Skoring: ${skoringResponse.statusCode}, Peringatan: ${peringatanResponse.statusCode})';
           isLoadingViolations = false;
         });
       }

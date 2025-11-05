@@ -677,72 +677,65 @@ class _LoginFormState extends State<_LoginForm> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _handleLogin() async {
-    String nip = _nipController.text.trim();
-    String password = _passwordController.text.trim();
+void _handleLogin() async {
+  String nip = _nipController.text.trim();
+  String password = _passwordController.text.trim();
+  if (nip.isEmpty || password.isEmpty) {
+    _showSnackBar(context, "Harap isi NIP dan password");
+    return;
+  }
+  try {
+    final response = await http.post(
+      Uri.parse("http://sikapin.student.smkn11bdg.sch.id/api/login"),
+      body: {"nip": nip, "password": password},
+    );
+    final data = jsonDecode(response.body);
 
-    if (nip.isEmpty || password.isEmpty) {
-      _showSnackBar(context, "Harap isi NIP dan password");
-      return;
-    }
+    if (response.statusCode == 200 && data['status'] == true) {
+      final prefs = await SharedPreferences.getInstance();
 
-    try {
-      final response = await http.post(
-        Uri.parse("http://sikapin.student.smkn11bdg.sch.id/api/login"),
-        body: {"nip": nip, "password": password},
+      // Simpan data user (TANPA TOKEN)
+      await prefs.setString(
+        'walikelas_id',
+        data['detail']['nip_walikelas']?.toString() ?? '',
+      );
+      await prefs.setString('role', data['role'].toString());
+      await prefs.setString(
+        'name',
+        data['detail']['nama_walikelas'] ?? data['user']['username'],
+      );
+      await prefs.setString('email', data['user']['email'] ?? 'Unknown');
+      await prefs.setString('phone', 'Unknown');
+      await prefs.setString(
+        'joinDate',
+        data['detail']['created_at'] ?? 'Unknown',
+      );
+      await prefs.setString(
+        'id_kelas',
+        data['detail']['id_kelas'] ?? 'Unknown',
+      );
+      await prefs.setString(
+        'jurusan',
+        data['detail']['jurusan'] ?? 'Unknown',
       );
 
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200 && data['status'] == true) {
-        final prefs = await SharedPreferences.getInstance();
-
-        // Simpan token Sanctum
-        await prefs.setString('token', data['token']);
-
-        // Simpan data user
-        await prefs.setString(
-          'walikelas_id',
-          data['detail']['nip_walikelas']?.toString() ?? '',
-        );
-        await prefs.setString('role', data['role'].toString());
-        await prefs.setString(
-          'name',
-          data['detail']['nama_walikelas'] ?? data['user']['username'],
-        );
-        await prefs.setString('email', data['user']['email'] ?? 'Unknown');
-        await prefs.setString('phone', 'Unknown');
-        await prefs.setString(
-          'joinDate',
-          data['detail']['created_at'] ?? 'Unknown',
-        );
-        await prefs.setString(
-          'id_kelas',
-          data['detail']['id_kelas'] ?? 'Unknown',
-        );
-        await prefs.setString(
-          'jurusan',
-          data['detail']['jurusan'] ?? 'Unknown',
-        );
-
-        // Cek role
-        String role = data['role'].toString();
-        if (role == '3') {
-          Navigator.pushNamed(context, '/walikelas');
-        } else if (role == '4') {
-          Navigator.pushNamed(context, '/kaprog');
-        } else {
-          _showSnackBar(context, "Role tidak dikenali");
-        }
+      // Cek role dan navigasi
+      String role = data['role'].toString();
+      if (role == '3') {
+        Navigator.pushNamedAndRemoveUntil(context, '/walikelas', (route) => false);
+      } else if (role == '4') {
+        Navigator.pushNamedAndRemoveUntil(context, '/kaprog', (route) => false);
       } else {
-        _showSnackBar(context, data['message'] ?? 'Login gagal');
+        _showSnackBar(context, "Role tidak dikenali");
       }
-    } catch (e) {
-      _showSnackBar(context, "Terjadi kesalahan: $e");
+    } else {
+      _showSnackBar(context, data['message'] ?? 'Login gagal');
     }
-
-    widget.onLogin();
+  } catch (e) {
+    _showSnackBar(context, "Terjadi kesalahan: $e");
   }
+  widget.onLogin();
+}
 
   @override
   void dispose() {
