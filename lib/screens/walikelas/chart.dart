@@ -114,7 +114,7 @@ class _GrafikScreenState extends State<GrafikScreen>
           : 'skoring_pelanggaran';
 
       final uri = Uri.parse(
-        'http://sikapin.student.smkn11bdg.sch.id/api/$endpoint?nip=$_nipWalikelas&id_kelas=$_teacherClassId',
+        'http://10.0.2.2:8000/api/$endpoint?nip=$_nipWalikelas&id_kelas=$_teacherClassId',
       );
 
       final response = await http.get(
