@@ -233,6 +233,9 @@ class _PointPopupState extends State<PointPopup> with TickerProviderStateMixin {
   bool _isLoadingCategories = true;
   String? _errorMessageCategories;
   List<Map<String, dynamic>> _aspekPenilaian = [];
+  final TextEditingController _categorySearchController =
+      TextEditingController();
+  String _categorySearch = '';
 
   @override
   void initState() {
@@ -349,6 +352,7 @@ Future<void> fetchAspekPenilaian() async {
     _classController.dispose();
     _dateController.dispose();
     _idPenilaianController.dispose();
+    _categorySearchController.dispose();
     super.dispose();
   }
 
@@ -416,6 +420,8 @@ Future<void> fetchAspekPenilaian() async {
   void _onPointTypeChanged(String value) {
     setState(() {
       _selectedPointType = value;
+      _categorySearch = '';
+      _categorySearchController.clear();
       _selectedCategory =
           _aspekPenilaian
               .firstWhere(
@@ -425,6 +431,37 @@ Future<void> fetchAspekPenilaian() async {
               )['id_aspekpenilaian']
               ?.toString() ??
           '';
+    });
+  }
+
+  List<Map<String, dynamic>> get _filteredAspekPenilaian {
+    final query = _categorySearch.toLowerCase();
+    return _aspekPenilaian
+        .where((aspek) => aspek['jenis_poin'] == _selectedPointType)
+        .where(
+          (aspek) =>
+              query.isEmpty ||
+              (aspek['kategori']?.toString().toLowerCase().contains(query) ??
+                  false) ||
+              (aspek['uraian']?.toString().toLowerCase().contains(query) ??
+                  false) ||
+              (aspek['kode']?.toString().toLowerCase().contains(query) ??
+                  false),
+        )
+        .toList();
+  }
+
+  void _onCategorySearchChanged(String value) {
+    setState(() {
+      _categorySearch = value;
+      final filtered = _filteredAspekPenilaian;
+      if (filtered.isNotEmpty &&
+          !filtered.any(
+            (aspek) =>
+                aspek['id_aspekpenilaian'].toString() == _selectedCategory,
+          )) {
+        _selectedCategory = filtered.first['id_aspekpenilaian'].toString();
+      }
     });
   }
 
@@ -450,8 +487,10 @@ Future<void> fetchAspekPenilaian() async {
                     dateController: _dateController,
                     idPenilaianController: _idPenilaianController,
                     selectedPointType: _selectedPointType,
-                    selectedCategory: _selectedCategory,
-                    aspekPenilaian: _aspekPenilaian,
+                  selectedCategory: _selectedCategory,
+                    aspekPenilaian: _filteredAspekPenilaian,
+                    categorySearchController: _categorySearchController,
+                    onCategorySearchChanged: _onCategorySearchChanged,
                     onPointTypeChanged: _onPointTypeChanged,
                     onCategoryChanged:
                         (value) => setState(() => _selectedCategory = value),
@@ -477,10 +516,12 @@ class PointDialogContent extends StatelessWidget {
   final TextEditingController nisController;
   final TextEditingController classController;
   final TextEditingController dateController;
+  final TextEditingController categorySearchController;
   final TextEditingController idPenilaianController;
   final String selectedPointType;
   final String selectedCategory;
   final List<Map<String, dynamic>> aspekPenilaian;
+  final ValueChanged<String> onCategorySearchChanged;
   final ValueChanged<String> onPointTypeChanged;
   final ValueChanged<String> onCategoryChanged;
   final bool isSubmitting;
@@ -496,10 +537,12 @@ class PointDialogContent extends StatelessWidget {
     required this.nisController,
     required this.classController,
     required this.dateController,
+    required this.categorySearchController,
     required this.idPenilaianController,
     required this.selectedPointType,
     required this.selectedCategory,
     required this.aspekPenilaian,
+    required this.onCategorySearchChanged,
     required this.onPointTypeChanged,
     required this.onCategoryChanged,
     required this.isSubmitting,
@@ -534,16 +577,18 @@ class PointDialogContent extends StatelessWidget {
             nameController: nameController,
             nisController: nisController,
             classController: classController,
-            dateController: dateController,
-            idPenilaianController: idPenilaianController,
-            selectedPointType: selectedPointType,
-            selectedCategory: selectedCategory,
-            aspekPenilaian: aspekPenilaian,
-            onPointTypeChanged: onPointTypeChanged,
-            onCategoryChanged: onCategoryChanged,
-            onDateTap: onDateTap,
-            isLoadingCategories: isLoadingCategories,
-            errorMessageCategories: errorMessageCategories,
+          dateController: dateController,
+          idPenilaianController: idPenilaianController,
+          selectedPointType: selectedPointType,
+          selectedCategory: selectedCategory,
+          aspekPenilaian: aspekPenilaian,
+          categorySearchController: categorySearchController,
+          onCategorySearchChanged: onCategorySearchChanged,
+          onPointTypeChanged: onPointTypeChanged,
+          onCategoryChanged: onCategoryChanged,
+          onDateTap: onDateTap,
+          isLoadingCategories: isLoadingCategories,
+          errorMessageCategories: errorMessageCategories,
           ),
           ActionButtons(
             isSubmitting: isSubmitting,
@@ -635,10 +680,12 @@ class FormSection extends StatelessWidget {
   final TextEditingController nisController;
   final TextEditingController classController;
   final TextEditingController dateController;
+  final TextEditingController categorySearchController;
   final TextEditingController idPenilaianController;
   final String selectedPointType;
   final String selectedCategory;
   final List<Map<String, dynamic>> aspekPenilaian;
+  final ValueChanged<String> onCategorySearchChanged;
   final ValueChanged<String> onPointTypeChanged;
   final ValueChanged<String> onCategoryChanged;
   final VoidCallback onDateTap;
@@ -651,10 +698,12 @@ class FormSection extends StatelessWidget {
     required this.nisController,
     required this.classController,
     required this.dateController,
+    required this.categorySearchController,
     required this.idPenilaianController,
     required this.selectedPointType,
     required this.selectedCategory,
     required this.aspekPenilaian,
+    required this.onCategorySearchChanged,
     required this.onPointTypeChanged,
     required this.onCategoryChanged,
     required this.onDateTap,
@@ -708,12 +757,18 @@ class FormSection extends StatelessWidget {
             onChanged: onPointTypeChanged,
           ),
           const SizedBox(height: 16),
+          CustomTextField(
+            controller: categorySearchController,
+            hint: 'Cari kategori / uraian / kode',
+            icon: Icons.search,
+            onTap: () {},
+            readOnly: false,
+            onChanged: onCategorySearchChanged,
+          ),
+          const SizedBox(height: 12),
           CategoryDropdown(
             selectedCategory: selectedCategory,
-            aspekPenilaian:
-                aspekPenilaian
-                    .where((aspek) => aspek['jenis_poin'] == selectedPointType)
-                    .toList(),
+            aspekPenilaian: aspekPenilaian,
             onChanged: onCategoryChanged,
             isLoading: isLoadingCategories,
             errorMessage: errorMessageCategories,
@@ -730,6 +785,7 @@ class CustomTextField extends StatelessWidget {
   final IconData icon;
   final bool readOnly;
   final VoidCallback? onTap;
+  final ValueChanged<String>? onChanged;
   final int maxLines;
 
   const CustomTextField({
@@ -739,6 +795,7 @@ class CustomTextField extends StatelessWidget {
     required this.icon,
     this.readOnly = false,
     this.onTap,
+    this.onChanged,
     this.maxLines = 1,
   }) : super(key: key);
 
@@ -759,6 +816,7 @@ class CustomTextField extends StatelessWidget {
         controller: controller,
         readOnly: readOnly,
         onTap: onTap,
+        onChanged: onChanged,
         maxLines: maxLines,
         decoration: InputDecoration(
           hintText: hint,
@@ -905,6 +963,15 @@ class CategoryDropdown extends StatelessWidget {
         style: GoogleFonts.poppins(
           fontSize: 14,
           color: const Color(0xFFEF4444),
+        ),
+      );
+    }
+    if (aspekPenilaian.isEmpty) {
+      return Text(
+        'Tidak ada kategori ditemukan',
+        style: GoogleFonts.poppins(
+          fontSize: 14,
+          color: const Color(0xFF6B7280),
         ),
       );
     }
