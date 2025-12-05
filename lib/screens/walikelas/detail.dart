@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 import 'point.dart';
 import 'note.dart';
 import 'history.dart';
@@ -177,6 +178,7 @@ class _DetailScreenState extends State<DetailScreen>
   String? errorMessageViolations;
   String? errorMessageStudent;
   List<dynamic> aspekPenilaianData = [];
+  final String _baseUrl = 'http://10.0.2.2:8000/api';
 
   String _nipWalikelas = '';
   String _idKelas = '';
@@ -257,7 +259,7 @@ void initializeStudentData() {
     });
     try {
       final uri = Uri.parse(
-        'http://10.0.2.2:8000/api/aspekpenilaian?nip=$_nipWalikelas&id_kelas=$_idKelas',
+        '$_baseUrl/aspekpenilaian?nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
       final response = await http.get(
         uri,
@@ -294,101 +296,67 @@ void initializeStudentData() {
     });
     try {
       final uri = Uri.parse(
-        'http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
+        '$_baseUrl/skoring_penghargaan?nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
-      final response = await http.get(
-        uri,
-        headers: {'Accept': 'application/json'},
-      );
+      final response = await http.get(uri, headers: {'Accept': 'application/json'});
 
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-        if (jsonData['penilaian']['data'].isNotEmpty) {
-          final appreciationsUri = Uri.parse(
-            'http://10.0.2.2:8000/api/Penghargaan?nip=$_nipWalikelas&id_kelas=$_idKelas',
-          );
-          final appreciationsResponse = await http.get(
-            appreciationsUri,
-            headers: {'Accept': 'application/json'},
-          );
-
-          if (appreciationsResponse.statusCode == 200) {
-            final appreciationsData = jsonDecode(appreciationsResponse.body);
-            if (appreciationsData['success']) {
-              List<dynamic> appreciations = appreciationsData['data'];
-              List<dynamic> studentEvaluations = jsonData['penilaian']['data']
-                  .where((eval) => eval['nis'].toString() == nis)
-                  .toList();
-
-              List<AppreciationHistory> filteredAppreciations = [];
-              for (var eval in studentEvaluations) {
-                final aspek = aspekPenilaianData.firstWhere(
-                  (a) => a['id_aspekpenilaian'] == eval['id_aspekpenilaian'],
-                  orElse: () => null,
-                );
-                if (aspek == null || aspek['jenis_poin'] != 'Apresiasi') continue;
-
-                final appreciation = appreciations.firstWhere(
-                  (a) {
-                    final evalDate = DateTime.parse(eval['created_at'].substring(0, 10));
-                    final appDate = DateTime.parse(a['tanggal_penghargaan']);
-                    return (appDate.difference(evalDate).inDays.abs() <= 2) ||
-                        a['alasan'].toLowerCase().contains(aspek['uraian'].toLowerCase());
-                  },
-                  orElse: () => null,
-                );
-
-                if (appreciation != null) {
-                  final apiAppreciation = ApiAppreciation.fromJson(appreciation);
-                  filteredAppreciations.add(
-                    AppreciationHistory(
-                      type: apiAppreciation.levelPenghargaan,
-                      description: aspek['uraian'],
-                      date: apiAppreciation.tanggalPenghargaan,
-                      time: eval['created_at'].substring(11, 16),
-                      points: aspek['indikator_poin'] ??
-                          (apiAppreciation.levelPenghargaan == 'PH1'
-                              ? 10
-                              : apiAppreciation.levelPenghargaan == 'PH2'
-                                  ? 20
-                                  : 30),
-                      icon: Icons.star,
-                      color: const Color(0xFF10B981),
-                      kategori: aspek['kategori'],
-                    ),
-                  );
-                }
-              }
-              setState(() {
-                apresiasiHistory = filteredAppreciations;
-                isLoadingAppreciations = false;
-                calculateAccumulations();
-              });
-            } else {
-              setState(() {
-                errorMessageAppreciations = appreciationsData['message'] ?? 'Gagal memuat penghargaan';
-                isLoadingAppreciations = false;
-              });
-            }
-          } else {
-            setState(() {
-              errorMessageAppreciations = 'Gagal mengambil data penghargaan (${appreciationsResponse.statusCode})';
-              isLoadingAppreciations = false;
-            });
-          }
-        } else {
-          setState(() {
-            errorMessageAppreciations = 'Tidak ada data penghargaan untuk siswa ini';
-            isLoadingAppreciations = false;
-            calculateAccumulations();
-          });
-        }
-      } else {
+      if (response.statusCode != 200) {
         setState(() {
-          errorMessageAppreciations = 'Gagal mengambil penilaian (${response.statusCode})';
+          errorMessageAppreciations =
+              'Gagal mengambil penilaian (${response.statusCode})';
           isLoadingAppreciations = false;
         });
+        return;
       }
+
+      final jsonData = jsonDecode(response.body);
+      final List<dynamic> evaluations =
+          (jsonData['penilaian']?['data'] as List<dynamic>? ?? [])
+              .where((e) => e['nis'].toString() == nis)
+              .toList();
+
+      final historiesWithDate = evaluations.map<Map<String, dynamic>>((eval) {
+        final aspek = aspekPenilaianData.firstWhere(
+          (a) =>
+              a['id_aspekpenilaian'].toString() ==
+              eval['id_aspekpenilaian'].toString(),
+          orElse: () => {
+            'uraian': 'Apresiasi',
+            'indikator_poin': 0,
+            'kategori': 'Umum',
+            'jenis_poin': 'Apresiasi',
+          },
+        );
+        final createdAt =
+            DateTime.tryParse(eval['created_at'] ?? '') ?? DateTime.now();
+        return {
+          'createdAt': createdAt,
+          'history': AppreciationHistory(
+            type: aspek['kategori']?.toString() ?? 'Apresiasi',
+            description: aspek['uraian']?.toString() ?? 'Apresiasi',
+            date: DateFormat('dd MMM yyyy').format(createdAt),
+            time: DateFormat('HH:mm').format(createdAt),
+            points: ((aspek['indikator_poin'] as num? ?? 0).abs()).toInt(),
+            icon: Icons.star,
+            color: const Color(0xFF10B981),
+            kategori: aspek['kategori'] ?? 'Umum',
+          ),
+        };
+      }).toList()
+        ..sort(
+          (a, b) =>
+              (b['createdAt'] as DateTime).compareTo(a['createdAt'] as DateTime),
+        );
+
+      setState(() {
+        apresiasiHistory = historiesWithDate
+            .map<AppreciationHistory>(
+              (e) => e['history'] as AppreciationHistory,
+            )
+            .toList();
+        isLoadingAppreciations = false;
+        calculateAccumulations();
+      });
     } catch (e) {
       setState(() {
         errorMessageAppreciations = 'Terjadi kesalahan: $e';
@@ -398,71 +366,109 @@ void initializeStudentData() {
   }
 
   Future<void> fetchViolations(String nis) async {
-  setState(() {
-    isLoadingViolations = true;
-    errorMessageViolations = null;
-  });
+    setState(() {
+      isLoadingViolations = true;
+      errorMessageViolations = null;
+    });
 
-  try {
-    final uri = Uri.parse(
-      'http://10.0.2.2:8000/api/skoring_pelanggaran?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
-    );
-    final response = await http.get(uri, headers: {'Accept': 'application/json'});
+    try {
+      Future<http.Response> loadPelanggaran() {
+        return http.get(
+          Uri.parse(
+            '$_baseUrl/skoring_pelanggaran?nip=$_nipWalikelas&id_kelas=$_idKelas',
+          ),
+          headers: {'Accept': 'application/json'},
+        );
+      }
 
-    if (response.statusCode == 200) {
+      var response = await loadPelanggaran();
+      if (response.statusCode != 200) {
+        response = await http.get(
+          Uri.parse(
+            '$_baseUrl/skoring_2pelanggaran?nip=$_nipWalikelas&id_kelas=$_idKelas',
+          ),
+          headers: {'Accept': 'application/json'},
+        );
+      }
+
+      if (response.statusCode != 200) {
+        setState(() {
+          errorMessageViolations =
+              'Gagal mengambil penilaian (${response.statusCode})';
+          isLoadingViolations = false;
+        });
+        return;
+      }
+
       final jsonData = jsonDecode(response.body);
-      final List<dynamic> evaluations = jsonData['penilaian']['data']
-          .where((e) => e['nis'].toString() == nis)
-          .toList();
+      final List<dynamic> evaluations =
+          (jsonData['penilaian']?['data'] as List<dynamic>? ?? [])
+              .where((e) => e['nis'].toString() == nis)
+              .toList();
 
-      List<ViolationHistory> history = [];
-
-      for (var eval in evaluations) {
+      final historiesWithDate = evaluations.map<Map<String, dynamic>>((eval) {
         final aspek = aspekPenilaianData.firstWhere(
-          (a) => a['id_aspekpenilaian'] == eval['id_aspekpenilaian'],
-          orElse: () => {'uraian': 'Unknown', 'indikator_poin': 10, 'kategori': 'Umum'},
+          (a) =>
+              a['id_aspekpenilaian'].toString() ==
+              eval['id_aspekpenilaian'].toString(),
+          orElse: () => {
+            'uraian': 'Pelanggaran',
+            'indikator_poin': 0,
+            'kategori': 'Umum',
+            'jenis_poin': 'Pelanggaran',
+          },
         );
 
-        history.add(ViolationHistory(
-          type: 'Pelanggaran',
-          description: aspek['uraian'],
-          date: eval['created_at'].substring(0, 10),
-          time: eval['created_at'].substring(11, 16),
-          points: aspek['indikator_poin'] ?? 10,
+        final createdAt =
+            DateTime.tryParse(eval['created_at'] ?? '') ?? DateTime.now();
+        return {
+          'createdAt': createdAt,
+          'history': ViolationHistory(
+            type: aspek['kategori']?.toString() ?? 'Pelanggaran',
+          description: aspek['uraian']?.toString() ?? 'Pelanggaran',
+          date: DateFormat('dd MMM yyyy').format(createdAt),
+          time: DateFormat('HH:mm').format(createdAt),
+          points: ((aspek['indikator_poin'] as num? ?? 0).abs()).toInt(),
           icon: Icons.warning,
           color: const Color(0xFFFF6B6D),
           pelanggaranKe: null,
           kategori: aspek['kategori'] ?? 'Umum',
-        ));
-      }
+        ),
+        };
+      }).toList()
+        ..sort(
+          (a, b) =>
+              (b['createdAt'] as DateTime).compareTo(a['createdAt'] as DateTime),
+        );
 
       setState(() {
-        pelanggaranHistory = history;
+        pelanggaranHistory = historiesWithDate
+            .map<ViolationHistory>(
+              (e) => e['history'] as ViolationHistory,
+            )
+            .toList();
         isLoadingViolations = false;
         calculateAccumulations();
       });
+    } catch (e) {
+      setState(() {
+        errorMessageViolations = 'Error: $e';
+        isLoadingViolations = false;
+      });
     }
-  } catch (e) {
-    setState(() {
-      errorMessageViolations = 'Error: $e';
-      isLoadingViolations = false;
-    });
   }
-}
   void calculateAccumulations() {
-    setState(() {
-      isLoadingAppreciations = true;
-      isLoadingViolations = true;
-    });
-
     try {
-      int totalApresiasiPoints = apresiasiHistory.fold(
+      final totalApresiasiPoints = apresiasiHistory.fold<int>(
         0,
         (sum, item) => sum + item.points,
       );
-      int totalPelanggaranPoints = detailedStudent.poinPelanggaran;
+      final totalPelanggaranPoints = pelanggaranHistory.fold<int>(
+        0,
+        (sum, item) => sum + item.points,
+      );
 
-      int totalPoints = totalApresiasiPoints - totalPelanggaranPoints;
+      final totalPoints = totalApresiasiPoints - totalPelanggaranPoints;
 
       String status;
       if (totalPoints >= 0) {
@@ -481,18 +487,14 @@ void initializeStudentData() {
             apresiasi: totalApresiasiPoints,
             total: totalPoints,
             status: status,
-            date: 'Sampai ${DateTime.now().toString().split(' ')[0]}',
+            date: 'Sampai ${DateFormat('dd MMM yyyy').format(DateTime.now())}',
           ),
         ];
-        isLoadingAppreciations = false;
-        isLoadingViolations = false;
       });
     } catch (e) {
       setState(() {
         errorMessageAppreciations =
             'Terjadi kesalahan dalam menghitung akumulasi: $e';
-        isLoadingAppreciations = false;
-        isLoadingViolations = false;
       });
     }
   }
