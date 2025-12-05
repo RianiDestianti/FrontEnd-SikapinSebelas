@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChartDataItem {
@@ -588,6 +589,7 @@ class _GrafikScreenState extends State<GrafikScreen>
             [
               {'name': 'Bar', 'icon': Icons.bar_chart},
               {'name': 'Pie', 'icon': Icons.pie_chart},
+              {'name': 'Line', 'icon': Icons.show_chart},
             ].asMap().entries.map((entry) {
               int index = entry.key;
               Map<String, dynamic> chartType = entry.value;
@@ -698,8 +700,10 @@ class _GrafikScreenState extends State<GrafikScreen>
             _buildEmptyState('Tidak ada data untuk periode ini')
           else if (_selectedChartType == 0)
             _buildBarChart()
+          else if (_selectedChartType == 1)
+            _buildPieChart()
           else
-            _buildPieChart(),
+            _buildLineChart(),
         ],
       ),
     );
@@ -924,6 +928,112 @@ class _GrafikScreenState extends State<GrafikScreen>
                     );
                   }).toList(),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLineChart() {
+    double maxValue =
+        _chartData.isNotEmpty
+            ? _chartData.map((e) => e.value).reduce((a, b) => math.max(a, b))
+            : 1.0;
+    if (maxValue <= 0) maxValue = 1.0;
+
+    final baseColor =
+        widget.chartType == 'apresiasi'
+            ? const Color(0xFF0083EE)
+            : const Color(0xFFFF6B6D);
+
+    return SizedBox(
+      height: 220,
+      child: Column(
+        children: [
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: 40,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        maxValue.toInt().toString(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                      Text(
+                        (maxValue * 0.75).toInt().toString(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                      Text(
+                        (maxValue * 0.5).toInt().toString(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                      Text(
+                        (maxValue * 0.25).toInt().toString(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                      Text(
+                        '0',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: CustomPaint(
+                    painter: LineChartPainter(
+                      data: _chartData,
+                      maxValue: maxValue,
+                      lineColor: baseColor,
+                      fillColor: baseColor.withOpacity(0.15),
+                      pointColor: baseColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const SizedBox(width: 52),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children:
+                      _chartData.map((item) {
+                        return Text(
+                          item.label,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: const Color(0xFF6B7280),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        );
+                      }).toList(),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1325,6 +1435,102 @@ class PieChartPainter extends CustomPainter {
         ..color = Colors.white
         ..style = PaintingStyle.fill,
     );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class LineChartPainter extends CustomPainter {
+  final List<ChartDataItem> data;
+  final double maxValue;
+  final Color lineColor;
+  final Color fillColor;
+  final Color pointColor;
+
+  LineChartPainter({
+    required this.data,
+    required this.maxValue,
+    required this.lineColor,
+    required this.fillColor,
+    required this.pointColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final double topPadding = 10;
+    final double bottomPadding = 20;
+    final double chartHeight = size.height - topPadding - bottomPadding;
+    final int pointCount = data.length;
+    final double stepX =
+        pointCount > 1 ? size.width / (pointCount - 1) : size.width;
+    final double safeMax = maxValue <= 0 ? 1 : maxValue;
+
+    // Grid lines
+    final gridPaint = Paint()
+      ..color = const Color(0xFFE5E7EB)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    for (int i = 0; i <= 4; i++) {
+      final double y = topPadding + (chartHeight / 4 * i);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    // Points
+    final points = <Offset>[];
+    for (int i = 0; i < pointCount; i++) {
+      final value = data[i].value;
+      final double x = stepX * i;
+      final double y = topPadding + chartHeight - (value / safeMax * chartHeight);
+      points.add(Offset(x, y));
+    }
+
+    // Fill area
+    final fillPath = Path()..moveTo(points.first.dx, size.height - bottomPadding);
+    for (final p in points) {
+      fillPath.lineTo(p.dx, p.dy);
+    }
+    fillPath.lineTo(points.last.dx, size.height - bottomPadding);
+    fillPath.close();
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [fillColor, Colors.transparent],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(fillPath, fillPaint);
+
+    // Line path
+    final linePath = Path()..moveTo(points.first.dx, points.first.dy);
+    for (final p in points.skip(1)) {
+      linePath.lineTo(p.dx, p.dy);
+    }
+    final linePaint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(linePath, linePaint);
+
+    // Points
+    final pointPaint = Paint()
+      ..color = pointColor
+      ..style = PaintingStyle.fill;
+    for (final p in points) {
+      canvas.drawCircle(p, 4, pointPaint);
+      canvas.drawCircle(
+        p,
+        7,
+        Paint()
+          ..color = pointColor.withOpacity(0.2)
+          ..style = PaintingStyle.fill,
+      );
+    }
   }
 
   @override

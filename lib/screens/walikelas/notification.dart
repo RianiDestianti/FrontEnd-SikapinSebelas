@@ -22,6 +22,8 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
   List<Map<String, dynamic>> _notificationsData = [];
   bool _isLoading = true;
   String _mostCriticalStatus = 'Aman';
+  String _teacherClassId = '';
+  String _walikelasId = '';
 
   @override
   void initState() {
@@ -44,37 +46,88 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
     });
     try {
       final prefs = await SharedPreferences.getInstance();
+      _teacherClassId = prefs.getString('id_kelas') ?? '';
+      _walikelasId = prefs.getString('walikelas_id') ?? '';
+
+      if (_teacherClassId.isEmpty || _walikelasId.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _notificationsData = [];
+          _mostCriticalStatus = 'Aman';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Data guru tidak lengkap. Silakan login ulang.',
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
+            backgroundColor: const Color(0xFFFF6B6D),
+          ),
+        );
+        return;
+      }
+
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/notifikasi'),
+        Uri.parse(
+          'http://10.0.2.2:8000/api/notifikasi?nip=$_walikelasId&id_kelas=$_teacherClassId',
+        ),
       );
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
-        final notifications = jsonData['data'] as List<dynamic>;
+        final notifications = (jsonData['data'] as List<dynamic>? ?? []);
 
         final readStatuses =
             prefs.getStringList('notification_read_status') ?? [];
 
         final notificationList =
             notifications.map((notif) {
-              final createdAt = DateTime.parse(
-                notif['tanggal_Mulai_Perbaikan'],
-              );
+              final mapNotif = notif as Map<String, dynamic>;
+              final createdRaw =
+                  mapNotif['created_at'] ??
+                      mapNotif['tanggal_Mulai_Perbaikan'] ??
+                      DateTime.now().toString();
+              final createdAt = DateTime.tryParse(createdRaw.toString()) ??
+                  DateTime.now();
               final time = timeago.format(createdAt, locale: 'id');
               final isRead = readStatuses.contains(
-                notif['id_intervensi'].toString(),
+                mapNotif['id_intervensi']?.toString() ??
+                    mapNotif['id']?.toString() ??
+                    mapNotif['nis']?.toString() ??
+                    createdAt.toIso8601String(),
               );
+              final status = mapNotif['status']?.toString() ?? 'Dalam Bimbingan';
+              final nis = mapNotif['nis']?.toString() ?? '-';
+              final namaSiswa =
+                  mapNotif['nama_siswa']?.toString() ??
+                      mapNotif['siswa']?.toString() ??
+                      'Siswa $nis';
+
               return {
-                'id': notif['id_intervensi'].toString(),
-                'title': notif['nama_intervensi'],
-                'message': notif['isi_intervensi'],
+                'id':
+                    mapNotif['id_intervensi']?.toString() ??
+                    mapNotif['id']?.toString() ??
+                    mapNotif['nis']?.toString() ??
+                    createdAt.toIso8601String(),
+                'title':
+                    mapNotif['nama_intervensi']?.toString() ??
+                    mapNotif['judul']?.toString() ??
+                    'Notifikasi Siswa',
+                'message':
+                    mapNotif['isi_intervensi']?.toString() ??
+                    mapNotif['isi']?.toString() ??
+                    mapNotif['description']?.toString() ??
+                    'Detail tidak tersedia',
                 'time': time,
-                'type': 'bk_treatment',
+                'type': mapNotif['kategori']?.toString() ?? 'bk_treatment',
                 'isRead': isRead,
-                'student': 'Siswa NIS ${notif['nis']}',
-                'action': 'Penanganan BK',
-                'bkTeacher': 'Guru BK NIP ${notif['nip_bk']}',
-                'statusChange': notif['status'],
-                'nis': notif['nis'].toString(),
+                'student': namaSiswa,
+                'action':
+                    mapNotif['action']?.toString() ?? 'Penanganan BK / Intervensi',
+                'bkTeacher':
+                    mapNotif['nama_guru_bk']?.toString() ??
+                    'Guru BK NIP ${mapNotif['nip_bk'] ?? '-'}',
+                'statusChange': status,
+                'nis': nis,
               };
             }).toList();
 
@@ -378,6 +431,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
                                           (filter) => setState(
                                             () => _selectedFilter = filter,
                                           ),
+                                      onRefresh: _fetchNotifications,
                                       onNotificationTap: (notif) {
                                         if (!notif['isRead'])
                                           _markAsRead(notif['id']);
@@ -427,6 +481,7 @@ class ContentWidget extends StatelessWidget {
   final String selectedFilter;
   final ValueChanged<String> onFilterChanged;
   final Function(Map<String, dynamic>) onNotificationTap;
+  final Future<void> Function() onRefresh;
   final double padding;
   final double fontSize;
 
@@ -436,6 +491,7 @@ class ContentWidget extends StatelessWidget {
     required this.selectedFilter,
     required this.onFilterChanged,
     required this.onNotificationTap,
+    required this.onRefresh,
     required this.padding,
     required this.fontSize,
   });
@@ -519,22 +575,33 @@ class ContentWidget extends StatelessWidget {
         ),
         SizedBox(height: padding),
         Expanded(
-          child:
-              filteredNotifications.isEmpty
-                  ? EmptyStateWidget(fontSize: fontSize, status: 'Aman')
-                  : ListView.builder(
-                    itemCount: filteredNotifications.length,
-                    itemBuilder:
-                        (context, index) => NotificationCardWidget(
-                          notification: filteredNotifications[index],
-                          onTap:
-                              () => onNotificationTap(
-                                filteredNotifications[index],
-                              ),
-                          padding: padding,
+          child: RefreshIndicator(
+            onRefresh: onRefresh,
+            child:
+                filteredNotifications.isEmpty
+                    ? ListView(
+                      children: [
+                        SizedBox(height: padding),
+                        EmptyStateWidget(
                           fontSize: fontSize,
+                          status: 'Aman',
                         ),
-                  ),
+                      ],
+                    )
+                    : ListView.builder(
+                      itemCount: filteredNotifications.length,
+                      itemBuilder:
+                          (context, index) => NotificationCardWidget(
+                            notification: filteredNotifications[index],
+                            onTap:
+                                () => onNotificationTap(
+                                  filteredNotifications[index],
+                                ),
+                            padding: padding,
+                            fontSize: fontSize,
+                          ),
+                    ),
+          ),
         ),
       ],
     );
