@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class Activity {
   final int id;
@@ -34,6 +36,103 @@ class Activity {
   });
 }
 
+String formatActivityDate(DateTime date) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final target = DateTime(date.year, date.month, date.day);
+  if (target == today) return 'Hari ini';
+  if (target == today.subtract(const Duration(days: 1))) return 'Kemarin';
+  return DateFormat('dd MMM yyyy').format(date);
+}
+
+List<Activity> mapActivityLogsFromJson({
+  required Map<String, dynamic> json,
+  required String category,
+  required String classId,
+}) {
+  final siswaList = List<Map<String, dynamic>>.from(
+    (json['siswa'] as List<dynamic>? ?? [])
+        .map((e) => Map<String, dynamic>.from(e as Map)),
+  );
+  final aspekList = List<Map<String, dynamic>>.from(
+    (json['aspekPel'] as List<dynamic>? ?? [])
+        .map((e) => Map<String, dynamic>.from(e as Map)),
+  );
+  final penilaianList = List<Map<String, dynamic>>.from(
+    ((json['penilaian']?['data']) as List<dynamic>? ?? [])
+        .map((e) => Map<String, dynamic>.from(e as Map)),
+  );
+
+  final siswaByNis = {
+    for (var siswa in siswaList) siswa['nis'].toString(): siswa,
+  };
+  final aspekById = {
+    for (var aspek in aspekList) aspek['id_aspekpenilaian'].toString(): aspek,
+  };
+
+  final lowerCategory = category.toLowerCase();
+  final isApresiasi = lowerCategory == 'apresiasi';
+
+  return penilaianList
+      .where((item) {
+        final nisKey = item['nis']?.toString();
+        if (nisKey == null) return false;
+        final siswa = siswaByNis[nisKey];
+        if (siswa == null) return false;
+        final kelasId = siswa['id_kelas']?.toString() ?? '';
+        return classId.isEmpty || kelasId == classId;
+      })
+      .map((item) {
+        final nis = item['nis']?.toString() ?? '-';
+        final siswa = siswaByNis[nis];
+        final nama = siswa?['nama_siswa']?.toString() ?? 'Siswa $nis';
+        final aspek = aspekById[item['id_aspekpenilaian']?.toString()];
+        final uraian =
+            aspek?['uraian']?.toString() ??
+            item['uraian']?.toString() ??
+            'Skoring';
+        final point = (aspek?['indikator_poin'] as num?)?.toInt() ?? 0;
+        final createdRaw = item['created_at']?.toString() ?? '';
+        final createdAt = DateTime.tryParse(createdRaw) ?? DateTime.now();
+        final statusColor =
+            isApresiasi ? const Color(0xFF10B981) : const Color(0xFFFF6B6D);
+        final gradient = isApresiasi
+            ? [const Color(0xFF10B981), const Color(0xFF34D399)]
+            : [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)];
+        final icon = isApresiasi
+            ? Icons.emoji_events_outlined
+            : Icons.report_problem_outlined;
+        final status = '${isApresiasi ? '+' : '-'}$point POIN';
+        final detailPieces = [
+          'NIS $nis',
+          if (aspek?['kategori'] != null) aspek!['kategori'].toString(),
+          if (aspek?['kode'] != null) 'Kode ${aspek!['kode']}',
+        ].where((element) => element.isNotEmpty).toList();
+
+        final parsedId =
+            int.tryParse(item['id_penilaian']?.toString() ?? '') ??
+                createdAt.millisecondsSinceEpoch;
+
+        return Activity(
+          id: parsedId,
+          type: lowerCategory,
+          icon: icon,
+          gradient: gradient,
+          title: isApresiasi
+              ? 'Penghargaan untuk $nama'
+              : 'Pelanggaran oleh $nama',
+          subtitle: uraian,
+          time: DateFormat('HH:mm').format(createdAt),
+          date: formatActivityDate(createdAt),
+          fullDate: createdAt,
+          status: status,
+          statusColor: statusColor,
+          details: detailPieces.join(' • '),
+        );
+      })
+      .toList();
+}
+
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({Key? key}) : super(key: key);
 
@@ -50,12 +149,16 @@ class _ActivityScreenState extends State<ActivityScreen>
   DateTime? _selectedDate;
   List<Activity> _allActivities = [];
   List<Activity> _filteredActivities = [];
+  bool _isLoading = true;
+  String _teacherClassId = '';
+  String _walikelasId = '';
+  String? _errorMessage;
+  final String _baseUrl = 'http://10.0.2.2:8000/api';
 
   final List<String> _filterOptions = [
     'Semua',
-    'Pencarian',
-    'Navigasi',
-    'Sistem',
+    'Apresiasi',
+    'Pelanggaran',
   ];
 
   @override
@@ -79,57 +182,96 @@ class _ActivityScreenState extends State<ActivityScreen>
   }
 
   Future<void> _loadActivities() async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> activities = prefs.getStringList('user_activities') ?? [];
-
     setState(() {
-      _allActivities =
-          activities.asMap().entries.map((entry) {
-              int index = entry.key;
-              String activity = entry.value;
-              List<String> parts = activity.split('|');
-              String type = parts[0];
-              String title = parts[1];
-              String subtitle = parts[2];
-              DateTime fullDate = DateTime.parse(parts[3]);
-              String time = DateFormat('HH:mm').format(fullDate);
-              String date = _formatDate(fullDate);
-
-              return Activity(
-                id: index + 1,
-                type: type.toLowerCase(),
-                icon:
-                    type == 'Penghargaan' || type == 'Pelanggaran'
-                        ? (type == 'Penghargaan'
-                            ? Icons.emoji_events_outlined
-                            : Icons.report_problem_outlined)
-                        : Icons.settings_outlined,
-                gradient:
-                    type == 'Penghargaan'
-                        ? [const Color(0xFF10B981), const Color(0xFF34D399)]
-                        : type == 'Pelanggaran'
-                        ? [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)]
-                        : [const Color(0xFF8B5CF6), const Color(0xFFA78BFA)],
-                title: title,
-                subtitle: subtitle,
-                time: time,
-                date: date,
-                fullDate: fullDate,
-                status: 'SELESAI',
-                statusColor:
-                    type == 'Penghargaan'
-                        ? const Color(0xFF10B981)
-                        : type == 'Pelanggaran'
-                        ? const Color(0xFFFF6B6D)
-                        : const Color(0xFF10B981),
-                details:
-                    '$subtitle pada ${DateFormat('dd MMM yyyy HH:mm').format(fullDate)}',
-              );
-            }).toList()
-            ..sort((a, b) => b.fullDate.compareTo(a.fullDate));
-
-      _filteredActivities = _allActivities;
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    final prefs = await SharedPreferences.getInstance();
+    _teacherClassId = prefs.getString('id_kelas') ?? '';
+    _walikelasId = prefs.getString('walikelas_id') ?? '';
+
+    if (_teacherClassId.isEmpty || _walikelasId.isEmpty) {
+      setState(() {
+        _allActivities = [];
+        _filteredActivities = [];
+        _isLoading = false;
+        _errorMessage = 'Data guru tidak ditemukan. Silakan login ulang.';
+      });
+      return;
+    }
+
+    try {
+      final activities = await _fetchActivitiesFromBackend();
+      setState(() {
+        _allActivities = activities;
+        _isLoading = false;
+      });
+      _filterActivities();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Gagal memuat aktivitas';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal memuat aktivitas',
+            style: GoogleFonts.poppins(fontSize: 14),
+          ),
+          backgroundColor: const Color(0xFFFF6B6D),
+        ),
+      );
+    }
+  }
+
+  Future<List<Activity>> _fetchActivitiesFromBackend() async {
+    final activities = <Activity>[];
+
+    final apresiasiUrl =
+        '$_baseUrl/skoring_penghargaan?nip=$_walikelasId&id_kelas=$_teacherClassId';
+    final apresiasiResponse = await http.get(Uri.parse(apresiasiUrl));
+    if (apresiasiResponse.statusCode == 200) {
+      final jsonData = jsonDecode(apresiasiResponse.body);
+      activities.addAll(
+        mapActivityLogsFromJson(
+          json: Map<String, dynamic>.from(jsonData),
+          category: 'Apresiasi',
+          classId: _teacherClassId,
+        ),
+      );
+    }
+
+    Future<void> loadPelanggaran(String endpoint) async {
+      final response = await http.get(Uri.parse(endpoint));
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        activities.addAll(
+          mapActivityLogsFromJson(
+            json: Map<String, dynamic>.from(jsonData),
+            category: 'Pelanggaran',
+            classId: _teacherClassId,
+          ),
+        );
+      } else {
+        throw Exception(
+          'Gagal memuat pelanggaran (${response.statusCode})',
+        );
+      }
+    }
+
+    try {
+      await loadPelanggaran(
+        '$_baseUrl/skoring_pelanggaran?nip=$_walikelasId&id_kelas=$_teacherClassId',
+      );
+    } catch (_) {
+      await loadPelanggaran(
+        '$_baseUrl/skoring_2pelanggaran?nip=$_walikelasId&id_kelas=$_teacherClassId',
+      );
+    }
+
+    activities.sort((a, b) => b.fullDate.compareTo(a.fullDate));
+    return activities;
   }
 
   void _filterActivities() {
@@ -249,28 +391,45 @@ class _ActivityScreenState extends State<ActivityScreen>
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(20),
-                          child:
-                              _filteredActivities.isEmpty
-                                  ? _buildEmptyState()
-                                  : ListView.builder(
-                                    itemCount: _filteredActivities.length,
-                                    itemBuilder: (context, index) {
-                                      final activity =
-                                          _filteredActivities[index];
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          bottom:
-                                              index <
-                                                      _filteredActivities
-                                                              .length -
-                                                          1
-                                                  ? 16
-                                                  : 0,
+                          child: _isLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : RefreshIndicator(
+                                  onRefresh: _loadActivities,
+                                  child: _filteredActivities.isEmpty
+                                      ? ListView(
+                                          physics:
+                                              const AlwaysScrollableScrollPhysics(),
+                                          children: [
+                                            const SizedBox(height: 24),
+                                            _buildEmptyState(
+                                              message: _errorMessage,
+                                            ),
+                                          ],
+                                        )
+                                      : ListView.builder(
+                                          physics:
+                                              const AlwaysScrollableScrollPhysics(),
+                                          itemCount: _filteredActivities.length,
+                                          itemBuilder: (context, index) {
+                                            final activity =
+                                                _filteredActivities[index];
+                                            return Padding(
+                                              padding: EdgeInsets.only(
+                                                bottom:
+                                                    index <
+                                                            _filteredActivities
+                                                                    .length -
+                                                                1
+                                                        ? 16
+                                                        : 0,
+                                              ),
+                                              child: _buildActivityCard(
+                                                activity,
+                                              ),
+                                            );
+                                          },
                                         ),
-                                        child: _buildActivityCard(activity),
-                                      );
-                                    },
-                                  ),
+                                ),
                         ),
                       ),
                     ],
@@ -341,7 +500,7 @@ class _ActivityScreenState extends State<ActivityScreen>
                         ),
                       ),
                       Text(
-                        'Riwayat semua aktivitas sistem',
+                        'Aktivitas skoring terbaru di kelas Anda',
                         style: GoogleFonts.poppins(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 14,
@@ -462,11 +621,9 @@ class _ActivityScreenState extends State<ActivityScreen>
                                     Icon(
                                       value == 'Semua'
                                           ? Icons.all_inclusive
-                                          : value == 'Pencarian'
-                                          ? Icons.search
-                                          : value == 'Navigasi'
-                                          ? Icons.navigation_outlined
-                                          : Icons.settings_outlined,
+                                          : value == 'Apresiasi'
+                                          ? Icons.emoji_events_outlined
+                                          : Icons.warning_amber_rounded,
                                       size: 18,
                                       color: const Color(0xFF0083EE),
                                     ),
@@ -556,7 +713,11 @@ class _ActivityScreenState extends State<ActivityScreen>
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState({String? message}) {
+    final title =
+        message != null ? 'Tidak dapat memuat aktivitas' : 'Belum ada aktivitas tercatat';
+    final description =
+        message ?? 'Aktivitas skoring akan muncul di sini';
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -576,7 +737,7 @@ class _ActivityScreenState extends State<ActivityScreen>
           ),
           const SizedBox(height: 16),
           Text(
-            'Tidak ada aktivitas ditemukan',
+            title,
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -585,7 +746,7 @@ class _ActivityScreenState extends State<ActivityScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Coba ubah filter atau kata kunci pencarian',
+            description,
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: const Color(0xFF9CA3AF),

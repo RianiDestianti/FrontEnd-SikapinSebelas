@@ -12,7 +12,6 @@ import 'package:skoring/screens/walikelas/chart.dart';
 import 'package:skoring/screens/walikelas/activity.dart';
 import 'detail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 
 class Student {
   final String name;
@@ -92,7 +91,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _pelanggaranChartTab = 0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  String _searchQuery = '';
   List<Student> _filteredSiswaTerbaik = [];
   List<Student> _filteredSiswaBerat = [];
   List<Student> _siswaTerbaik = [];
@@ -100,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _apresiasiRawData = [];
   List<Map<String, dynamic>> _pelanggaranRawData = [];
   List<Map<String, dynamic>> _kelasData = [];
-  List<Map<String, dynamic>> _activityData = [];
+  List<Activity> _activityData = [];
   String _teacherName = 'Teacher';
   String _teacherClassId = '';
   String _walikelasId = '';
@@ -117,7 +115,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     _animationController.forward();
     _loadTeacherData();
-    _loadLocalActivityData();
   }
 
   @override
@@ -136,51 +133,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     await _fetchData();
   }
 
-  Future<void> _loadLocalActivityData() async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> activities = prefs.getStringList('user_activities') ?? [];
+  Future<void> _updateActivityTimeline({
+    Map<String, dynamic>? apresiasiJson,
+    Map<String, dynamic>? pelanggaranJson,
+  }) async {
+    if (_teacherClassId.isEmpty) {
+      setState(() {
+        _activityData = [];
+      });
+      return;
+    }
 
+    final activities = <Activity>[];
+    if (apresiasiJson != null) {
+      activities.addAll(
+        mapActivityLogsFromJson(
+          json: apresiasiJson,
+          category: 'Apresiasi',
+          classId: _teacherClassId,
+        ),
+      );
+    }
+    if (pelanggaranJson != null) {
+      activities.addAll(
+        mapActivityLogsFromJson(
+          json: pelanggaranJson,
+          category: 'Pelanggaran',
+          classId: _teacherClassId,
+        ),
+      );
+    }
+
+    activities.sort((a, b) => b.fullDate.compareTo(a.fullDate));
     setState(() {
-      _activityData =
-          activities.asMap().entries.map((entry) {
-              int index = entry.key;
-              String activity = entry.value;
-              List<String> parts = activity.split('|');
-              String type = parts[0];
-              return {
-                'type': type,
-                'title': parts[1],
-                'subtitle': parts[2],
-                'time': parts[3],
-                'timeObj': DateTime.parse(parts[3]),
-                'badge': 'SELESAI',
-                'badgeColor':
-                    type == 'Penghargaan'
-                        ? const Color(0xFF10B981)
-                        : type == 'Pelanggaran'
-                        ? const Color(0xFFFF6B6D)
-                        : const Color(0xFF8B5CF6),
-                'icon':
-                    type == 'Penghargaan'
-                        ? Icons.emoji_events_outlined
-                        : type == 'Pelanggaran'
-                        ? Icons.report_problem_outlined
-                        : Icons.settings_outlined,
-                'gradient': LinearGradient(
-                  colors:
-                      type == 'Penghargaan'
-                          ? [const Color(0xFF10B981), const Color(0xFF34D399)]
-                          : type == 'Pelanggaran'
-                          ? [const Color(0xFFFF6B6D), const Color(0xFFFF8E8F)]
-                          : [const Color(0xFF8B5CF6), const Color(0xFFA78BFA)],
-                ),
-              };
-            }).toList()
-            ..sort(
-              (a, b) => (b['timeObj'] as DateTime).compareTo(
-                a['timeObj'] as DateTime,
-              ),
-            );
+      _activityData = activities;
     });
   }
 
@@ -189,20 +175,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     String title,
     String subtitle,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> activities = prefs.getStringList('user_activities') ?? [];
-    String time = DateTime.now().toString().split('.')[0];
-    String activity = '$type|$title|$subtitle|$time';
-    activities.insert(0, activity);
-    if (activities.length > 10) {
-      activities = activities.sublist(0, 10);
-    }
-    await prefs.setStringList('user_activities', activities);
-    await _loadLocalActivityData();
+    // Timeline aktivitas kini diambil dari backend untuk akurasi.
+    // Fungsi ini dibiarkan agar pemanggil lama tetap aman tanpa menambah data palsu.
   }
 
   Future<void> _fetchData() async {
     try {
+      Map<String, dynamic>? penghargaanJson;
+      Map<String, dynamic>? pelanggaranJson;
+
       final kelasResponse = await http.get(
         Uri.parse('http://10.0.2.2:8000/api/kelas'),
       );
@@ -284,7 +265,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         );
         if (penghargaanResponse.statusCode == 200) {
-          final penghargaanJson = jsonDecode(penghargaanResponse.body);
+          penghargaanJson = Map<String, dynamic>.from(
+            jsonDecode(penghargaanResponse.body),
+          );
           final siswaData = (penghargaanJson['siswa'] as List<dynamic>? ?? []);
           final penilaianData =
               (penghargaanJson['penilaian']['data'] as List<dynamic>? ?? [])
@@ -301,13 +284,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _apresiasiRawData = [];
         }
 
-        final pelanggaranResponse = await http.get(
+        var pelanggaranResponse = await http.get(
           Uri.parse(
             'http://10.0.2.2:8000/api/skoring_pelanggaran?nip=$_walikelasId&id_kelas=$_teacherClassId',
           ),
         );
+        if (pelanggaranResponse.statusCode != 200) {
+          pelanggaranResponse = await http.get(
+            Uri.parse(
+              'http://10.0.2.2:8000/api/skoring_2pelanggaran?nip=$_walikelasId&id_kelas=$_teacherClassId',
+            ),
+          );
+        }
         if (pelanggaranResponse.statusCode == 200) {
-          final pelanggaranJson = jsonDecode(pelanggaranResponse.body);
+          pelanggaranJson = Map<String, dynamic>.from(
+            jsonDecode(pelanggaranResponse.body),
+          );
           final siswaData = (pelanggaranJson['siswa'] as List<dynamic>? ?? []);
           final penilaianData =
               (pelanggaranJson['penilaian']['data'] as List<dynamic>? ?? [])
@@ -326,8 +318,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       } else {
         _apresiasiRawData = [];
         _pelanggaranRawData = [];
+        _activityData = [];
       }
 
+      await _updateActivityTimeline(
+        apresiasiJson: penghargaanJson,
+        pelanggaranJson: pelanggaranJson,
+      );
       setState(() {});
     } catch (e) {
       print('Error fetching data: $e');
@@ -387,18 +384,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return months[month - 1];
   }
 
-  String _formatTime(String dateStr) {
-    try {
-      DateTime date = DateTime.parse(dateStr);
-      return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return dateStr;
-    }
-  }
-
   void _filterSiswa(String query) {
     setState(() {
-      _searchQuery = query;
       if (query.isEmpty) {
         _filteredSiswaTerbaik = _siswaTerbaik;
         _filteredSiswaBerat = _siswaBerat;
@@ -899,7 +886,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                     ),
                                                   ),
                                                   Text(
-                                                    'Update terbaru dari aktivitas pengguna',
+                                                    'Update terbaru dari aktivitas skoring',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 12,
                                                       color: Color(0xFF6B7280),
@@ -924,25 +911,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                           ],
                                         ),
                                         const SizedBox(height: 24),
-                                        ..._activityData
-                                            .take(3)
-                                            .map(
-                                              (activity) => Padding(
-                                                padding: const EdgeInsets.only(
-                                                  bottom: 16,
-                                                ),
-                                                child:
-                                                    _buildEnhancedActivityItem(
-                                                      activity['icon'],
-                                                      activity['gradient'],
-                                                      activity['title'],
-                                                      activity['subtitle'],
-                                                      activity['time'],
-                                                      activity['badge'],
-                                                      activity['badgeColor'],
-                                                    ),
-                                              ),
+                                        if (_activityData.isEmpty)
+                                          Text(
+                                            'Belum ada aktivitas skoring.',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 13,
+                                              color: const Color(0xFF9CA3AF),
                                             ),
+                                          )
+                                        else
+                                          ..._activityData
+                                              .take(3)
+                                              .map(
+                                                (activity) => Padding(
+                                                  padding: const EdgeInsets.only(
+                                                    bottom: 16,
+                                                  ),
+                                                  child:
+                                                      _buildEnhancedActivityItem(
+                                                        activity,
+                                                      ),
+                                                ),
+                                              ),
                                       ],
                                     ),
                                   ),
@@ -1929,15 +1919,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildEnhancedActivityItem(
-    IconData icon,
-    Gradient gradient,
-    String title,
-    String subtitle,
-    String time,
-    String badge,
-    Color badgeColor,
-  ) {
+  Widget _buildEnhancedActivityItem(Activity activity) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -1964,7 +1946,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                gradient: gradient,
+                gradient: LinearGradient(colors: activity.gradient),
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
@@ -1974,7 +1956,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ],
               ),
-              child: Icon(icon, color: Colors.white, size: 24),
+              child: Icon(activity.icon, color: Colors.white, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -1982,7 +1964,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    activity.title,
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
@@ -1991,7 +1973,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle,
+                    activity.subtitle,
                     style: GoogleFonts.poppins(
                       color: const Color(0xFF6B7280),
                       fontSize: 12,
@@ -2009,7 +1991,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  _formatTime(time),
+                  '${activity.time} • ${activity.date}',
                   style: GoogleFonts.poppins(
                     color: const Color(0xFF9CA3AF),
                     fontSize: 11,
@@ -2023,17 +2005,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: badgeColor.withOpacity(0.1),
+                    color: activity.statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: badgeColor.withOpacity(0.3),
+                      color: activity.statusColor.withOpacity(0.3),
                       width: 1,
                     ),
                   ),
                   child: Text(
-                    badge,
+                    activity.status,
                     style: GoogleFonts.poppins(
-                      color: badgeColor,
+                      color: activity.statusColor,
                       fontSize: 8,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
