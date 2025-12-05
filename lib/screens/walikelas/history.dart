@@ -60,6 +60,7 @@ class _HistoryScreenState extends State<HistoryScreen>
   bool isLoading = true;
   String? errorMessage;
   List<dynamic> aspekPenilaianData = [];
+  final String _baseUrl = 'http://10.0.2.2:8000/api';
 
   String _nipWalikelas = '';
   String _idKelas = '';
@@ -109,7 +110,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     });
     try {
       final uri = Uri.parse(
-        'http://10.0.2.2:8000/api/aspekpenilaian?nip=$_nipWalikelas&id_kelas=$_idKelas',
+        '$_baseUrl/aspekpenilaian?nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
       final response = await http.get(
         uri,
@@ -150,158 +151,115 @@ class _HistoryScreenState extends State<HistoryScreen>
     });
     try {
       final skoringPenghargaanUri = Uri.parse(
-        'http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
+        '$_baseUrl/skoring_penghargaan?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
-      final skoringPelanggaranUri = Uri.parse(
-        'http://10.0.2.2:8000/api/skoring_pelanggaran?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
-      );
-      final penghargaanUri = Uri.parse(
-        'http://10.0.2.2:8000/api/Penghargaan?nip=$_nipWalikelas&id_kelas=$_idKelas',
-      );
-      final peringatanUri = Uri.parse(
-        'http://10.0.2.2:8000/api/peringatan?nip=$_nipWalikelas&id_kelas=$_idKelas',
+      var skoringPelanggaranUri = Uri.parse(
+        '$_baseUrl/skoring_pelanggaran?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
 
       final skoringPenghargaanResponse = await http.get(skoringPenghargaanUri, headers: {'Accept': 'application/json'});
-      final skoringPelanggaranResponse = await http.get(skoringPelanggaranUri, headers: {'Accept': 'application/json'});
-      final penghargaanResponse = await http.get(penghargaanUri, headers: {'Accept': 'application/json'});
-      final peringatanResponse = await http.get(peringatanUri, headers: {'Accept': 'application/json'});
+      var skoringPelanggaranResponse = await http.get(skoringPelanggaranUri, headers: {'Accept': 'application/json'});
+      if (skoringPelanggaranResponse.statusCode != 200) {
+        skoringPelanggaranUri = Uri.parse(
+          '$_baseUrl/skoring_2pelanggaran?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
+        );
+        skoringPelanggaranResponse = await http.get(skoringPelanggaranUri, headers: {'Accept': 'application/json'});
+      }
 
       if (skoringPenghargaanResponse.statusCode == 200 &&
-          skoringPelanggaranResponse.statusCode == 200 &&
-          penghargaanResponse.statusCode == 200 &&
-          peringatanResponse.statusCode == 200) {
-        final skoringPenghargaanData = jsonDecode(skoringPenghargaanResponse.body);
-        final skoringPelanggaranData = jsonDecode(skoringPelanggaranResponse.body);
-        final penghargaanData = jsonDecode(penghargaanResponse.body);
-        final peringatanData = jsonDecode(peringatanResponse.body);
-
-        if (!skoringPenghargaanData['success'] ||
-            !skoringPelanggaranData['success'] ||
-            !penghargaanData['success'] ||
-            !peringatanData['success']) {
-          setState(() {
-            errorMessage = 'Gagal memuat data: Salah satu API gagal';
-            isLoading = false;
-          });
-          return;
-        }
+          skoringPelanggaranResponse.statusCode == 200) {
+        final skoringPenghargaanData =
+            jsonDecode(skoringPenghargaanResponse.body);
+        final skoringPelanggaranData =
+            jsonDecode(skoringPelanggaranResponse.body);
 
         List<HistoryItem> historyList = [];
 
-        if (skoringPenghargaanData['penilaian']['data'].isNotEmpty) {
-          final appreciations = penghargaanData['data'];
-          final evaluations = skoringPenghargaanData['penilaian']['data']
-              .where((eval) => eval['nis'].toString() == nis)
-              .toList();
+        final apresiasiList =
+            (skoringPenghargaanData['penilaian']?['data'] as List<dynamic>? ??
+                    [])
+                .where((eval) => eval['nis'].toString() == nis)
+                .toList();
 
-          for (var eval in evaluations) {
-            final aspek = aspekPenilaianData.firstWhere(
-              (a) => a['id_aspekpenilaian'] == eval['id_aspekpenilaian'],
-              orElse: () => null,
-            );
-            if (aspek == null || aspek['jenis_poin'] != 'Apresiasi') continue;
-
-            final appreciation = appreciations.firstWhere(
-              (a) {
-                final evalDate = DateTime.parse(eval['created_at'].substring(0, 10));
-                final appDate = DateTime.parse(a['tanggal_penghargaan']);
-                return (appDate.difference(evalDate).inDays.abs() <= 2) ||
-                    a['alasan'].toLowerCase().contains(aspek['uraian'].toLowerCase());
-              },
-              orElse: () => null,
-            );
-
-            if (appreciation != null) {
-              historyList.add(
-                HistoryItem(
-                  id: 'apr_${eval['id_penilaian']}',
-                  type: appreciation['level_penghargaan'],
-                  description: aspek['uraian'],
-                  date: appreciation['tanggal_penghargaan'],
-                  time: eval['created_at'].substring(11, 16),
-                  points: aspek['indikator_poin'] ??
-                      (appreciation['level_penghargaan'] == 'PH1'
-                          ? 10
-                          : appreciation['level_penghargaan'] == 'PH2'
-                              ? 20
-                              : 30),
-                  icon: Icons.star,
-                  color: const Color(0xFF10B981),
-                  pemberi: eval['nip_wakasek'] != null
-                      ? 'Wakasek'
-                      : eval['nip_walikelas'] != null
-                          ? 'Walikelas'
-                          : eval['nip_bk'] != null
-                              ? 'BK'
-                              : 'Tidak diketahui',
-                  isNew: DateTime.now().difference(DateTime.parse(eval['created_at'])).inDays < 7,
-                  isPelanggaran: false,
-                  createdAt: DateTime.parse(eval['created_at']),
-                  pelanggaranKe: aspek['pelanggaran_ke'],
-                  kategori: aspek['kategori'],
-                ),
-              );
-            }
-          }
+        for (var eval in apresiasiList) {
+          final aspek = aspekPenilaianData.firstWhere(
+            (a) =>
+                a['id_aspekpenilaian'].toString() ==
+                eval['id_aspekpenilaian'].toString(),
+            orElse: () => null,
+          );
+          if (aspek == null) continue;
+          final createdAt =
+              DateTime.tryParse(eval['created_at'] ?? '') ?? DateTime.now();
+          historyList.add(
+            HistoryItem(
+              id: 'apr_${eval['id_penilaian'] ?? createdAt.millisecondsSinceEpoch}',
+              type: (aspek['kategori'] ?? 'Apresiasi').toString(),
+              description: aspek['uraian']?.toString() ?? 'Apresiasi',
+              date: createdAt.toIso8601String().substring(0, 10),
+              time: createdAt.toIso8601String().substring(11, 16),
+              points: ((aspek['indikator_poin'] as num? ?? 0).abs()).toInt(),
+              icon: Icons.star,
+              color: const Color(0xFF10B981),
+              pemberi: eval['nip_wakasek'] != null
+                  ? 'Wakasek'
+                  : eval['nip_walikelas'] != null
+                      ? 'Walikelas'
+                      : eval['nip_bk'] != null
+                          ? 'BK'
+                          : 'Tidak diketahui',
+              isNew: DateTime.now().difference(createdAt).inDays < 7,
+              isPelanggaran: false,
+              createdAt: createdAt,
+              pelanggaranKe: aspek['pelanggaran_ke'],
+              kategori: aspek['kategori'] ?? 'Umum',
+            ),
+          );
         }
 
-        if (skoringPelanggaranData['penilaian']['data'].isNotEmpty) {
-          final violations = peringatanData['data'];
-          final evaluations = skoringPelanggaranData['penilaian']['data']
-              .where((eval) => eval['nis'].toString() == nis)
-              .toList();
+        final pelanggaranList =
+            (skoringPelanggaranData['penilaian']?['data'] as List<dynamic>? ??
+                    [])
+                .where((eval) => eval['nis'].toString() == nis)
+                .toList();
 
-          for (var eval in evaluations) {
-            final aspek = aspekPenilaianData.firstWhere(
-              (a) => a['id_aspekpenilaian'] == eval['id_aspekpenilaian'],
-              orElse: () => null,
-            );
-            if (aspek == null || aspek['jenis_poin'] != 'Pelanggaran') continue;
-
-            final evalDate = DateTime.parse(eval['created_at'].substring(0, 10));
-            final matchingViolation = violations.firstWhere(
-              (v) {
-                final violationDate = DateTime.parse(v['tanggal_sp']);
-                return (violationDate.difference(evalDate).inDays.abs() <= 2) ||
-                    v['alasan'].toLowerCase().contains(aspek['uraian'].toLowerCase());
-              },
-              orElse: () => null,
-            );
-
-            if (matchingViolation != null) {
-              historyList.add(
-                HistoryItem(
-                  id: 'pel_${eval['id_penilaian']}',
-                  type: matchingViolation['level_sp'],
-                  description: aspek['uraian'],
-                  date: matchingViolation['tanggal_sp'],
-                  time: eval['created_at'].substring(11, 16),
-                  points: aspek['indikator_poin'] ??
-                      (matchingViolation['level_sp'] == 'SP1'
-                          ? 10
-                          : matchingViolation['level_sp'] == 'SP2'
-                              ? 20
-                              : 30),
-                  icon: Icons.warning,
-                  color: const Color(0xFFFF6B6D),
-                  pelapor: eval['nip_wakasek'] != null
-                      ? 'Wakasek'
-                      : eval['nip_walikelas'] != null
-                          ? 'Walikelas'
-                          : eval['nip_bk'] != null
-                              ? 'BK'
-                              : 'Tidak diketahui',
-                  isNew: DateTime.now().difference(DateTime.parse(eval['created_at'])).inDays < 7,
-                  isPelanggaran: true,
-                  createdAt: DateTime.parse(eval['created_at']),
-                  pelanggaranKe: aspek['pelanggaran_ke'],
-                  kategori: aspek['kategori'],
-                ),
-              );
-            }
-          }
+        for (var eval in pelanggaranList) {
+          final aspek = aspekPenilaianData.firstWhere(
+            (a) =>
+                a['id_aspekpenilaian'].toString() ==
+                eval['id_aspekpenilaian'].toString(),
+            orElse: () => null,
+          );
+          if (aspek == null) continue;
+          final createdAt =
+              DateTime.tryParse(eval['created_at'] ?? '') ?? DateTime.now();
+          historyList.add(
+            HistoryItem(
+              id: 'pel_${eval['id_penilaian'] ?? createdAt.millisecondsSinceEpoch}',
+              type: (aspek['kategori'] ?? 'Pelanggaran').toString(),
+              description: aspek['uraian']?.toString() ?? 'Pelanggaran',
+              date: createdAt.toIso8601String().substring(0, 10),
+              time: createdAt.toIso8601String().substring(11, 16),
+              points: ((aspek['indikator_poin'] as num? ?? 0).abs()).toInt(),
+              icon: Icons.warning,
+              color: const Color(0xFFFF6B6D),
+              pelapor: eval['nip_wakasek'] != null
+                  ? 'Wakasek'
+                  : eval['nip_walikelas'] != null
+                      ? 'Walikelas'
+                      : eval['nip_bk'] != null
+                          ? 'BK'
+                          : 'Tidak diketahui',
+              isNew: DateTime.now().difference(createdAt).inDays < 7,
+              isPelanggaran: true,
+              createdAt: createdAt,
+              pelanggaranKe: aspek['pelanggaran_ke'],
+              kategori: aspek['kategori'] ?? 'Umum',
+            ),
+          );
         }
+
+        historyList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
         setState(() {
           allHistory = historyList;

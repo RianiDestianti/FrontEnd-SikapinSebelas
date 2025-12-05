@@ -166,6 +166,7 @@ class _DetailScreenState extends State<DetailScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  static const int _maxHistoryPreview = 5;
   int _selectedTab = 0;
   late Student detailedStudent;
   List<ViolationHistory> pelanggaranHistory = [];
@@ -1101,6 +1102,10 @@ void initializeStudentData() {
   }
 
   Widget _buildPelanggaranContent() {
+    final displayed =
+        pelanggaranHistory.length > _maxHistoryPreview
+            ? pelanggaranHistory.take(_maxHistoryPreview).toList()
+            : pelanggaranHistory;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1120,14 +1125,21 @@ void initializeStudentData() {
         else if (pelanggaranHistory.isEmpty)
           _buildEmptyState('Belum ada riwayat pelanggaran', Icons.warning)
         else
-          ...pelanggaranHistory
-              .map((item) => _buildHistoryCard(item, isPelanggaran: true))
-              .toList(),
+          ...[
+            ...displayed
+                .map((item) => _buildHistoryCard(item, isPelanggaran: true)),
+            if (pelanggaranHistory.length > _maxHistoryPreview)
+              _buildSeeAllButton(),
+          ],
       ],
     );
   }
 
   Widget _buildApresiasiContent() {
+    final displayed =
+        apresiasiHistory.length > _maxHistoryPreview
+            ? apresiasiHistory.take(_maxHistoryPreview).toList()
+            : apresiasiHistory;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1147,9 +1159,12 @@ void initializeStudentData() {
         else if (apresiasiHistory.isEmpty)
           _buildEmptyState('Belum ada riwayat apresiasi', Icons.star)
         else
-          ...apresiasiHistory
-              .map((item) => _buildHistoryCard(item, isPelanggaran: false))
-              .toList(),
+          ...[
+            ...displayed
+                .map((item) => _buildHistoryCard(item, isPelanggaran: false)),
+            if (apresiasiHistory.length > _maxHistoryPreview)
+              _buildSeeAllButton(),
+          ],
       ],
     );
   }
@@ -1298,6 +1313,37 @@ void initializeStudentData() {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSeeAllButton() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HistoryScreen(student: widget.student),
+              ),
+            );
+          },
+          icon: const Icon(Icons.history, color: Color(0xFF0083EE)),
+          label: Text(
+            'Lihat semua riwayat',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF0083EE),
+            ),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFF0083EE)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
         ),
       ),
     );
