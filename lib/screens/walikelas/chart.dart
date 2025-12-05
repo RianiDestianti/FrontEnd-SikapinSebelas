@@ -126,7 +126,14 @@ class _GrafikScreenState extends State<GrafikScreen>
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
-        if (jsonData['success'] != true) {
+        final penilaianDataRaw =
+            (jsonData['penilaian']?['data'] as List<dynamic>? ?? []);
+        final siswaData =
+            (jsonData['siswa'] as List<dynamic>? ?? [])
+                .map((e) => e as Map<String, dynamic>)
+                .toList();
+
+        if (penilaianDataRaw.isEmpty) {
           setState(() {
             errorMessage = jsonData['message'] ?? 'Gagal memuat data';
             isLoading = false;
@@ -134,47 +141,74 @@ class _GrafikScreenState extends State<GrafikScreen>
           return;
         }
 
-        final penilaianData = jsonData['penilaian']['data'] as List<dynamic>;
-        final siswaData = jsonData['siswa'] as List<dynamic>;
+        final penilaianData = penilaianDataRaw
+            .where(
+              (item) => siswaData.any(
+                (s) =>
+                    s['nis'].toString() == item['nis'].toString() &&
+                    s['id_kelas'].toString() == _teacherClassId,
+              ),
+            )
+            .toList();
 
         Map<String, double> weeklyData = {};
         Map<String, double> monthlyData = {};
+        Map<String, double> yearlyData = {};
 
         for (var item in penilaianData) {
-          if (siswaData.any(
-            (s) => s['nis'] == item['nis'] && s['id_kelas'] == _teacherClassId,
-          )) {
-            DateTime date = DateTime.parse(item['created_at']);
-            String weekKey = '${date.year}-W${((date.day + 6) / 7).ceil()}'; // Minggu ISO
-            String monthKey = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+          final createdAt = (item as Map<String, dynamic>)['created_at'];
+          if (createdAt == null) continue;
+          final date = DateTime.tryParse(createdAt.toString());
+          if (date == null) continue;
 
-            weeklyData[weekKey] = (weeklyData[weekKey] ?? 0) + 1;
-            monthlyData[monthKey] = (monthlyData[monthKey] ?? 0) + 1;
-          }
+          final weekKey = '${date.year}-W${((date.day + 6) / 7).ceil().toString().padLeft(2, '0')}';
+          final monthKey = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+          final yearKey = date.year.toString();
+
+          weeklyData[weekKey] = (weeklyData[weekKey] ?? 0) + 1;
+          monthlyData[monthKey] = (monthlyData[monthKey] ?? 0) + 1;
+          yearlyData[yearKey] = (yearlyData[yearKey] ?? 0) + 1;
         }
 
         setState(() {
-          _chartData = _selectedPeriod == 0
-              ? weeklyData.entries
-                  .map(
-                    (e) => ChartDataItem(
-                      value: e.value,
-                      label: e.key.split('-W')[1],
-                      detail: 'Total: ${e.value.toInt()} kasus',
-                    ),
-                  )
-                  .toList()
-              : monthlyData.entries
-                  .map(
-                    (e) => ChartDataItem(
-                      value: e.value,
-                      label: _getMonthName(int.parse(e.key.split('-')[1])),
-                      detail: 'Total: ${e.value.toInt()} kasus',
-                    ),
-                  )
-                  .toList();
+          if (_selectedPeriod == 0) {
+            final weekly = weeklyData.entries.toList()
+              ..sort((a, b) => a.key.compareTo(b.key));
+            _chartData = weekly
+                .map(
+                  (e) => ChartDataItem(
+                    value: e.value,
+                    label: e.key.split('-W')[1],
+                    detail: 'Total: ${e.value.toInt()} kasus',
+                  ),
+                )
+                .toList();
+          } else if (_selectedPeriod == 1) {
+            final monthly = monthlyData.entries.toList()
+              ..sort((a, b) => a.key.compareTo(b.key));
+            _chartData = monthly
+                .map(
+                  (e) => ChartDataItem(
+                    value: e.value,
+                    label: _getMonthName(int.parse(e.key.split('-')[1])),
+                    detail: 'Total: ${e.value.toInt()} kasus',
+                  ),
+                )
+                .toList();
+          } else {
+            final yearly = yearlyData.entries.toList()
+              ..sort((a, b) => a.key.compareTo(b.key));
+            _chartData = yearly
+                .map(
+                  (e) => ChartDataItem(
+                    value: e.value,
+                    label: e.key,
+                    detail: 'Total: ${e.value.toInt()} kasus',
+                  ),
+                )
+                .toList();
+          }
 
-          _chartData.sort((a, b) => a.label.compareTo(b.label));
           isLoading = false;
         });
       } else {

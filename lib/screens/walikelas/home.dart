@@ -97,12 +97,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Student> _filteredSiswaBerat = [];
   List<Student> _siswaTerbaik = [];
   List<Student> _siswaBerat = [];
-  List<Map<String, dynamic>> _apresiasiData = [];
-  List<Map<String, dynamic>> _pelanggaranData = [];
+  List<Map<String, dynamic>> _apresiasiRawData = [];
+  List<Map<String, dynamic>> _pelanggaranRawData = [];
   List<Map<String, dynamic>> _kelasData = [];
   List<Map<String, dynamic>> _activityData = [];
   String _teacherName = 'Teacher';
   String _teacherClassId = '';
+  String _walikelasId = '';
 
   @override
   void initState() {
@@ -130,6 +131,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() {
       _teacherName = prefs.getString('name') ?? 'Teacher';
       _teacherClassId = prefs.getString('id_kelas') ?? '';
+      _walikelasId = prefs.getString('walikelas_id') ?? '';
     });
     await _fetchData();
   }
@@ -275,30 +277,55 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         );
       }
 
-      final penghargaanResponse = await http.get(
-        Uri.parse(
-          'http://10.0.2.2:8000/api/skoring_penghargaan',
-        ),
-      );
-      if (penghargaanResponse.statusCode == 200) {
-        final penghargaanJson = jsonDecode(penghargaanResponse.body);
-        final penghargaanData = List<Map<String, dynamic>>.from(
-          penghargaanJson['penilaian']['data'],
+      if (_walikelasId.isNotEmpty && _teacherClassId.isNotEmpty) {
+        final penghargaanResponse = await http.get(
+          Uri.parse(
+            'http://10.0.2.2:8000/api/skoring_penghargaan?nip=$_walikelasId&id_kelas=$_teacherClassId',
+          ),
         );
-        _apresiasiData = _aggregateChartData(penghargaanData, 'created_at');
-      }
+        if (penghargaanResponse.statusCode == 200) {
+          final penghargaanJson = jsonDecode(penghargaanResponse.body);
+          final siswaData = (penghargaanJson['siswa'] as List<dynamic>? ?? []);
+          final penilaianData =
+              (penghargaanJson['penilaian']['data'] as List<dynamic>? ?? [])
+                  .where(
+                    (item) => siswaData.any(
+                      (siswa) =>
+                          siswa['nis'].toString() == item['nis'].toString() &&
+                          siswa['id_kelas'].toString() == _teacherClassId,
+                    ),
+                  )
+                  .toList();
+          _apresiasiRawData = List<Map<String, dynamic>>.from(penilaianData);
+        } else {
+          _apresiasiRawData = [];
+        }
 
-      final pelanggaranResponse = await http.get(
-        Uri.parse(
-          'http://10.0.2.2:8000/api/skoring_pelanggaran',
-        ),
-      );
-      if (pelanggaranResponse.statusCode == 200) {
-        final pelanggaranJson = jsonDecode(pelanggaranResponse.body);
-        final pelanggaranData = List<Map<String, dynamic>>.from(
-          pelanggaranJson['penilaian']['data'],
+        final pelanggaranResponse = await http.get(
+          Uri.parse(
+            'http://10.0.2.2:8000/api/skoring_pelanggaran?nip=$_walikelasId&id_kelas=$_teacherClassId',
+          ),
         );
-        _pelanggaranData = _aggregateChartData(pelanggaranData, 'created_at');
+        if (pelanggaranResponse.statusCode == 200) {
+          final pelanggaranJson = jsonDecode(pelanggaranResponse.body);
+          final siswaData = (pelanggaranJson['siswa'] as List<dynamic>? ?? []);
+          final penilaianData =
+              (pelanggaranJson['penilaian']['data'] as List<dynamic>? ?? [])
+                  .where(
+                    (item) => siswaData.any(
+                      (siswa) =>
+                          siswa['nis'].toString() == item['nis'].toString() &&
+                          siswa['id_kelas'].toString() == _teacherClassId,
+                    ),
+                  )
+                  .toList();
+          _pelanggaranRawData = List<Map<String, dynamic>>.from(penilaianData);
+        } else {
+          _pelanggaranRawData = [];
+        }
+      } else {
+        _apresiasiRawData = [];
+        _pelanggaranRawData = [];
       }
 
       setState(() {});
@@ -309,55 +336,52 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   List<Map<String, dynamic>> _aggregateChartData(
     List<Map<String, dynamic>> data,
-    String dateField,
-  ) {
+    int selectedTab, {
+    String dateField = 'created_at',
+  }) {
     Map<String, double> weeklyData = {};
     Map<String, double> monthlyData = {};
 
     for (var item in data) {
-      DateTime date = DateTime.parse(item[dateField]);
-      String weekKey = '${date.year}-W${(date.day / 7).ceil()}';
-      String monthKey = '${date.year}-${date.month}';
+      final rawDate = item[dateField];
+      if (rawDate == null) continue;
+      DateTime date = DateTime.parse(rawDate.toString());
+      String weekKey = '${date.year}-W${((date.day + 6) / 7).ceil().toString().padLeft(2, '0')}';
+      String monthKey = '${date.year}-${date.month.toString().padLeft(2, '0')}';
 
       weeklyData[weekKey] = (weeklyData[weekKey] ?? 0) + 1;
       monthlyData[monthKey] = (monthlyData[monthKey] ?? 0) + 1;
     }
 
-    List<Map<String, dynamic>> result = [];
-    if (_apresiasiChartTab == 0 || _pelanggaranChartTab == 0) {
-      result =
-          weeklyData.entries
-              .map((e) => {'label': e.key.split('-W')[1], 'value': e.value})
-              .toList();
-    } else {
-      result =
-          monthlyData.entries
-              .map(
-                (e) => {
-                  'label': _getMonthName(int.parse(e.key.split('-')[1])),
-                  'value': e.value,
-                },
-              )
-              .toList();
+    if (selectedTab == 0) {
+      final weeklyEntries = weeklyData.entries.toList()
+        ..sort((a, b) => a.key.compareTo(b.key));
+      return weeklyEntries
+          .map(
+            (e) => {
+              'label': e.key.split('-W')[1],
+              'value': e.value,
+            },
+          )
+          .toList();
     }
 
-    return result..sort((a, b) => a['label'].compareTo(b['label']));
+    final monthlyEntries = monthlyData.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return monthlyEntries
+        .map(
+          (e) => {
+            'label': _getMonthName(int.parse(e.key.split('-')[1])),
+            'value': e.value,
+          },
+        )
+        .toList();
   }
 
   String _getMonthName(int month) {
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
     ];
 
     return months[month - 1];
@@ -446,6 +470,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final apresiasiChartData = _aggregateChartData(
+      _apresiasiRawData,
+      _apresiasiChartTab,
+    );
+    final pelanggaranChartData = _aggregateChartData(
+      _pelanggaranRawData,
+      _pelanggaranChartTab,
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -755,9 +788,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     ],
                                   ),
                                   _buildBarChart(
-                                    _apresiasiChartTab == 0
-                                        ? _apresiasiData
-                                        : _apresiasiData,
+                                    apresiasiChartData,
                                     const LinearGradient(
                                       colors: [
                                         Color(0xFF61B8FF),
@@ -783,9 +814,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     ],
                                   ),
                                   _buildBarChart(
-                                    _pelanggaranChartTab == 0
-                                        ? _pelanggaranData
-                                        : _pelanggaranData,
+                                    pelanggaranChartData,
                                     const LinearGradient(
                                       colors: [
                                         Color(0xFFFF6B6D),
