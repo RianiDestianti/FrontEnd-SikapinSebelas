@@ -45,7 +45,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
     try {
       final prefs = await SharedPreferences.getInstance();
       final response = await http.get(
-        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/notifikasi'),
+        Uri.parse('http://127.0.0.1:3000/api/notifikasi'),
       );
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);

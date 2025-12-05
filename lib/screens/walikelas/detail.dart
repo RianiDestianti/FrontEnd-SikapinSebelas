@@ -257,7 +257,7 @@ void initializeStudentData() {
     });
     try {
       final uri = Uri.parse(
-        'http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian?nip=$_nipWalikelas&id_kelas=$_idKelas',
+        'http://127.0.0.1:3000/api/aspekpenilaian?nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
       final response = await http.get(
         uri,
@@ -294,7 +294,7 @@ void initializeStudentData() {
     });
     try {
       final uri = Uri.parse(
-        'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
+        'http://127.0.0.1:3000/api/skoring_penghargaan?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
       final response = await http.get(
         uri,
@@ -305,7 +305,7 @@ void initializeStudentData() {
         final jsonData = jsonDecode(response.body);
         if (jsonData['penilaian']['data'].isNotEmpty) {
           final appreciationsUri = Uri.parse(
-            'http://sikapin.student.smkn11bdg.sch.id/api/Penghargaan?nip=$_nipWalikelas&id_kelas=$_idKelas',
+            'http://127.0.0.1:3000/api/Penghargaan?nip=$_nipWalikelas&id_kelas=$_idKelas',
           );
           final appreciationsResponse = await http.get(
             appreciationsUri,
@@ -405,7 +405,7 @@ void initializeStudentData() {
 
   try {
     final uri = Uri.parse(
-      'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
+      'http://127.0.0.1:3000/api/skoring_pelanggaran?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
     );
     final response = await http.get(uri, headers: {'Accept': 'application/json'});
 

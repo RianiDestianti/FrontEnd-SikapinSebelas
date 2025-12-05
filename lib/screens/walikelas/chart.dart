@@ -74,7 +74,7 @@ class _GrafikScreenState extends State<GrafikScreen> with TickerProviderStateMix
 
   Future<void> _fetch() async {
     final endpoint = widget.chartType == 'apresiasi' ? 'skoring_penghargaan' : 'skoring_pelanggaran';
-    final uri = Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/$endpoint?nip=$_nip&id_kelas=$_classId');
+    final uri = Uri.parse('http://127.0.0.1:3000/api/$endpoint?nip=$_nip&id_kelas=$_classId');
 
     final res = await http.get(uri, headers: {'Accept': 'application/json'});
     if (res.statusCode != 200) throw 'Gagal mengambil data';

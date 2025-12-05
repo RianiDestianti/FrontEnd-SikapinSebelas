@@ -202,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _fetchData() async {
     try {
       final kelasResponse = await http.get(
-        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/kelas'),
+        Uri.parse('http://127.0.0.1:3000/api/kelas'),
       );
       if (kelasResponse.statusCode == 200) {
         final kelasJson = jsonDecode(kelasResponse.body);
@@ -210,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
 
       final akumulasiResponse = await http.get(
-        Uri.parse('http://sikapin.student.smkn11bdg.sch.id/api/akumulasi'),
+        Uri.parse('http://127.0.0.1:3000/api/akumulasi'),
       );
       if (akumulasiResponse.statusCode == 200) {
         final akumulasiJson = jsonDecode(akumulasiResponse.body);
@@ -277,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       final penghargaanResponse = await http.get(
         Uri.parse(
-          'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan',
+          'http://127.0.0.1:3000/api/skoring_penghargaan',
         ),
       );
       if (penghargaanResponse.statusCode == 200) {
@@ -290,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       final pelanggaranResponse = await http.get(
         Uri.parse(
-          'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran',
+          'http://127.0.0.1:3000/api/skoring_pelanggaran',
         ),
       );
       if (pelanggaranResponse.statusCode == 200) {

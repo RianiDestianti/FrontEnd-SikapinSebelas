@@ -109,7 +109,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     });
     try {
       final uri = Uri.parse(
-        'http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian?nip=$_nipWalikelas&id_kelas=$_idKelas',
+        'http://127.0.0.1:3000/api/aspekpenilaian?nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
       final response = await http.get(
         uri,
@@ -150,16 +150,16 @@ class _HistoryScreenState extends State<HistoryScreen>
     });
     try {
       final skoringPenghargaanUri = Uri.parse(
-        'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
+        'http://127.0.0.1:3000/api/skoring_penghargaan?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
       final skoringPelanggaranUri = Uri.parse(
-        'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
+        'http://127.0.0.1:3000/api/skoring_pelanggaran?nis=$nis&nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
       final penghargaanUri = Uri.parse(
-        'http://sikapin.student.smkn11bdg.sch.id/api/Penghargaan?nip=$_nipWalikelas&id_kelas=$_idKelas',
+        'http://127.0.0.1:3000/api/Penghargaan?nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
       final peringatanUri = Uri.parse(
-        'http://sikapin.student.smkn11bdg.sch.id/api/peringatan?nip=$_nipWalikelas&id_kelas=$_idKelas',
+        'http://127.0.0.1:3000/api/peringatan?nip=$_nipWalikelas&id_kelas=$_idKelas',
       );
 
       final skoringPenghargaanResponse = await http.get(skoringPenghargaanUri, headers: {'Accept': 'application/json'});

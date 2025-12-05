@@ -46,8 +46,8 @@ class PointUtils {
       }
 
       final endpoint = type == 'Apresiasi'
-          ? 'http://sikapin.student.smkn11bdg.sch.id/api/skoring_penghargaan?nip=$nip&id_kelas=$idKelas'
-          : 'http://sikapin.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nip=$nip&id_kelas=$idKelas';
+          ? 'http://127.0.0.1:3000/api/skoring_penghargaan?nip=$nip&id_kelas=$idKelas'
+          : 'http://127.0.0.1:3000/api/skoring_pelanggaran?nip=$nip&id_kelas=$idKelas';
 
       print('Sending POST request to $endpoint');
       print(
@@ -300,7 +300,7 @@ Future<void> fetchAspekPenilaian() async {
     }
 
     final uri = Uri.parse(
-      'http://sikapin.student.smkn11bdg.sch.id/api/aspekpenilaian?nip=$nip&id_kelas=$idKelas',
+      'http://127.0.0.1:3000/api/aspekpenilaian?nip=$nip&id_kelas=$idKelas',
     );
 
     final response = await http.get(uri, headers: {'Accept': 'application/json'});

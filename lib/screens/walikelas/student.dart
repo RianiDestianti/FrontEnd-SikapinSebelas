@@ -124,7 +124,7 @@ Future<void> fetchKelas() async {
 
   try {
     final uri = Uri.parse(
-      'http://sikapin.student.smkn11bdg.sch.id/api/kelas?nip=$walikelasId&id_kelas=$idKelas',
+      'http://127.0.0.1:3000/api/kelas?nip=$walikelasId&id_kelas=$idKelas',
     );
 
     final response = await http.get(
@@ -192,7 +192,7 @@ Future<void> fetchSiswa() async {
 
   try {
     final uri = Uri.parse(
-      'http://sikapin.student.smkn11bdg.sch.id/api/siswa?nip=$walikelasId&id_kelas=$idKelas',
+      'http://127.0.0.1:3000/api/siswa?nip=$walikelasId&id_kelas=$idKelas',
     );
 
     final response = await http.get(

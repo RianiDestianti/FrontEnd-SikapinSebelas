@@ -35,7 +35,7 @@ class NoteUtils {
       }
 
       final url = Uri.parse(
-        'http://sikapin.student.smkn11bdg.sch.id/api/AddCatatan/$nis?nip=$nip&id_kelas=$idKelas',
+        'http://127.0.0.1:3000/api/AddCatatan/$nis?nip=$nip&id_kelas=$idKelas',
       );
 
       print('Sending POST request to $url');
