@@ -110,20 +110,27 @@ class _GrafikScreenState extends State<GrafikScreen>
     });
 
     try {
-      final endpoint = widget.chartType == 'apresiasi'
-          ? 'skoring_penghargaan'
-          : 'skoring_pelanggaran';
+      final isApresiasi = widget.chartType == 'apresiasi';
+      final primaryEndpoint =
+          isApresiasi ? 'skoring_penghargaan' : 'skoring_pelanggaran';
+      final fallbackEndpoint =
+          isApresiasi ? null : 'skoring_2pelanggaran'; // beberapa API butuh endpoint ini
 
-      final uri = Uri.parse(
-        'http://10.0.2.2:8000/api/$endpoint?nip=$_nipWalikelas&id_kelas=$_teacherClassId',
-      );
+      Future<http.Response> _doRequest(String endpoint) {
+        final uri = Uri.parse(
+          'http://10.0.2.2:8000/api/$endpoint?nip=$_nipWalikelas&id_kelas=$_teacherClassId',
+        );
+        return http.get(uri, headers: {'Accept': 'application/json'});
+      }
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Accept': 'application/json',
-        },
-      );
+      http.Response response = await _doRequest(primaryEndpoint);
+      if (response.statusCode != 200 && fallbackEndpoint != null) {
+        // coba ulang dengan endpoint alternatif
+        final retry = await _doRequest(fallbackEndpoint);
+        if (retry.statusCode == 200) {
+          response = retry;
+        }
+      }
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
