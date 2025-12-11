@@ -102,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String _teacherName = 'Teacher';
   String _teacherClassId = '';
   String _walikelasId = '';
+  bool _isRefreshing = false;
 
   @override
   void initState() {
@@ -179,7 +180,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // Fungsi ini dibiarkan agar pemanggil lama tetap aman tanpa menambah data palsu.
   }
 
-  Future<void> _fetchData() async {
+  Future<void> _fetchData({bool force = false}) async {
+    if (_isRefreshing && !force) return;
     try {
       Map<String, dynamic>? penghargaanJson;
       Map<String, dynamic>? pelanggaranJson;
@@ -329,6 +331,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } catch (e) {
       print('Error fetching data: $e');
     }
+  }
+
+  Future<void> _manualRefresh() async {
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    await _fetchData(force: true);
+    if (mounted) setState(() => _isRefreshing = false);
   }
 
   List<Map<String, dynamic>> _aggregateChartData(
@@ -582,9 +591,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         ),
                                         const SizedBox(width: 8),
                                         GestureDetector(
-                                          onTap: () async {
-                                            await _fetchData();
-                                          },
+                                          onTap: _manualRefresh,
                                           child: Container(
                                             width: 40,
                                             height: 40,
@@ -595,12 +602,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),
-                                            child: const Center(
-                                              child: Icon(
-                                                Icons.refresh_rounded,
-                                                color: Colors.white,
-                                                size: 24,
-                                              ),
+                                            child: Center(
+                                              child: _isRefreshing
+                                                  ? const SizedBox(
+                                                      width: 18,
+                                                      height: 18,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                                Color>(
+                                                          Colors.white,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : const Icon(
+                                                      Icons.refresh_rounded,
+                                                      color: Colors.white,
+                                                      size: 24,
+                                                    ),
                                             ),
                                           ),
                                         ),

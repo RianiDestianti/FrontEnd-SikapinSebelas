@@ -80,6 +80,7 @@ class _SiswaScreenState extends State<SiswaScreen>
   String? errorMessageSiswa;
   String? walikelasId;
   String? idKelas;
+  bool _isRefreshing = false;
 
   @override
   void initState() {
@@ -299,8 +300,11 @@ Future<void> fetchSiswa() async {
   }
 
   void _refreshData() {
-    fetchKelas();
-    fetchSiswa();
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    Future.wait([fetchKelas(), fetchSiswa()]).whenComplete(() {
+      if (mounted) setState(() => _isRefreshing = false);
+    });
   }
 
   Widget _buildHeaderContent() {
@@ -533,11 +537,25 @@ Future<void> fetchSiswa() async {
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                               ),
-                                              child: const Icon(
-                                                Icons.refresh_rounded,
-                                                color: Colors.white,
-                                                size: 24,
-                                              ),
+                                              child: _isRefreshing
+                                                  ? const SizedBox(
+                                                      width: 18,
+                                                      height: 18,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                                Color>(
+                                                          Colors.white,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : const Icon(
+                                                      Icons.refresh_rounded,
+                                                      color: Colors.white,
+                                                      size: 24,
+                                                    ),
                                             ),
                                           ),
                                           const SizedBox(width: 8),

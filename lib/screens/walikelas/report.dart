@@ -156,6 +156,7 @@ class _LaporanScreenState extends State<LaporanScreen>
   String? errorMessageAspek;
   String? walikelasId;
   String? idKelas;
+  bool _isRefreshing = false;
   Map<String, dynamic> aspekPenilaianData = {};
 
   Map<String, dynamic> _spStatus(Student student) {
@@ -262,6 +263,13 @@ class _LaporanScreenState extends State<LaporanScreen>
 
   Future<void> _refreshData() async {
     await Future.wait([fetchKelas(), fetchSiswa(), fetchAspekPenilaian()]);
+  }
+
+  Future<void> _manualRefresh() async {
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    await _refreshData();
+    if (mounted) setState(() => _isRefreshing = false);
   }
 
   List<Map<String, dynamic>> _mappedStudentsForExport() {
@@ -1069,7 +1077,7 @@ class _LaporanScreenState extends State<LaporanScreen>
                                           ),
                                           const SizedBox(width: 8),
                                           GestureDetector(
-                                            onTap: _refreshData,
+                                            onTap: _manualRefresh,
                                             child: Container(
                                               width: 40,
                                               height: 40,
@@ -1080,11 +1088,25 @@ class _LaporanScreenState extends State<LaporanScreen>
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                               ),
-                                              child: const Icon(
-                                                Icons.refresh_rounded,
-                                                color: Colors.white,
-                                                size: 24,
-                                              ),
+                                              child: _isRefreshing
+                                                  ? const SizedBox(
+                                                      width: 18,
+                                                      height: 18,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                                Color>(
+                                                          Colors.white,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : const Icon(
+                                                      Icons.refresh_rounded,
+                                                      color: Colors.white,
+                                                      size: 24,
+                                                    ),
                                             ),
                                           ),
                                           const SizedBox(width: 8),
