@@ -42,7 +42,7 @@ class _GrafikScreenState extends State<GrafikScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   String _teacherClassId = '';
-  String _nipWalikelas = ''; // NIP dari login
+  String _nipWalikelas = '';
   List<ChartDataItem> _chartData = [];
   bool isLoading = true;
   String? errorMessage;
@@ -114,7 +114,7 @@ class _GrafikScreenState extends State<GrafikScreen>
       final primaryEndpoint =
           isApresiasi ? 'skoring_penghargaan' : 'skoring_pelanggaran';
       final fallbackEndpoint =
-          isApresiasi ? null : 'skoring_2pelanggaran'; // beberapa API butuh endpoint ini
+          isApresiasi ? null : 'skoring_2pelanggaran';
 
       Future<http.Response> _doRequest(String endpoint) {
         final uri = Uri.parse(
@@ -125,7 +125,6 @@ class _GrafikScreenState extends State<GrafikScreen>
 
       http.Response response = await _doRequest(primaryEndpoint);
       if (response.statusCode != 200 && fallbackEndpoint != null) {
-        // coba ulang dengan endpoint alternatif
         final retry = await _doRequest(fallbackEndpoint);
         if (retry.statusCode == 200) {
           response = retry;
@@ -1475,7 +1474,6 @@ class LineChartPainter extends CustomPainter {
         pointCount > 1 ? size.width / (pointCount - 1) : size.width;
     final double safeMax = maxValue <= 0 ? 1 : maxValue;
 
-    // Grid lines
     final gridPaint = Paint()
       ..color = const Color(0xFFE5E7EB)
       ..style = PaintingStyle.stroke
@@ -1486,7 +1484,6 @@ class LineChartPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    // Points
     final points = <Offset>[];
     for (int i = 0; i < pointCount; i++) {
       final value = data[i].value;
@@ -1495,7 +1492,6 @@ class LineChartPainter extends CustomPainter {
       points.add(Offset(x, y));
     }
 
-    // Fill area
     final fillPath = Path()..moveTo(points.first.dx, size.height - bottomPadding);
     for (final p in points) {
       fillPath.lineTo(p.dx, p.dy);
@@ -1512,7 +1508,6 @@ class LineChartPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     canvas.drawPath(fillPath, fillPaint);
 
-    // Line path
     final linePath = Path()..moveTo(points.first.dx, points.first.dy);
     for (final p in points.skip(1)) {
       linePath.lineTo(p.dx, p.dy);
@@ -1524,7 +1519,6 @@ class LineChartPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     canvas.drawPath(linePath, linePaint);
 
-    // Points
     final pointPaint = Paint()
       ..color = pointColor
       ..style = PaintingStyle.fill;

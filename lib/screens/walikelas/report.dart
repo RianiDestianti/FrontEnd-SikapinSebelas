@@ -325,14 +325,11 @@ class _LaporanScreenState extends State<LaporanScreen>
 
 
   Future<bool> _ensureStoragePermission() async {
-    // Izinkan lanjut tanpa memblokir eksport; FileSaver dapat membuka sistem picker.
     if (!Platform.isAndroid) return true;
 
     try {
-      // Coba minta izin; abaikan hasil agar tidak menghalangi flow.
       final storageStatus = await Permission.storage.request();
       if (storageStatus.isPermanentlyDenied) {
-        // Coba izin akses penuh jika tersedia.
         final manageStatus = await Permission.manageExternalStorage.request();
         if (manageStatus.isPermanentlyDenied && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -353,7 +350,7 @@ class _LaporanScreenState extends State<LaporanScreen>
       }
     } catch (_) {}
 
-    return true; // tetap lanjutkan, biarkan FileSaver yang menangani picker/penulisan
+    return true;
   }
 
   Future<void> fetchKelas() async {

@@ -176,8 +176,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     String title,
     String subtitle,
   ) async {
-    // Timeline aktivitas kini diambil dari backend untuk akurasi.
-    // Fungsi ini dibiarkan agar pemanggil lama tetap aman tanpa menambah data palsu.
   }
 
   Future<void> _fetchData({bool force = false}) async {
@@ -213,10 +211,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               var siswa = entry.value;
               String kelas = kelasMap[siswa['id_kelas']] ?? 'Unknown';
               int poin = siswa['poin_total'] != null ? siswa['poin_total'] : 0;
-              String prestasi =
-                  poin >= 0
-                      ? 'Peringkat ${index + 1}'
-                      : 'Peringkat ${index + 1}';
+          String prestasi =
+              poin >= 0
+                  ? 'Peringkat ${index + 1}'
+                  : 'Peringkat ${index + 1}';
               String status =
                   poin >= 0
                       ? 'Aman'
@@ -226,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 name: siswa['nama_siswa'],
                 kelas: kelas,
                 poin: poin,
-                programKeahlian: siswa['program_keahlian'] ?? 'Unknown', // TAMBAHKAN
+                programKeahlian: siswa['program_keahlian'] ?? 'Unknown',
                 prestasi: prestasi,
                 avatar: Icons.person,
                 rank: index + 1,
@@ -448,10 +446,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           'status': siswa.status,
           'nis': siswa.nis.toString(),
           'kelas': siswa.kelas,
-          'programKeahlian': siswa.kelas, // sementara gunakan kelas, atau ambil dari API
+          'programKeahlian': siswa.kelas,
           'poinApresiasi': siswa.poin > 0 ? siswa.poin : 0,
           'poinPelanggaran': siswa.poin < 0 ? siswa.poin.abs() : 0,
-          'points': siswa.poin, // sesuai yang dipakai di DetailScreen
+          'points': siswa.poin,
         },
       ),
     ),

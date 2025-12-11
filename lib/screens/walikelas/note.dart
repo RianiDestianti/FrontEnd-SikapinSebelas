@@ -49,7 +49,6 @@ class NoteUtils {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          // TOKEN DIHAPUS TOTAL
         },
         body: jsonEncode({
           'judul_catatan': judulCatatan,
