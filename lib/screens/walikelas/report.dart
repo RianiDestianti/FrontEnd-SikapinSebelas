@@ -158,6 +158,81 @@ class _LaporanScreenState extends State<LaporanScreen>
   String? idKelas;
   Map<String, dynamic> aspekPenilaianData = {};
 
+  Map<String, dynamic> _spStatus(Student student) {
+    final p = student.pelanggaran;
+    if (p >= 76) {
+      return {
+        'label': 'SP3 (>=76)',
+        'color': const Color(0xFF991B1B),
+        'bg': const Color(0xFFFEE2E2),
+      };
+    }
+    if (p >= 51) {
+      return {
+        'label': 'SP2 (51-75)',
+        'color': const Color(0xFFB45309),
+        'bg': const Color(0xFFFDE68A),
+      };
+    }
+    if (p >= 25) {
+      return {
+        'label': 'SP1 (25-50)',
+        'color': const Color(0xFF92400E),
+        'bg': const Color(0xFFF5D0FE),
+      };
+    }
+    return {
+      'label': 'Aman (<25)',
+      'color': const Color(0xFF047857),
+      'bg': const Color(0xFFD1FAE5),
+    };
+  }
+
+  Map<String, dynamic>? _apresiasiBadge(Student student) {
+    final a = student.apresiasi;
+    if (a >= 151) {
+      return {
+        'label': 'Anugerah Waluya Utama 151+',
+        'color': const Color(0xFF1D4ED8),
+        'bg': const Color(0xFFDBEAFE),
+      };
+    }
+    if (a >= 126) {
+      return {
+        'label': 'Sertifikat+Hadiah 126-150',
+        'color': const Color(0xFF1D4ED8),
+        'bg': const Color(0xFFE0F2FE),
+      };
+    }
+    if (a >= 100) {
+      return {
+        'label': 'Sertifikat 100-125',
+        'color': const Color(0xFF2563EB),
+        'bg': const Color(0xFFE0F2FE),
+      };
+    }
+    return null;
+  }
+
+  Widget _statusChip(String text, Color fg, Color bg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: fg.withOpacity(0.25)),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.poppins(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: fg,
+        ),
+      ),
+    );
+  }
+
   final Map<String, bool> _expandedSections = {};
 
   @override
@@ -1666,6 +1741,29 @@ class _LaporanScreenState extends State<LaporanScreen>
                     ],
                   ),
                   const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      if (_apresiasiBadge(student) != null)
+                        _statusChip(
+                          _apresiasiBadge(student)!['label'] as String,
+                          _apresiasiBadge(student)!['color'] as Color,
+                          _apresiasiBadge(student)!['bg'] as Color,
+                        ),
+                      Builder(
+                        builder: (context) {
+                          final info = _spStatus(student);
+                          return _statusChip(
+                            info['label'] as String,
+                            info['color'] as Color,
+                            info['bg'] as Color,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   Container(
                     height: 6,
                     decoration: BoxDecoration(
@@ -2073,6 +2171,29 @@ class _LaporanScreenState extends State<LaporanScreen>
                 ),
               ),
               const SizedBox(height: 20),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  if (_apresiasiBadge(student) != null)
+                    _statusChip(
+                      _apresiasiBadge(student)!['label'] as String,
+                      _apresiasiBadge(student)!['color'] as Color,
+                      _apresiasiBadge(student)!['bg'] as Color,
+                    ),
+                  Builder(
+                    builder: (context) {
+                      final info = _spStatus(student);
+                      return _statusChip(
+                        info['label'] as String,
+                        info['color'] as Color,
+                        info['bg'] as Color,
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               Text(
                 'Daftar Nilai',
                 style: GoogleFonts.poppins(
