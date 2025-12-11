@@ -661,20 +661,36 @@ class _LaporanScreenState extends State<LaporanScreen>
 
   double get _apresiasiPercentage {
     if (_filteredAndSortedStudents.isEmpty) return 0;
-    int positiveCount =
-        _filteredAndSortedStudents
-            .where((student) => student.apresiasi > 0)
-            .length;
-    return positiveCount / _filteredAndSortedStudents.length;
+    final totalApresiasi =
+        _filteredAndSortedStudents.fold<int>(
+          0,
+          (sum, student) => sum + student.apresiasi,
+        );
+    final totalPelanggaran =
+        _filteredAndSortedStudents.fold<int>(
+          0,
+          (sum, student) => sum + student.pelanggaran.abs(),
+        );
+    final total = totalApresiasi + totalPelanggaran;
+    if (total == 0) return 0;
+    return totalApresiasi / total;
   }
 
   double get _pelanggaranPercentage {
     if (_filteredAndSortedStudents.isEmpty) return 0;
-    int noViolationCount =
-        _filteredAndSortedStudents
-            .where((student) => student.pelanggaran == 0)
-            .length;
-    return noViolationCount / _filteredAndSortedStudents.length;
+    final totalApresiasi =
+        _filteredAndSortedStudents.fold<int>(
+          0,
+          (sum, student) => sum + student.apresiasi,
+        );
+    final totalPelanggaran =
+        _filteredAndSortedStudents.fold<int>(
+          0,
+          (sum, student) => sum + student.pelanggaran.abs(),
+        );
+    final total = totalApresiasi + totalPelanggaran;
+    if (total == 0) return 0;
+    return totalPelanggaran / total;
   }
 
   List<Student> get _filteredAndSortedStudents {
