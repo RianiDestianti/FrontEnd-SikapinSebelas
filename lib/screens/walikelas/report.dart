@@ -1757,28 +1757,6 @@ class _LaporanScreenState extends State<LaporanScreen>
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      if (_apresiasiBadge(student) != null)
-                        _statusChip(
-                          _apresiasiBadge(student)!['label'] as String,
-                          _apresiasiBadge(student)!['color'] as Color,
-                          _apresiasiBadge(student)!['bg'] as Color,
-                        ),
-                      Builder(
-                        builder: (context) {
-                          final info = _spStatus(student);
-                          return _statusChip(
-                            info['label'] as String,
-                            info['color'] as Color,
-                            info['bg'] as Color,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 8),
                   Container(
                     height: 6,
@@ -2187,28 +2165,6 @@ class _LaporanScreenState extends State<LaporanScreen>
                 ),
               ),
               const SizedBox(height: 20),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: [
-                  if (_apresiasiBadge(student) != null)
-                    _statusChip(
-                      _apresiasiBadge(student)!['label'] as String,
-                      _apresiasiBadge(student)!['color'] as Color,
-                      _apresiasiBadge(student)!['bg'] as Color,
-                    ),
-                  Builder(
-                    builder: (context) {
-                      final info = _spStatus(student);
-                      return _statusChip(
-                        info['label'] as String,
-                        info['color'] as Color,
-                        info['bg'] as Color,
-                      );
-                    },
-                  ),
-                ],
-              ),
               const SizedBox(height: 12),
               Text(
                 'Daftar Nilai',
