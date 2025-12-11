@@ -85,6 +85,8 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
               final createdRaw =
                   mapNotif['created_at'] ??
                       mapNotif['tanggal_Mulai_Perbaikan'] ??
+                      mapNotif['tanggal_sp'] ??
+                      mapNotif['tanggal_penghargaan'] ??
                       DateTime.now().toString();
               final createdAt = DateTime.tryParse(createdRaw.toString()) ??
                   DateTime.now();
@@ -116,7 +118,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
                     mapNotif['isi_intervensi']?.toString() ??
                     mapNotif['isi']?.toString() ??
                     mapNotif['description']?.toString() ??
-                    'Detail tidak tersedia',
+                    '',
                 'time': time,
                 'type': mapNotif['kategori']?.toString() ?? 'bk_treatment',
                 'isRead': isRead,
@@ -879,17 +881,19 @@ class NotificationCardWidget extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: padding * 0.4),
-                        Text(
-                          notification['message'],
-                          style: GoogleFonts.poppins(
-                            fontSize: fontSize * 0.8,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF9CA3AF),
-                            height: 1.4,
+                        if ((notification['message'] as String?)?.isNotEmpty ??
+                            false)
+                          Text(
+                            notification['message'],
+                            style: GoogleFonts.poppins(
+                              fontSize: fontSize * 0.8,
+                              fontWeight: FontWeight.w400,
+                              color: const Color(0xFF9CA3AF),
+                              height: 1.4,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
                       ],
                     ),
                   ),
@@ -1040,44 +1044,6 @@ class NotificationDetailWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(padding),
-                    decoration: BoxDecoration(
-                      color: _getTypeColor(
-                        notification['statusChange'],
-                      ).withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: _getTypeColor(
-                          notification['statusChange'],
-                        ).withOpacity(0.2),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Detail Notifikasi',
-                          style: GoogleFonts.poppins(
-                            fontSize: fontSize,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF1F2937),
-                          ),
-                        ),
-                        SizedBox(height: padding * 0.6),
-                        Text(
-                          notification['message'],
-                          style: GoogleFonts.poppins(
-                            fontSize: fontSize * 0.9,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF374151),
-                            height: 1.6,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   SizedBox(height: padding),
                   Row(
                     children: [
