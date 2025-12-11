@@ -6,6 +6,7 @@ import 'package:skoring/screens/introduction/swipeup.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:local_auth/local_auth.dart';
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
@@ -667,6 +668,23 @@ class _LoginFormState extends State<_LoginForm> {
   final TextEditingController _nipController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  final LocalAuthentication _localAuth = LocalAuthentication();
+  bool _canCheckBiometrics = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometrics();
+  }
+
+  Future<void> _checkBiometrics() async {
+    try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      setState(() => _canCheckBiometrics = canCheck);
+    } catch (_) {
+      setState(() => _canCheckBiometrics = false);
+    }
+  }
 
   void _showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(
@@ -715,6 +733,9 @@ void _handleLogin() async {
         'jurusan',
         data['detail']['jurusan'] ?? 'Unknown',
       );
+      // Simpan kredensial untuk login biometrik cepat (non-token)
+      await prefs.setString('biometric_nip', nip);
+      await prefs.setString('biometric_password', password);
 
       // Cek role dan navigasi
       String role = data['role'].toString();
@@ -739,6 +760,30 @@ void _handleLogin() async {
     _nipController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedNip = prefs.getString('biometric_nip') ?? '';
+      final savedPassword = prefs.getString('biometric_password') ?? '';
+      if (savedNip.isEmpty || savedPassword.isEmpty) {
+        _showSnackBar(context, "Belum ada data login tersimpan. Masuk manual dulu.");
+        return;
+      }
+
+      final didAuth = await _localAuth.authenticate(
+        localizedReason: 'Autentikasi dengan sidik jari untuk login cepat',
+        options: const AuthenticationOptions(biometricOnly: true),
+      );
+      if (!didAuth) return;
+
+      _nipController.text = savedNip;
+      _passwordController.text = savedPassword;
+      _handleLogin();
+    } catch (e) {
+      _showSnackBar(context, "Biometrik gagal: $e");
+    }
   }
 
   @override
@@ -795,7 +840,32 @@ void _handleLogin() async {
                       });
                     },
                   ),
-                  SizedBox(height: isWeb ? 40 : 30),
+                  SizedBox(height: isWeb ? 32 : 24),
+                  if (_canCheckBiometrics)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          backgroundColor: const Color(0xFFE0F2FE),
+                          foregroundColor: const Color(0xFF1D4ED8),
+                        ),
+                        icon: const Icon(Icons.fingerprint, size: 20),
+                        label: Text(
+                          'Login dengan Sidik Jari',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                            fontSize: isWeb ? 15 : 14,
+                          ),
+                        ),
+                        onPressed: _handleBiometricLogin,
+                      ),
+                    ),
+                  SizedBox(height: isWeb ? 20 : 16),
                   _GradientButton(
                     text: 'Login',
                     onTap: _handleLogin,
