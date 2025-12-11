@@ -710,53 +710,6 @@ void initializeStudentData() {
                                           ),
                                         ),
                                         const SizedBox(height: 16),
-                                        Container(
-                                          width: double.infinity,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 12,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: _getStatusColor(
-                                              detailedStudent.status,
-                                            ).withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(
-                                              16,
-                                            ),
-                                            border: Border.all(
-                                              color: _getStatusColor(
-                                                detailedStudent.status,
-                                              ).withOpacity(0.3),
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Container(
-                                                width: 8,
-                                                height: 8,
-                                                decoration: BoxDecoration(
-                                                  color: _getStatusColor(
-                                                    detailedStudent.status,
-                                                  ),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                '${detailedStudent.status}',
-                                                textAlign: TextAlign.center,
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: _getStatusColor(
-                                                    detailedStudent.status,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
                                         const SizedBox(height: 16),
                                         Row(
                                           children: [
@@ -828,82 +781,76 @@ void initializeStudentData() {
                                                 ),
                                               ),
                                             ),
-                                            if (detailedStudent.status !=
-                                                'Aman') ...[
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: GestureDetector(
-                                                  onTap: () {
-                                                    showBKNotePopup(
-                                                      context,
-                                                      detailedStudent.name,
-                                                      detailedStudent.nis,
-                                                      detailedStudent.kelas,
-                                                    );
-                                                  },
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 14,
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  showBKNotePopup(
+                                                    context,
+                                                    detailedStudent.name,
+                                                    detailedStudent.nis,
+                                                    detailedStudent.kelas,
+                                                  );
+                                                },
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 14,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    gradient:
+                                                        const LinearGradient(
+                                                          colors: [
+                                                            Color(0xFFFF6B6D),
+                                                            Color(0xFFEA580C),
+                                                          ],
                                                         ),
-                                                    decoration: BoxDecoration(
-                                                      gradient:
-                                                          const LinearGradient(
-                                                            colors: [
-                                                              Color(0xFFFF6B6D),
-                                                              Color(0xFFEA580C),
-                                                            ],
-                                                          ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            16,
-                                                          ),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: const Color(
-                                                            0xFFFF6B6D,
-                                                          ).withOpacity(0.3),
-                                                          blurRadius: 8,
-                                                          offset: const Offset(
-                                                            0,
-                                                            4,
-                                                          ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          16,
                                                         ),
-                                                      ],
-                                                    ),
-                                                    child: Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        const Icon(
-                                                          Icons
-                                                              .note_add_outlined,
-                                                          color: Colors.white,
-                                                          size: 18,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: const Color(
+                                                          0xFFFF6B6D,
+                                                        ).withOpacity(0.3),
+                                                        blurRadius: 8,
+                                                        offset: const Offset(
+                                                          0,
+                                                          4,
                                                         ),
-                                                        const SizedBox(
-                                                          width: 8,
-                                                        ),
-                                                        Text(
-                                                          'Catatan BK',
-                                                          style:
-                                                              GoogleFonts.poppins(
-                                                                fontSize: 14,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                                color:
-                                                                    Colors
-                                                                        .white,
-                                                              ),
-                                                        ),
-                                                      ],
-                                                    ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.note_add_outlined,
+                                                        color: Colors.white,
+                                                        size: 18,
+                                                      ),
+                                                      const SizedBox(
+                                                        width: 8,
+                                                      ),
+                                                      Text(
+                                                        'Catatan BK',
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
                                               ),
-                                            ],
+                                            ),
                                           ],
                                         ),
                                       ],

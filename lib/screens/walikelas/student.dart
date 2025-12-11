@@ -249,11 +249,12 @@ Future<void> fetchSiswa() async {
             .toList();
 
     if (_selectedFilter == 1) {
-      filtered = filtered.where((s) => s.status == 'Aman').toList();
+      filtered =
+          filtered.where((s) => (s.poinApresiasi ?? 0) > 0).toList();
     } else if (_selectedFilter == 2) {
       filtered =
           filtered
-              .where((s) => s.status == 'Bermasalah' || s.status == 'Prioritas')
+              .where((s) => (s.poinPelanggaran ?? 0) > 0)
               .toList();
     }
 
@@ -676,11 +677,11 @@ Future<void> fetchSiswa() async {
                                     const SizedBox(height: 20),
                                     Row(
                                       children: [
-                                        _buildActionButton('Semua', 0),
+                                        _buildActionButton('Akumulasi', 0),
                                         const SizedBox(width: 10),
-                                        _buildActionButton('Aman', 1),
+                                        _buildActionButton('Reward', 1),
                                         const SizedBox(width: 10),
-                                        _buildActionButton('Bermasalah', 2),
+                                        _buildActionButton('Punishment', 2),
                                       ],
                                     ),
                                   ],
@@ -865,7 +866,7 @@ Future<void> fetchSiswa() async {
                   margin: const EdgeInsets.only(right: 8),
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFFFF6B6D), Color(0xFFFF8E8F)],
+                      colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
                     ),
                     shape: BoxShape.circle,
                   ),
@@ -877,7 +878,7 @@ Future<void> fetchSiswa() async {
                   margin: const EdgeInsets.only(right: 8),
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
                     ),
                     shape: BoxShape.circle,
                   ),
@@ -902,7 +903,7 @@ Future<void> fetchSiswa() async {
                           ? (index == 0
                               ? const Color(0xFF1F2937)
                               : index == 1
-                              ? const Color(0xFF10B981)
+                              ? const Color(0xFFB45309)
                               : const Color(0xFFEA580C))
                           : Colors.white,
                   fontWeight: FontWeight.w600,
@@ -917,6 +918,34 @@ Future<void> fetchSiswa() async {
   }
 
   Widget _buildStudentCard(Student student, int index) {
+    int _getDisplayPoints() {
+      if (_selectedFilter == 1) {
+        return (student.poinApresiasi ?? 0);
+      }
+      if (_selectedFilter == 2) {
+        return (student.poinPelanggaran ?? 0).abs();
+      }
+      return student.points;
+    }
+
+    String _getPointLabel() {
+      if (_selectedFilter == 1) return 'Reward';
+      if (_selectedFilter == 2) return 'Punishment';
+      return 'Poin';
+    }
+
+    Color _getPointColor() {
+      if (_selectedFilter == 1) return const Color(0xFF10B981);
+      if (_selectedFilter == 2) return const Color(0xFFFF6B6D);
+      return student.points >= 0
+          ? const Color(0xFF10B981)
+          : const Color(0xFFFF6B6D);
+    }
+
+    final displayPoints = _getDisplayPoints();
+    final pointLabel = _getPointLabel();
+    final pointColor = _getPointColor();
+
     return GestureDetector(
       onTap: () => _navigateToDetail(student),
       child: Container(
@@ -974,46 +1003,17 @@ Future<void> fetchSiswa() async {
 
                   const SizedBox(height: 2),
                   Text(
-                    'Poin: ${student.points}',
+                    '$pointLabel: $displayPoints',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color:
-                          student.points >= 0
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFFFF6B6D),
+                      color: pointColor,
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  width: 85,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(student.status).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Text(
-                      student.status,
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: _getStatusColor(student.status),
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ],
-            ),
             const SizedBox(width: 8),
             Icon(
               Icons.arrow_forward_ios,
