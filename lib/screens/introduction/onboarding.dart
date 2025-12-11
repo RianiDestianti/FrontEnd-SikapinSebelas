@@ -51,9 +51,9 @@ class _IntroductionScreenState extends State<IntroductionScreen>
     ),
     PageData(
       image: 'assets/backpack.png',
-      title: 'SIJUAWARA (SISTEM INFORMASI JURNAL SISWA AKTIF)',
+      title: 'SIJUAWARA',
       description:
-          'Siap untuk mulai?\nGeser ke atas untuk masuk ke SIJUAWARA (SISTEM INFORMASI JURNAL SISWA AKTIF) dan kelola penilaian siswa dengan mudah!',
+          'Geser ke atas untuk masuk ke SIJUAWARA (SISTEM INFORMASI JURNAL SISWA AKTIF) dan kelola penilaian siswa dengan mudah!',
     ),
   ];
 
