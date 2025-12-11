@@ -5,10 +5,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:skoring/screens/walikelas/notification.dart';
 import 'package:skoring/screens/profile.dart';
-import 'package:skoring/widgets/exports/excel.dart';
 import 'package:skoring/widgets/exports/pdf.dart';
 import 'package:skoring/widgets/faq.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 
 class FAQItem {
   final String title;
@@ -186,6 +187,90 @@ class _LaporanScreenState extends State<LaporanScreen>
 
   Future<void> _refreshData() async {
     await Future.wait([fetchKelas(), fetchSiswa(), fetchAspekPenilaian()]);
+  }
+
+  List<Map<String, dynamic>> _mappedStudentsForExport() {
+    return _filteredAndSortedStudents
+        .map(
+          (s) => {
+            'name': s.name,
+            'totalPoin': s.totalPoin,
+            'apresiasi': s.apresiasi,
+            'pelanggaran': s.pelanggaran,
+            'isPositive': s.isPositive,
+            'color': s.color,
+            'avatar': s.avatar,
+            'scores':
+                s.scores
+                    .map(
+                      (score) => {
+                        'keterangan': score.keterangan,
+                        'tanggal': score.tanggal,
+                        'poin': score.poin,
+                        'type': score.type,
+                      },
+                    )
+                    .toList(),
+          },
+        )
+        .toList();
+  }
+
+  Future<void> _exportToPdf(String filterLabel) async {
+    if (!await _ensureStoragePermission()) return;
+    final savedPath = await PdfExport.exportToPDF(
+      _mappedStudentsForExport(),
+      'Laporan_Siswa_${selectedKelas?.namaKelas ?? 'Unknown'}.pdf',
+      kelas: selectedKelas?.namaKelas,
+      filterLabel: filterLabel,
+      searchQuery: _searchQuery,
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            savedPath != null
+                ? 'PDF tersimpan di $savedPath'
+                : 'PDF berhasil dibuat',
+            style: GoogleFonts.poppins(color: Colors.white),
+          ),
+          backgroundColor: const Color(0xFF10B981),
+        ),
+      );
+    }
+  }
+
+
+  Future<bool> _ensureStoragePermission() async {
+    // Izinkan lanjut tanpa memblokir eksport; FileSaver dapat membuka sistem picker.
+    if (!Platform.isAndroid) return true;
+
+    try {
+      // Coba minta izin; abaikan hasil agar tidak menghalangi flow.
+      final storageStatus = await Permission.storage.request();
+      if (storageStatus.isPermanentlyDenied) {
+        // Coba izin akses penuh jika tersedia.
+        final manageStatus = await Permission.manageExternalStorage.request();
+        if (manageStatus.isPermanentlyDenied && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Izin penyimpanan ditolak permanen. Buka pengaturan untuk mengizinkan.',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
+              action: SnackBarAction(
+                label: 'Pengaturan',
+                textColor: Colors.white,
+                onPressed: openAppSettings,
+              ),
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+          );
+        }
+      }
+    } catch (_) {}
+
+    return true; // tetap lanjutkan, biarkan FileSaver yang menangani picker/penulisan
   }
 
   Future<void> fetchKelas() async {
@@ -645,66 +730,13 @@ class _LaporanScreenState extends State<LaporanScreen>
                 title: Text('PDF', style: GoogleFonts.poppins(fontSize: 15)),
                 onTap: () {
                   Navigator.pop(context);
-                  PdfExport.exportToPDF(
-                    _filteredAndSortedStudents
-                        .map(
-                          (s) => {
-                            'name': s.name,
-                            'totalPoin': s.totalPoin,
-                            'apresiasi': s.apresiasi,
-                            'pelanggaran': s.pelanggaran,
-                            'isPositive': s.isPositive,
-                            'color': s.color,
-                            'avatar': s.avatar,
-                            'scores':
-                                s.scores
-                                    .map(
-                                      (score) => {
-                                        'keterangan': score.keterangan,
-                                        'tanggal': score.tanggal,
-                                        'poin': score.poin,
-                                        'type': score.type,
-                                      },
-                                    )
-                                    .toList(),
-                          },
-                        )
-                        .toList(),
-                    'Laporan_Siswa_${selectedKelas?.namaKelas ?? 'Unknown'}.pdf',
-                  );
-                },
-              ),
-              ListTile(
-                title: Text('Excel', style: GoogleFonts.poppins(fontSize: 15)),
-                onTap: () {
-                  Navigator.pop(context);
-                  ExcelExport.exportToExcel(
-                    _filteredAndSortedStudents
-                        .map(
-                          (s) => {
-                            'name': s.name,
-                            'totalPoin': s.totalPoin,
-                            'apresiasi': s.apresiasi,
-                            'pelanggaran': s.pelanggaran,
-                            'isPositive': s.isPositive,
-                            'color': s.color,
-                            'avatar': s.avatar,
-                            'scores':
-                                s.scores
-                                    .map(
-                                      (score) => {
-                                        'keterangan': score.keterangan,
-                                        'tanggal': score.tanggal,
-                                        'poin': score.poin,
-                                        'type': score.type,
-                                      },
-                                    )
-                                    .toList(),
-                          },
-                        )
-                        .toList(),
-                    'Laporan_Siswa_${selectedKelas?.namaKelas ?? 'Unknown'}.xlsx',
-                  );
+                  final filterLabel =
+                      _selectedFilter == 'Negatif'
+                          ? 'Nilai Negatif'
+                          : _selectedFilter == '101+'
+                          ? '101 ke atas'
+                          : _selectedFilter;
+                  _exportToPdf(filterLabel);
                 },
               ),
             ],

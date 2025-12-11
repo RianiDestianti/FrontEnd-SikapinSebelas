@@ -3,8 +3,15 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:file_saver/file_saver.dart';
 
 class PdfExport {
-  static Future<void> exportToPDF(List<Map<String, dynamic>> students, String fileName) async {
+  static Future<String?> exportToPDF(
+    List<Map<String, dynamic>> students,
+    String fileName, {
+    String? kelas,
+    String? filterLabel,
+    String? searchQuery,
+  }) async {
     final pdf = pw.Document();
+    final printedAt = DateTime.now();
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -14,9 +21,15 @@ class PdfExport {
             pw.Header(
               level: 0,
               child: pw.Text(
-                'Laporan Penilaian Siswa XII RPL 2 - Semester Ganjil 2025/2026',
+                'Laporan Penilaian Siswa${kelas != null ? ' - $kelas' : ''}',
                 style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
               ),
+            ),
+            pw.Text(
+              'Filter: ${filterLabel ?? 'Semua'}'
+              '${searchQuery != null && searchQuery.isNotEmpty ? ' | Pencarian: $searchQuery' : ''}'
+              ' | Dicetak: ${printedAt.toLocal()}',
+              style: const pw.TextStyle(fontSize: 10),
             ),
             pw.SizedBox(height: 20),
             pw.Table.fromTextArray(
@@ -56,7 +69,7 @@ class PdfExport {
     );
 
     final bytes = await pdf.save();
-    await FileSaver.instance.saveFile(
+    return FileSaver.instance.saveFile(
       name: fileName,
       bytes: bytes,
       mimeType: MimeType.pdf,
