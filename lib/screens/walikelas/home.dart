@@ -744,9 +744,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   children: [
                                     _buildActionButton('Umum', 0),
                                     const SizedBox(width: 10),
-                                    _buildActionButton('Terbaik', 2),
+                                    _buildActionButton('Reward', 2),
                                     const SizedBox(width: 10),
-                                    _buildActionButton('Berat', 3),
+                                    _buildActionButton('Punishment', 3),
                                   ],
                                 ),
                               ],
@@ -1002,7 +1002,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Siswa Terbaik',
+                        'Reward',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -1010,7 +1010,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
                       Text(
-                        'Top siswa dengan poin tertinggi',
+                        'Siswa dengan penghargaan tertinggi',
                         style: GoogleFonts.poppins(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 12,
@@ -1106,7 +1106,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Siswa Berat',
+                        'Punishment',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -1114,7 +1114,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
                       Text(
-                        'Top siswa dengan pelanggaran terberat',
+                        'Siswa dengan punishment/pelanggaran terberat',
                         style: GoogleFonts.poppins(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 12,
