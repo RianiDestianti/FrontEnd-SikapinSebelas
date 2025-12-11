@@ -55,6 +55,7 @@ class PointUtils {
           'id_penilaian': idPenilaian,
           'nis': nis,
           'id_aspekpenilaian': idAspekPenilaian,
+          'nip_walikelas': nip,
         })}',
       );
 
@@ -68,6 +69,7 @@ class PointUtils {
           'id_penilaian': idPenilaian,
           'nis': nis,
           'id_aspekpenilaian': idAspekPenilaian,
+          'nip_walikelas': nip,
         }),
       );
 
