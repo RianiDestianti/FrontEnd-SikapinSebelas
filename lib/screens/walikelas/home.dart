@@ -124,9 +124,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  void _safeSetState(VoidCallback fn) {
+    if (!mounted) return;
+    setState(fn);
+  }
+
   Future<void> _loadTeacherData() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
+    _safeSetState(() {
       _teacherName = prefs.getString('name') ?? 'Teacher';
       _teacherClassId = prefs.getString('id_kelas') ?? '';
       _walikelasId = prefs.getString('walikelas_id') ?? '';
@@ -139,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     Map<String, dynamic>? pelanggaranJson,
   }) async {
     if (_teacherClassId.isEmpty) {
-      setState(() {
+      _safeSetState(() {
         _activityData = [];
       });
       return;
@@ -166,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     activities.sort((a, b) => b.fullDate.compareTo(a.fullDate));
-    setState(() {
+    _safeSetState(() {
       _activityData = activities;
     });
   }
@@ -325,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         apresiasiJson: penghargaanJson,
         pelanggaranJson: pelanggaranJson,
       );
-      setState(() {});
+      _safeSetState(() {});
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -333,9 +338,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _manualRefresh() async {
     if (_isRefreshing) return;
-    setState(() => _isRefreshing = true);
+    _safeSetState(() => _isRefreshing = true);
     await _fetchData(force: true);
-    if (mounted) setState(() => _isRefreshing = false);
+    _safeSetState(() => _isRefreshing = false);
   }
 
   List<Map<String, dynamic>> _aggregateChartData(

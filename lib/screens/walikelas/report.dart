@@ -63,6 +63,7 @@ class StudentScore {
 }
 
 class Student {
+  final String nis;
   final String name;
   final int totalPoin;
   final int apresiasi;
@@ -74,6 +75,7 @@ class Student {
   final String idKelas;
 
   Student({
+    required this.nis,
     required this.name,
     required this.totalPoin,
     required this.apresiasi,
@@ -90,15 +92,15 @@ class Student {
     List<StudentScore> scores,
   ) {
     final totalPoin =
-        (json['poin_total'] is int ? json['poin_total'] : 0) as int;
+        int.tryParse(json['poin_total']?.toString() ?? '') ?? 0;
     return Student(
+      nis: json['nis']?.toString() ?? '',
       name: json['nama_siswa']?.toString() ?? 'Unknown',
       totalPoin: totalPoin,
       apresiasi:
-          (json['poin_apresiasi'] is int ? json['poin_apresiasi'] : 0) as int,
+          int.tryParse(json['poin_apresiasi']?.toString() ?? '') ?? 0,
       pelanggaran:
-          (json['poin_pelanggaran'] is int ? json['poin_pelanggaran'] : 0)
-              as int,
+          int.tryParse(json['poin_pelanggaran']?.toString() ?? '') ?? 0,
       isPositive: totalPoin >= 0,
       color: totalPoin >= 0 ? const Color(0xFF10B981) : const Color(0xFFFF6B6D),
       avatar:
@@ -426,26 +428,37 @@ class _LaporanScreenState extends State<LaporanScreen>
   }
 
   Future<void> fetchSiswa() async {
+    if (walikelasId == null || idKelas == null) {
+      _safeSetState(() {
+        errorMessageStudents = 'Data guru tidak lengkap. Silakan login ulang.';
+        isLoadingStudents = false;
+      });
+      return;
+    }
+
     _safeSetState(() {
       isLoadingStudents = true;
       errorMessageStudents = null;
     });
 
     try {
+      final uri = Uri.parse(
+        'http://sijuwara.student.smkn11bdg.sch.id/api/siswa?nip=$walikelasId&id_kelas=$idKelas',
+      );
       final response = await http
-          .get(Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/akumulasi'))
+          .get(uri, headers: {'Accept': 'application/json'})
           .timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
+        final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
         if (jsonData['success']) {
-          List<dynamic> data = jsonData['data']['data'];
-          List<Student> students = [];
-          for (var studentJson in data) {
-            final scores = await _fetchStudentScores(
-              studentJson['nis']?.toString() ?? '',
-            );
-            students.add(Student.fromJson(studentJson, scores));
-          }
+          List<dynamic> data = jsonData['data'];
+          final students =
+              data
+                  .map(
+                    (studentJson) =>
+                        Student.fromJson(studentJson, const []),
+                  )
+                  .toList();
           _safeSetState(() {
             studentsList = students;
             isLoadingStudents = false;
@@ -477,7 +490,9 @@ class _LaporanScreenState extends State<LaporanScreen>
     try {
       final penghargaanResponse = await http
           .get(
-            Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis'),
+            Uri.parse(
+              'http://sijuwara.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis&nip=$walikelasId&id_kelas=$idKelas',
+            ),
           )
           .timeout(Duration(seconds: 10));
       if (penghargaanResponse.statusCode == 200) {
@@ -541,7 +556,9 @@ class _LaporanScreenState extends State<LaporanScreen>
 
       final peringatanResponse = await http
           .get(
-            Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis'),
+            Uri.parse(
+              'http://sijuwara.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis&nip=$walikelasId&id_kelas=$idKelas',
+            ),
           )
           .timeout(Duration(seconds: 10));
       if (peringatanResponse.statusCode == 200) {
@@ -601,6 +618,13 @@ class _LaporanScreenState extends State<LaporanScreen>
       }
     } catch (e) {}
     return scores;
+  }
+
+  Future<List<StudentScore>> _loadStudentScores(String nis) async {
+    if (aspekPenilaianData.isEmpty) {
+      await fetchAspekPenilaian();
+    }
+    return _fetchStudentScores(nis);
   }
 
   Future<void> fetchAspekPenilaian() async {
@@ -1951,6 +1975,7 @@ class _LaporanScreenState extends State<LaporanScreen>
   }
 
   void _showStudentDetail(Student student) {
+    final scoresFuture = _loadStudentScores(student.nis);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -2164,84 +2189,104 @@ class _LaporanScreenState extends State<LaporanScreen>
               ),
               const SizedBox(height: 8),
               Expanded(
-                child: ListView.builder(
-                  itemCount: student.scores.length,
-                  itemBuilder: (context, index) {
-                    final score = student.scores[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color:
-                              score.type == 'apresiasi'
-                                  ? const Color(0xFF10B981).withOpacity(0.2)
-                                  : const Color(0xFFFF6B6D).withOpacity(0.2),
+                child: FutureBuilder<List<StudentScore>>(
+                  future: scoresFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final scores = snapshot.data ?? [];
+                    if (scores.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'Belum ada detail poin.',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: const Color(0xFF6B7280),
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              score.keterangan,
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF1F2937),
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                      );
+                    }
+                    return ListView.builder(
+                      itemCount: scores.length,
+                      itemBuilder: (context, index) {
+                        final score = scores[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color:
+                                  score.type == 'apresiasi'
+                                      ? const Color(0xFF10B981).withOpacity(0.2)
+                                      : const Color(0xFFFF6B6D).withOpacity(0.2),
                             ),
                           ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              score.tanggal,
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: const Color(0xFF0083EE),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    score.type == 'apresiasi'
-                                        ? const Color(
-                                          0xFF10B981,
-                                        ).withOpacity(0.1)
-                                        : const Color(
-                                          0xFFFF6B6D,
-                                        ).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '${score.poin}',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color:
-                                      score.type == 'apresiasi'
-                                          ? const Color(0xFF10B981)
-                                          : const Color(0xFFFF6B6D),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  score.keterangan,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF1F2937),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                            ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  score.tanggal,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: const Color(0xFF0083EE),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        score.type == 'apresiasi'
+                                            ? const Color(
+                                              0xFF10B981,
+                                            ).withOpacity(0.1)
+                                            : const Color(
+                                              0xFFFF6B6D,
+                                            ).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '${score.poin}',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color:
+                                          score.type == 'apresiasi'
+                                              ? const Color(0xFF10B981)
+                                              : const Color(0xFFFF6B6D),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     );
                   },
                 ),

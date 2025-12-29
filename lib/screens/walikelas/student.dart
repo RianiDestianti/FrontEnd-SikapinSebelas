@@ -133,9 +133,14 @@ class _SiswaScreenState extends State<SiswaScreen>
     });
   }
 
+  void _safeSetState(VoidCallback fn) {
+    if (!mounted) return;
+    setState(fn);
+  }
+
   Future<void> _loadWalikelasId() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
+    _safeSetState(() {
       walikelasId = prefs.getString('walikelas_id');
       idKelas = prefs.getString('id_kelas');
       print('Loaded walikelasId: $walikelasId, id_kelas: $idKelas');
@@ -144,14 +149,14 @@ class _SiswaScreenState extends State<SiswaScreen>
 
 Future<void> fetchKelas() async {
   if (walikelasId == null || idKelas == null) {
-    setState(() {
+    _safeSetState(() {
       errorMessageKelas = 'Data guru tidak lengkap. Silakan login ulang.';
       isLoadingKelas = false;
     });
     return;
   }
 
-  setState(() {
+  _safeSetState(() {
     isLoadingKelas = true;
     errorMessageKelas = null;
   });
@@ -175,7 +180,7 @@ Future<void> fetchKelas() async {
       if (jsonData['success']) {
         List<dynamic> data = jsonData['data'];
         if (data.isNotEmpty) {
-          setState(() {
+          _safeSetState(() {
             kelasList = data.map((json) => Kelas.fromJson(json)).toList();
             selectedKelas = kelasList.firstWhere(
               (kelas) => kelas.idKelas == idKelas,
@@ -184,26 +189,26 @@ Future<void> fetchKelas() async {
             isLoadingKelas = false;
           });
         } else {
-          setState(() {
+          _safeSetState(() {
             errorMessageKelas = 'Tidak ada data kelas ditemukan';
             isLoadingKelas = false;
           });
         }
       } else {
-        setState(() {
+        _safeSetState(() {
           errorMessageKelas = jsonData['message'] ?? 'Gagal memuat kelas';
           isLoadingKelas = false;
         });
       }
     } else {
-      setState(() {
+      _safeSetState(() {
         errorMessageKelas = 'Gagal mengambil data kelas (${response.statusCode})';
         isLoadingKelas = false;
       });
     }
   } catch (e) {
     print('Error fetchKelas: $e');
-    setState(() {
+    _safeSetState(() {
       errorMessageKelas = 'Terjadi kesalahan: $e';
       isLoadingKelas = false;
     });
@@ -212,14 +217,14 @@ Future<void> fetchKelas() async {
 
 Future<void> fetchSiswa() async {
   if (walikelasId == null || idKelas == null) {
-    setState(() {
+    _safeSetState(() {
       errorMessageSiswa = 'Data guru tidak lengkap. Silakan login ulang.';
       isLoadingSiswa = false;
     });
     return;
   }
 
-  setState(() {
+  _safeSetState(() {
     isLoadingSiswa = true;
     errorMessageSiswa = null;
   });
@@ -242,25 +247,25 @@ Future<void> fetchSiswa() async {
       final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
       if (jsonData['success']) {
         List<dynamic> data = jsonData['data'];
-        setState(() {
+        _safeSetState(() {
           studentsList = data.map((json) => Student.fromJson(json)).toList();
           isLoadingSiswa = false;
         });
       } else {
-        setState(() {
+        _safeSetState(() {
           errorMessageSiswa = jsonData['message'] ?? 'Gagal memuat data siswa';
           isLoadingSiswa = false;
         });
       }
     } else {
-      setState(() {
+      _safeSetState(() {
         errorMessageSiswa = 'Gagal mengambil data siswa (${response.statusCode})';
         isLoadingSiswa = false;
       });
     }
   } catch (e) {
     print('Error fetchSiswa: $e');
-    setState(() {
+    _safeSetState(() {
       errorMessageSiswa = 'Terjadi kesalahan: $e';
       isLoadingSiswa = false;
     });
@@ -336,11 +341,11 @@ Future<void> fetchSiswa() async {
 
   Future<void> _refreshData() async {
     if (_isRefreshing) return;
-    setState(() => _isRefreshing = true);
+    _safeSetState(() => _isRefreshing = true);
     try {
       await Future.wait([fetchKelas(), fetchSiswa()]);
     } finally {
-      if (mounted) setState(() => _isRefreshing = false);
+      _safeSetState(() => _isRefreshing = false);
     }
   }
 
