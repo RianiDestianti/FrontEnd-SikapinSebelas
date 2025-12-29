@@ -82,6 +82,33 @@ class _SiswaScreenState extends State<SiswaScreen>
   String? idKelas;
   bool _isRefreshing = false;
 
+  Map<String, dynamic> _decodeJsonResponse(http.Response response) {
+    final rawBody = utf8.decode(response.bodyBytes);
+    try {
+      return jsonDecode(rawBody) as Map<String, dynamic>;
+    } on FormatException {
+      final cleaned = _sanitizeJsonPayload(rawBody);
+      return jsonDecode(cleaned) as Map<String, dynamic>;
+    }
+  }
+
+  String _sanitizeJsonPayload(String raw) {
+    var cleaned = raw.trim();
+    if (cleaned.isNotEmpty && cleaned.codeUnitAt(0) == 0xFEFF) {
+      cleaned = cleaned.substring(1);
+    }
+    final start = cleaned.indexOf(RegExp(r'[\{\[]'));
+    final end = cleaned.lastIndexOf(RegExp(r'[\}\]]'));
+    if (start != -1 && end != -1 && end > start) {
+      cleaned = cleaned.substring(start, end + 1);
+    }
+    cleaned = cleaned
+        .replaceAll(RegExp(r'Z,(?=\")'), 'Z\",')
+        .replaceAll(RegExp(r'Z(?=\})'), 'Z\"')
+        .replaceAll(RegExp(r'Z(?=\])'), 'Z\"');
+    return cleaned;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -102,6 +129,7 @@ class _SiswaScreenState extends State<SiswaScreen>
 
   Future<void> _loadWalikelasId() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       walikelasId = prefs.getString('walikelas_id');
       idKelas = prefs.getString('id_kelas');
@@ -111,6 +139,7 @@ class _SiswaScreenState extends State<SiswaScreen>
 
 Future<void> fetchKelas() async {
   if (walikelasId == null || idKelas == null) {
+    if (!mounted) return;
     setState(() {
       errorMessageKelas = 'Data guru tidak lengkap. Silakan login ulang.';
       isLoadingKelas = false;
@@ -118,6 +147,7 @@ Future<void> fetchKelas() async {
     return;
   }
 
+  if (!mounted) return;
   setState(() {
     isLoadingKelas = true;
     errorMessageKelas = null;
@@ -138,10 +168,11 @@ Future<void> fetchKelas() async {
     print('GET $uri -> ${response.statusCode}');
 
     if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body);
+      final jsonData = _decodeJsonResponse(response);
       if (jsonData['success']) {
         List<dynamic> data = jsonData['data'];
         if (data.isNotEmpty) {
+          if (!mounted) return;
           setState(() {
             kelasList = data.map((json) => Kelas.fromJson(json)).toList();
             selectedKelas = kelasList.firstWhere(
@@ -151,18 +182,21 @@ Future<void> fetchKelas() async {
             isLoadingKelas = false;
           });
         } else {
+          if (!mounted) return;
           setState(() {
             errorMessageKelas = 'Tidak ada data kelas ditemukan';
             isLoadingKelas = false;
           });
         }
       } else {
+        if (!mounted) return;
         setState(() {
           errorMessageKelas = jsonData['message'] ?? 'Gagal memuat kelas';
           isLoadingKelas = false;
         });
       }
     } else {
+      if (!mounted) return;
       setState(() {
         errorMessageKelas = 'Gagal mengambil data kelas (${response.statusCode})';
         isLoadingKelas = false;
@@ -170,8 +204,13 @@ Future<void> fetchKelas() async {
     }
   } catch (e) {
     print('Error fetchKelas: $e');
+    if (!mounted) return;
+    final message =
+        e is FormatException
+            ? 'Format data kelas tidak valid. Coba lagi.'
+            : 'Terjadi kesalahan: $e';
     setState(() {
-      errorMessageKelas = 'Terjadi kesalahan: $e';
+      errorMessageKelas = message;
       isLoadingKelas = false;
     });
   }
@@ -179,6 +218,7 @@ Future<void> fetchKelas() async {
 
 Future<void> fetchSiswa() async {
   if (walikelasId == null || idKelas == null) {
+    if (!mounted) return;
     setState(() {
       errorMessageSiswa = 'Data guru tidak lengkap. Silakan login ulang.';
       isLoadingSiswa = false;
@@ -186,6 +226,7 @@ Future<void> fetchSiswa() async {
     return;
   }
 
+  if (!mounted) return;
   setState(() {
     isLoadingSiswa = true;
     errorMessageSiswa = null;
@@ -206,20 +247,23 @@ Future<void> fetchSiswa() async {
     print('GET $uri -> ${response.statusCode}');
 
     if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body);
+      final jsonData = _decodeJsonResponse(response);
       if (jsonData['success']) {
         List<dynamic> data = jsonData['data'];
+        if (!mounted) return;
         setState(() {
           studentsList = data.map((json) => Student.fromJson(json)).toList();
           isLoadingSiswa = false;
         });
       } else {
+        if (!mounted) return;
         setState(() {
           errorMessageSiswa = jsonData['message'] ?? 'Gagal memuat data siswa';
           isLoadingSiswa = false;
         });
       }
     } else {
+      if (!mounted) return;
       setState(() {
         errorMessageSiswa = 'Gagal mengambil data siswa (${response.statusCode})';
         isLoadingSiswa = false;
@@ -227,8 +271,13 @@ Future<void> fetchSiswa() async {
     }
   } catch (e) {
     print('Error fetchSiswa: $e');
+    if (!mounted) return;
+    final message =
+        e is FormatException
+            ? 'Format data siswa tidak valid. Coba lagi.'
+            : 'Terjadi kesalahan: $e';
     setState(() {
-      errorMessageSiswa = 'Terjadi kesalahan: $e';
+      errorMessageSiswa = message;
       isLoadingSiswa = false;
     });
   }
