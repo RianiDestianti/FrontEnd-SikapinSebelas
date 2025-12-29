@@ -18,6 +18,9 @@ class FaqWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final filteredFaqData = _filterFaqData();
+    final apresiasiEntries = _entriesForType(filteredFaqData, 'apresiasi');
+    final pelanggaranEntries = _entriesForType(filteredFaqData, 'pelanggaran');
+    final otherEntries = _entriesForOtherTypes(filteredFaqData);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,48 +81,39 @@ class FaqWidget extends StatelessWidget {
               ),
             ),
           ],
-          _buildSectionTitle('Lembar 1 – Penghargaan dan Apresiasi'),
-          ...filteredFaqData.entries
-              .where(
-                (entry) =>
-                    entry.value['items'][0]['text']?.toLowerCase().contains(
-                      'tepat waktu',
-                    ) ??
-                    false,
-              )
-              .map(
-                (entry) => _buildFaqSection(
-                  entry.key,
-                  entry.value['title'],
-                  (entry.value['items'] as List<Map<String, dynamic>>)
-                      .map(
-                        (item) => _buildFaqItem(item['text'], item['points']),
-                      )
-                      .toList(),
-                ),
+          if (apresiasiEntries.isNotEmpty) ...[
+            _buildSectionTitle('Lembar 1 - Penghargaan dan Apresiasi'),
+            ...apresiasiEntries.map(
+              (entry) => _buildFaqSection(
+                entry.key,
+                entry.value['title']?.toString() ?? '',
+                _buildItems(entry.value['items']),
               ),
-          const SizedBox(height: 24),
-          _buildSectionTitle('Lembar 2 – Pelanggaran dan Sanksi'),
-          ...filteredFaqData.entries
-              .where(
-                (entry) =>
-                    entry.value['items'][0]['text']?.toLowerCase().contains(
-                      'terlambat',
-                    ) ??
-                    false,
-              )
-              .map(
-                (entry) => _buildFaqSection(
-                  entry.key,
-                  entry.value['title'],
-                  (entry.value['items'] as List<Map<String, dynamic>>)
-                      .map(
-                        (item) => _buildFaqItem(item['text'], item['points']),
-                      )
-                      .toList(),
-                ),
+            ),
+            const SizedBox(height: 24),
+          ],
+          if (pelanggaranEntries.isNotEmpty) ...[
+            _buildSectionTitle('Lembar 2 - Pelanggaran dan Sanksi'),
+            ...pelanggaranEntries.map(
+              (entry) => _buildFaqSection(
+                entry.key,
+                entry.value['title']?.toString() ?? '',
+                _buildItems(entry.value['items']),
               ),
-          const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 24),
+          ],
+          if (otherEntries.isNotEmpty) ...[
+            _buildSectionTitle('Lembar 3 - Lainnya'),
+            ...otherEntries.map(
+              (entry) => _buildFaqSection(
+                entry.key,
+                entry.value['title']?.toString() ?? '',
+                _buildItems(entry.value['items']),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           if (searchQuery.isEmpty) ...[
             Text(
               'Ketentuan Konversi Skor Penghargaan',
@@ -148,31 +142,70 @@ class FaqWidget extends StatelessWidget {
       return faqData;
     }
 
-    Map<String, Map<String, dynamic>> filtered = {};
-    String searchLower = searchQuery.toLowerCase();
+    final filtered = <String, Map<String, dynamic>>{};
+    final searchLower = searchQuery.toLowerCase();
 
     faqData.forEach((key, section) {
-      bool titleMatches = section['title'].toString().toLowerCase().contains(
-        searchLower,
-      );
+      final title = section['title']?.toString() ?? '';
+      final items = section['items'] as List<dynamic>? ?? [];
+      final titleMatches = title.toLowerCase().contains(searchLower);
 
-      List<Map<String, dynamic>> matchingItems = [];
-      for (var item in section['items']) {
-        if (item['text'].toString().toLowerCase().contains(searchLower) ||
-            item['points'].toString().toLowerCase().contains(searchLower)) {
-          matchingItems.add(item);
+      final matchingItems = <Map<String, dynamic>>[];
+      for (final item in items) {
+        if (item is! Map) {
+          continue;
+        }
+        final text = item['text']?.toString().toLowerCase() ?? '';
+        final points = item['points']?.toString().toLowerCase() ?? '';
+        if (text.contains(searchLower) || points.contains(searchLower)) {
+          matchingItems.add(Map<String, dynamic>.from(item));
         }
       }
 
       if (titleMatches || matchingItems.isNotEmpty) {
         filtered[key] = {
           'title': section['title'],
-          'items': titleMatches ? section['items'] : matchingItems,
+          'type': section['type'],
+          'items': titleMatches ? items : matchingItems,
         };
       }
     });
 
     return filtered;
+  }
+
+  List<MapEntry<String, Map<String, dynamic>>> _entriesForType(
+    Map<String, Map<String, dynamic>> data,
+    String type,
+  ) {
+    final expected = type.toLowerCase();
+    return data.entries.where((entry) {
+      final entryType = entry.value['type']?.toString().toLowerCase() ?? '';
+      return entryType == expected;
+    }).toList();
+  }
+
+  List<MapEntry<String, Map<String, dynamic>>> _entriesForOtherTypes(
+    Map<String, Map<String, dynamic>> data,
+  ) {
+    return data.entries.where((entry) {
+      final entryType = entry.value['type']?.toString().toLowerCase() ?? '';
+      return entryType != 'apresiasi' && entryType != 'pelanggaran';
+    }).toList();
+  }
+
+  List<Widget> _buildItems(dynamic items) {
+    final list = items as List<dynamic>? ?? [];
+    return list
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .map(
+          (item) => _buildFaqItem(
+            item['text']?.toString() ?? '',
+            item['points']?.toString() ?? '',
+          ),
+        )
+        .toList();
   }
 
   Widget _buildSectionTitle(String title) {
@@ -210,7 +243,7 @@ class FaqWidget extends StatelessWidget {
         title: RichText(
           text: TextSpan(
             children: _highlightSearchText(
-              '$code – $title',
+              '$code - $title',
               searchQuery,
               GoogleFonts.poppins(
                 fontSize: 16,

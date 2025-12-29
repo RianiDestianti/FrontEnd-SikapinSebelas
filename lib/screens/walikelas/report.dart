@@ -15,13 +15,19 @@ import 'dart:io';
 
 class FAQItem {
   final String title;
+  final String jenisPoin;
   final List<Map<String, String>> items;
 
-  FAQItem({required this.title, required this.items});
+  FAQItem({
+    required this.title,
+    required this.jenisPoin,
+    required this.items,
+  });
 
   factory FAQItem.fromJson(Map<String, dynamic> json) {
     return FAQItem(
       title: json['kategori'] ?? 'Unknown',
+      jenisPoin: json['jenis_poin']?.toString() ?? '',
       items: [
         {
           'text': json['uraian'] ?? 'No description',
@@ -1509,6 +1515,7 @@ class _LaporanScreenState extends State<LaporanScreen>
                                     faqData: faqData.map(
                                       (key, value) => MapEntry(key, {
                                         'title': value.title,
+                                        'type': value.jenisPoin,
                                         'items': value.items,
                                       }),
                                     ),
