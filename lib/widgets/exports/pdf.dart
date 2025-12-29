@@ -1,6 +1,8 @@
+import 'dart:io';
+
+import 'package:file_saver/file_saver.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:file_saver/file_saver.dart';
 
 class PdfExport {
   static Future<String?> exportToPDF(
@@ -69,9 +71,31 @@ class PdfExport {
     );
 
     final bytes = await pdf.save();
+    final trimmedName = fileName.trim().isEmpty ? 'laporan_siswa' : fileName;
+    final dotIndex = trimmedName.lastIndexOf('.');
+    String baseName = trimmedName;
+    String ext = '';
+    if (dotIndex > 0 && dotIndex < trimmedName.length - 1) {
+      baseName = trimmedName.substring(0, dotIndex);
+      ext = trimmedName.substring(dotIndex + 1);
+    }
+    if (ext.isEmpty) {
+      ext = 'pdf';
+    }
+
+    if (Platform.isAndroid || Platform.isIOS) {
+      return FileSaver.instance.saveAs(
+        name: baseName,
+        bytes: bytes,
+        ext: ext,
+        mimeType: MimeType.pdf,
+      );
+    }
+
     return FileSaver.instance.saveFile(
-      name: fileName,
+      name: baseName,
       bytes: bytes,
+      ext: ext,
       mimeType: MimeType.pdf,
     );
   }
