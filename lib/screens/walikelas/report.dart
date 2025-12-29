@@ -236,6 +236,11 @@ class _LaporanScreenState extends State<LaporanScreen>
 
   final Map<String, bool> _expandedSections = {};
 
+  void _safeSetState(VoidCallback fn) {
+    if (!mounted) return;
+    setState(fn);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -255,7 +260,7 @@ class _LaporanScreenState extends State<LaporanScreen>
 
   Future<void> _loadWalikelasId() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
+    _safeSetState(() {
       walikelasId = prefs.getString('walikelas_id');
       idKelas = prefs.getString('id_kelas');
     });
@@ -267,9 +272,9 @@ class _LaporanScreenState extends State<LaporanScreen>
 
   Future<void> _manualRefresh() async {
     if (_isRefreshing) return;
-    setState(() => _isRefreshing = true);
+    _safeSetState(() => _isRefreshing = true);
     await _refreshData();
-    if (mounted) setState(() => _isRefreshing = false);
+    _safeSetState(() => _isRefreshing = false);
   }
 
   List<Map<String, dynamic>> _mappedStudentsForExport() {
@@ -355,14 +360,14 @@ class _LaporanScreenState extends State<LaporanScreen>
 
   Future<void> fetchKelas() async {
     if (walikelasId == null) {
-      setState(() {
+      _safeSetState(() {
         errorMessageKelas = 'ID walikelas tidak ditemukan';
         isLoadingKelas = false;
       });
       return;
     }
 
-    setState(() {
+    _safeSetState(() {
       isLoadingKelas = true;
       errorMessageKelas = null;
     });
@@ -375,7 +380,7 @@ class _LaporanScreenState extends State<LaporanScreen>
         final jsonData = jsonDecode(response.body);
         if (jsonData['success']) {
           List<dynamic> data = jsonData['data'];
-          setState(() {
+          _safeSetState(() {
             kelasList = data.map((json) => Kelas.fromJson(json)).toList();
             selectedKelas =
                 idKelas != null
@@ -400,20 +405,20 @@ class _LaporanScreenState extends State<LaporanScreen>
             }
           });
         } else {
-          setState(() {
+          _safeSetState(() {
             errorMessageKelas = jsonData['message'];
             isLoadingKelas = false;
           });
         }
       } else {
-        setState(() {
+        _safeSetState(() {
           errorMessageKelas =
               'Gagal mengambil data kelas: ${response.statusCode}';
           isLoadingKelas = false;
         });
       }
     } catch (e) {
-      setState(() {
+      _safeSetState(() {
         errorMessageKelas = 'Terjadi kesalahan: $e';
         isLoadingKelas = false;
       });
@@ -421,7 +426,7 @@ class _LaporanScreenState extends State<LaporanScreen>
   }
 
   Future<void> fetchSiswa() async {
-    setState(() {
+    _safeSetState(() {
       isLoadingStudents = true;
       errorMessageStudents = null;
     });
@@ -441,25 +446,25 @@ class _LaporanScreenState extends State<LaporanScreen>
             );
             students.add(Student.fromJson(studentJson, scores));
           }
-          setState(() {
+          _safeSetState(() {
             studentsList = students;
             isLoadingStudents = false;
           });
         } else {
-          setState(() {
+          _safeSetState(() {
             errorMessageStudents = jsonData['message'];
             isLoadingStudents = false;
           });
         }
       } else {
-        setState(() {
+        _safeSetState(() {
           errorMessageStudents =
               'Gagal mengambil data siswa: ${response.statusCode}';
           isLoadingStudents = false;
         });
       }
     } catch (e) {
-      setState(() {
+      _safeSetState(() {
         errorMessageStudents = 'Terjadi kesalahan: $e';
         isLoadingStudents = false;
       });
@@ -599,7 +604,7 @@ class _LaporanScreenState extends State<LaporanScreen>
   }
 
   Future<void> fetchAspekPenilaian() async {
-    setState(() {
+    _safeSetState(() {
       isLoadingAspek = true;
       errorMessageAspek = null;
     });
@@ -622,26 +627,26 @@ class _LaporanScreenState extends State<LaporanScreen>
             tempAspekData[key] = item;
             _expandedSections[key] = false;
           }
-          setState(() {
+          _safeSetState(() {
             faqData = tempFaqData;
             aspekPenilaianData = tempAspekData;
             isLoadingAspek = false;
           });
         } else {
-          setState(() {
+          _safeSetState(() {
             errorMessageAspek = jsonData['message'];
             isLoadingAspek = false;
           });
         }
       } else {
-        setState(() {
+        _safeSetState(() {
           errorMessageAspek =
               'Gagal mengambil data aspek penilaian: ${response.statusCode}';
           isLoadingAspek = false;
         });
       }
     } catch (e) {
-      setState(() {
+      _safeSetState(() {
         errorMessageAspek = 'Terjadi kesalahan: $e';
         isLoadingAspek = false;
       });

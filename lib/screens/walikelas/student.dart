@@ -138,7 +138,7 @@ Future<void> fetchKelas() async {
     print('GET $uri -> ${response.statusCode}');
 
     if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body);
+      final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
       if (jsonData['success']) {
         List<dynamic> data = jsonData['data'];
         if (data.isNotEmpty) {
@@ -206,7 +206,7 @@ Future<void> fetchSiswa() async {
     print('GET $uri -> ${response.statusCode}');
 
     if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body);
+      final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
       if (jsonData['success']) {
         List<dynamic> data = jsonData['data'];
         setState(() {
