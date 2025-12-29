@@ -76,6 +76,8 @@ class Student {
   final int poinApresiasi;
   final int poinPelanggaran;
   final int poinTotal;
+  final String spLevel;
+  final String phLevel;
 
   Student({
     required this.name,
@@ -86,6 +88,8 @@ class Student {
     required this.poinApresiasi,
     required this.poinPelanggaran,
     required this.poinTotal,
+    required this.spLevel,
+    required this.phLevel,
   });
 }
 
@@ -223,36 +227,66 @@ Future<void> _loadUserData() async {
   initializeStudentData();
 }
 
-void initializeStudentData() {
-  setState(() {
-    isLoadingStudent = true;
-    errorMessageStudent = null;
-  });
+  void initializeStudentData() {
+    setState(() {
+      isLoadingStudent = true;
+      errorMessageStudent = null;
+    });
 
-  try {
-    final data = widget.student;
+    try {
+      final data = widget.student;
+      final poinTotal = int.tryParse(data['points']?.toString() ?? '') ?? 0;
+      final spLevelRaw = data['spLevel'] ?? data['sp_level'];
+      final phLevelRaw = data['phLevel'] ?? data['ph_level'];
+      final spLevel = _resolveSpLevel(spLevelRaw?.toString(), poinTotal);
+      final phLevel = _resolvePhLevel(phLevelRaw?.toString(), poinTotal);
 
-    detailedStudent = Student(
-      name: data['name'] ?? 'Unknown',
-      status: data['status'] ?? 'Unknown',
-      nis: data['nis'] ?? '0',
-      programKeahlian: data['programKeahlian'] ?? data['kelas'] ?? 'Unknown',
-      kelas: data['kelas'] ?? 'Unknown',
-      poinApresiasi: data['poinApresiasi'] ?? 0,
-      poinPelanggaran: (data['poinPelanggaran'] ?? 0).abs(),
-      poinTotal: data['points'] ?? 0,
-    );
+      detailedStudent = Student(
+        name: data['name'] ?? 'Unknown',
+        status: data['status'] ?? 'Unknown',
+        nis: data['nis'] ?? '0',
+        programKeahlian: data['programKeahlian'] ?? data['kelas'] ?? 'Unknown',
+        kelas: data['kelas'] ?? 'Unknown',
+        poinApresiasi: data['poinApresiasi'] ?? 0,
+        poinPelanggaran: (data['poinPelanggaran'] ?? 0).abs(),
+        poinTotal: poinTotal,
+        spLevel: spLevel,
+        phLevel: phLevel,
+      );
 
-    setState(() => isLoadingStudent = false);
-    fetchAppreciations(data['nis']);
-    fetchViolations(data['nis']);
+      setState(() => isLoadingStudent = false);
+      fetchAppreciations(data['nis']);
+      fetchViolations(data['nis']);
   } catch (e) {
     setState(() {
       errorMessageStudent = 'Gagal memuat detail siswa: $e';
       isLoadingStudent = false;
     });
+    }
   }
-}
+
+  String _resolveSpLevel(String? spLevel, int poinTotal) {
+    final sp = spLevel?.trim();
+    if (sp != null && sp.isNotEmpty) {
+      return sp;
+    }
+    if (poinTotal <= -76) return 'SP3';
+    if (poinTotal <= -51) return 'SP2';
+    if (poinTotal <= -25) return 'SP1';
+    return '-';
+  }
+
+  String _resolvePhLevel(String? phLevel, int poinTotal) {
+    if (poinTotal <= -25) return '-';
+    final ph = phLevel?.trim();
+    if (ph != null && ph.isNotEmpty) {
+      return ph;
+    }
+    if (poinTotal >= 151) return 'PH3';
+    if (poinTotal >= 126) return 'PH2';
+    if (poinTotal >= 100) return 'PH1';
+    return '-';
+  }
 
   Future<void> fetchAspekPenilaian() async {
     setState(() {
@@ -919,6 +953,16 @@ void initializeStudentData() {
                                   '${detailedStudent.poinTotal > 0 ? '+' : ''}${detailedStudent.poinTotal}',
                                   Icons.calculate,
                                 ),
+                                _buildBiodataRow(
+                                  'Status SP',
+                                  detailedStudent.spLevel,
+                                  Icons.report,
+                                ),
+                                _buildBiodataRow(
+                                  'Status PH',
+                                  detailedStudent.phLevel,
+                                  Icons.emoji_events,
+                                ),
                               ],
                             ),
                           ),
@@ -1247,7 +1291,7 @@ void initializeStudentData() {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${item.date} • ${item.time}',
+                        '${item.date} - ${item.time}',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,

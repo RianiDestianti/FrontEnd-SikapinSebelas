@@ -18,6 +18,8 @@ class Student {
   final int? poinTotal;
   final String createdAt;
   final String updatedAt;
+  final String? spLevel;
+  final String? phLevel;
 
   Student({
     required this.nis,
@@ -28,6 +30,8 @@ class Student {
     this.poinTotal,
     required this.createdAt,
     required this.updatedAt,
+    this.spLevel,
+    this.phLevel,
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {
@@ -42,6 +46,8 @@ class Student {
       poinTotal: int.tryParse(json['poin_total']?.toString() ?? ''),
       createdAt: json['created_at']?.toString() ?? '',
       updatedAt: json['updated_at']?.toString() ?? '',
+      spLevel: json['sp_level']?.toString(),
+      phLevel: json['ph_level']?.toString(),
     );
   }
 
@@ -57,6 +63,31 @@ class Student {
   }
 
   int get points => poinTotal ?? 0;
+
+  String get spLevelDisplay {
+    final sp = spLevel?.trim();
+    if (sp != null && sp.isNotEmpty) {
+      return sp;
+    }
+    final totalPoints = poinTotal ?? 0;
+    if (totalPoints <= -76) return 'SP3';
+    if (totalPoints <= -51) return 'SP2';
+    if (totalPoints <= -25) return 'SP1';
+    return '-';
+  }
+
+  String get phLevelDisplay {
+    final totalPoints = poinTotal ?? 0;
+    if (totalPoints <= -25) return '-';
+    final ph = phLevel?.trim();
+    if (ph != null && ph.isNotEmpty) {
+      return ph;
+    }
+    if (totalPoints >= 151) return 'PH3';
+    if (totalPoints >= 126) return 'PH2';
+    if (totalPoints >= 100) return 'PH1';
+    return '-';
+  }
 }
 
 class SiswaScreen extends StatefulWidget {
@@ -295,6 +326,8 @@ Future<void> fetchSiswa() async {
                 'kelas': selectedKelas?.namaKelas ?? 'Tidak Diketahui',
                 'poinApresiasi': student.poinApresiasi ?? 0,
                 'poinPelanggaran': student.poinPelanggaran ?? 0,
+                'spLevel': student.spLevelDisplay,
+                'phLevel': student.phLevelDisplay,
               },
             ),
       ),
@@ -393,7 +426,7 @@ Future<void> fetchSiswa() async {
           ),
           const SizedBox(height: 4),
           Text(
-            'Total Siswa: $studentsInClass • Semester Ganjil 2025/2026',
+            'Total Siswa: $studentsInClass - Semester Ganjil 2025/2026',
             style: GoogleFonts.poppins(
               color: Colors.white.withOpacity(0.8),
               fontSize: 12,
@@ -937,6 +970,24 @@ Future<void> fetchSiswa() async {
     );
   }
 
+  Widget _buildStatusChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+
   Widget _buildStudentCard(Student student, int index) {
     int _getDisplayPoints() {
       if (_selectedFilter == 1) {
@@ -965,6 +1016,10 @@ Future<void> fetchSiswa() async {
     final displayPoints = _getDisplayPoints();
     final pointLabel = _getPointLabel();
     final pointColor = _getPointColor();
+    final spLevel = student.spLevelDisplay;
+    final phLevel = student.phLevelDisplay;
+    final hasSp = spLevel != '-';
+    final hasPh = phLevel != '-';
 
     return GestureDetector(
       onTap: () => _navigateToDetail(student),
@@ -1020,7 +1075,23 @@ Future<void> fetchSiswa() async {
                     ),
                   ),
                   const SizedBox(height: 4),
-
+                  if (hasSp || hasPh)
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        if (hasSp)
+                          _buildStatusChip(
+                            spLevel,
+                            const Color(0xFFFF6B6D),
+                          ),
+                        if (hasPh)
+                          _buildStatusChip(
+                            phLevel,
+                            const Color(0xFF10B981),
+                          ),
+                      ],
+                    ),
                   const SizedBox(height: 2),
                   Text(
                     '$pointLabel: $displayPoints',
