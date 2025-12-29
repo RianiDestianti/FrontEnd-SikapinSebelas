@@ -77,7 +77,6 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/template.docx
     - assets/backpack.png
     - assets/smkn.png
     - assets/apk.png
