@@ -1030,26 +1030,7 @@ class _LaporanScreenState extends State<LaporanScreen>
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      GestureDetector(
-                                        onTap: () => Navigator.pop(context),
-                                        child: Container(
-                                          width: 40,
-                                          height: 40,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(
-                                              0.2,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.arrow_back_ios_new_rounded,
-                                            color: Colors.white,
-                                            size: 18,
-                                          ),
-                                        ),
-                                      ),
+                                      const SizedBox(width: 40, height: 40),
                                       Row(
                                         children: [
                                           GestureDetector(
@@ -1078,40 +1059,6 @@ class _LaporanScreenState extends State<LaporanScreen>
                                                 color: Colors.white,
                                                 size: 24,
                                               ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          GestureDetector(
-                                            onTap: _manualRefresh,
-                                            child: Container(
-                                              width: 40,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(
-                                                  0.2,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                              child: _isRefreshing
-                                                  ? const SizedBox(
-                                                      width: 18,
-                                                      height: 18,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                        valueColor:
-                                                            AlwaysStoppedAnimation<
-                                                                Color>(
-                                                          Colors.white,
-                                                        ),
-                                                      ),
-                                                    )
-                                                  : const Icon(
-                                                      Icons.refresh_rounded,
-                                                      color: Colors.white,
-                                                      size: 24,
-                                                    ),
                                             ),
                                           ),
                                           const SizedBox(width: 8),
@@ -1914,43 +1861,6 @@ class _LaporanScreenState extends State<LaporanScreen>
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: const Color(0xFF9CA3AF),
-            ),
-          ),
-          const SizedBox(height: 20),
-          GestureDetector(
-            onTap: _refreshData,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0xFF0083EE).withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.refresh, color: Colors.white, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Coba Lagi',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ],

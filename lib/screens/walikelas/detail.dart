@@ -654,24 +654,7 @@ Future<void> _loadUserData() async {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    GestureDetector(
-                                      onTap: () => Navigator.pop(context),
-                                      child: Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.arrow_back_ios_new,
-                                          color: Colors.white,
-                                          size: 20,
-                                        ),
-                                      ),
-                                    ),
+                                    const SizedBox(width: 40, height: 40),
                                     Text(
                                       'Profil Siswa',
                                       style: GoogleFonts.poppins(

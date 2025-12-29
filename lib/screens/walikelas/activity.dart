@@ -470,22 +470,7 @@ class _ActivityScreenState extends State<ActivityScreen>
           children: [
             Row(
               children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
+                const SizedBox(width: 40, height: 40),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(

@@ -527,31 +527,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        _addLocalActivity(
-                                          'Navigasi',
-                                          'Kembali',
-                                          'Kembali ke halaman sebelumnya',
-                                        );
-                                      },
-                                      child: Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.arrow_back_ios_new_rounded,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
-                                      ),
-                                    ),
+                                    const SizedBox(width: 40, height: 40),
                                     Row(
                                       children: [
                                         GestureDetector(
@@ -587,42 +563,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                 color: Colors.white,
                                                 size: 24,
                                               ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        GestureDetector(
-                                          onTap: _manualRefresh,
-                                          child: Container(
-                                            width: 40,
-                                            height: 40,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(
-                                                0.2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: Center(
-                                              child: _isRefreshing
-                                                  ? const SizedBox(
-                                                      width: 18,
-                                                      height: 18,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                        valueColor:
-                                                            AlwaysStoppedAnimation<
-                                                                Color>(
-                                                          Colors.white,
-                                                        ),
-                                                      ),
-                                                    )
-                                                  : const Icon(
-                                                      Icons.refresh_rounded,
-                                                      color: Colors.white,
-                                                      size: 24,
-                                                    ),
                                             ),
                                           ),
                                         ),
