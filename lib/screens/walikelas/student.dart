@@ -32,14 +32,16 @@ class Student {
 
   factory Student.fromJson(Map<String, dynamic> json) {
     return Student(
-      nis: json['nis'],
-      idKelas: json['id_kelas'],
-      namaSiswa: json['nama_siswa'],
-      poinApresiasi: json['poin_apresiasi'],
-      poinPelanggaran: json['poin_pelanggaran'],
-      poinTotal: json['poin_total'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
+      nis: int.tryParse(json['nis']?.toString() ?? '') ?? 0,
+      idKelas: json['id_kelas']?.toString() ?? '',
+      namaSiswa: json['nama_siswa']?.toString() ?? '',
+      poinApresiasi:
+          int.tryParse(json['poin_apresiasi']?.toString() ?? ''),
+      poinPelanggaran:
+          int.tryParse(json['poin_pelanggaran']?.toString() ?? ''),
+      poinTotal: int.tryParse(json['poin_total']?.toString() ?? ''),
+      createdAt: json['created_at']?.toString() ?? '',
+      updatedAt: json['updated_at']?.toString() ?? '',
     );
   }
 
