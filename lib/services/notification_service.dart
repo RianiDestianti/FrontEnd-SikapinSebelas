@@ -18,8 +18,19 @@ class NotificationService {
     priority: Priority.high,
   );
 
+  static const AndroidNotificationDetails _downloadAndroidDetails =
+      AndroidNotificationDetails(
+    'download_channel',
+    'Download Notifications',
+    channelDescription: 'Notifikasi unduhan laporan',
+    importance: Importance.defaultImportance,
+    priority: Priority.defaultPriority,
+  );
+
   static const NotificationDetails _notificationDetails =
       NotificationDetails(android: _androidDetails);
+  static const NotificationDetails _downloadNotificationDetails =
+      NotificationDetails(android: _downloadAndroidDetails);
 
   Future<void> init() async {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -42,6 +53,18 @@ class NotificationService {
       notification.body ?? '',
       _notificationDetails,
       payload: message.data['nis']?.toString(),
+    );
+  }
+
+  Future<void> showDownloadNotification({
+    required String title,
+    required String body,
+  }) async {
+    await _notificationsPlugin.show(
+      DateTime.now().millisecondsSinceEpoch.remainder(100000),
+      title,
+      body,
+      _downloadNotificationDetails,
     );
   }
 }

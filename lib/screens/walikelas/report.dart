@@ -8,6 +8,7 @@ import 'package:skoring/screens/profile.dart';
 import 'package:skoring/widgets/exports/pdf.dart';
 import 'package:skoring/widgets/exports/excel.dart';
 import 'package:skoring/widgets/faq.dart';
+import 'package:skoring/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
@@ -310,48 +311,70 @@ class _LaporanScreenState extends State<LaporanScreen>
 
   Future<void> _exportToPdf(String filterLabel) async {
     if (!await _ensureStoragePermission()) return;
+    final fileName =
+        'Laporan_Siswa_${selectedKelas?.namaKelas ?? 'Unknown'}.pdf';
     final savedPath = await PdfExport.exportToPDF(
       _mappedStudentsForExport(),
-      'Laporan_Siswa_${selectedKelas?.namaKelas ?? 'Unknown'}.pdf',
+      fileName,
       kelas: selectedKelas?.namaKelas,
       filterLabel: filterLabel,
       searchQuery: _searchQuery,
     );
     if (mounted) {
+      final message =
+          savedPath != null && savedPath.isNotEmpty
+              ? 'PDF tersimpan di $savedPath'
+              : 'PDF berhasil dibuat';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            savedPath != null
-                ? 'PDF tersimpan di $savedPath'
-                : 'PDF berhasil dibuat',
+            message,
             style: GoogleFonts.poppins(color: Colors.white),
           ),
           backgroundColor: const Color(0xFF10B981),
         ),
+      );
+      await NotificationService.instance.showDownloadNotification(
+        title: 'Unduhan selesai',
+        body:
+            savedPath != null && savedPath.isNotEmpty
+                ? '$fileName\nTersimpan di: $savedPath'
+                : fileName,
       );
     }
   }
 
   Future<void> _exportToExcel(String filterLabel) async {
     if (!await _ensureStoragePermission()) return;
+    final fileName =
+        'Laporan_Siswa_${selectedKelas?.namaKelas ?? 'Unknown'}.xlsx';
     final savedPath = await ExcelExport.exportToExcel(
       _mappedStudentsForExport(),
-      'Laporan_Siswa_${selectedKelas?.namaKelas ?? 'Unknown'}.xlsx',
+      fileName,
       kelas: selectedKelas?.namaKelas,
       filterLabel: filterLabel,
       searchQuery: _searchQuery,
     );
     if (mounted) {
+      final message =
+          savedPath != null && savedPath.isNotEmpty
+              ? 'Excel tersimpan di $savedPath'
+              : 'Excel berhasil dibuat';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            savedPath != null
-                ? 'Excel tersimpan di $savedPath'
-                : 'Excel berhasil dibuat',
+            message,
             style: GoogleFonts.poppins(color: Colors.white),
           ),
           backgroundColor: const Color(0xFF10B981),
         ),
+      );
+      await NotificationService.instance.showDownloadNotification(
+        title: 'Unduhan selesai',
+        body:
+            savedPath != null && savedPath.isNotEmpty
+                ? '$fileName\nTersimpan di: $savedPath'
+                : fileName,
       );
     }
   }

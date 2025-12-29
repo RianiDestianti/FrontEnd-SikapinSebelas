@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,11 +15,9 @@ class FcmTokenService {
 
   Future<void> init() async {
     await _messaging.requestPermission();
+    await _messaging.setAutoInitEnabled(true);
 
-    final token = await _messaging.getToken();
-    if (token != null) {
-      await _sendToken(token);
-    }
+    await _syncTokenWithRetry();
 
     _messaging.onTokenRefresh.listen((newToken) {
       _sendToken(newToken);
@@ -23,9 +25,30 @@ class FcmTokenService {
   }
 
   Future<void> syncToken() async {
-    final token = await _messaging.getToken();
-    if (token != null) {
-      await _sendToken(token);
+    await _syncTokenWithRetry();
+  }
+
+  Future<void> _syncTokenWithRetry() async {
+    const maxAttempts = 3;
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        final token = await _messaging.getToken();
+        if (token != null) {
+          await _sendToken(token);
+        }
+        return;
+      } on FirebaseException catch (e) {
+        debugPrint(
+          'FCM getToken failed (attempt $attempt): ${e.code} ${e.message}',
+        );
+        if (attempt < maxAttempts) {
+          await Future.delayed(Duration(seconds: 2 * attempt));
+          continue;
+        }
+      } catch (e) {
+        debugPrint('FCM getToken error: $e');
+      }
+      return;
     }
   }
 
