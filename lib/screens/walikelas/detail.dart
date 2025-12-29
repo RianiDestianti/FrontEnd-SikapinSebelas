@@ -227,6 +227,10 @@ Future<void> _loadUserData() async {
   initializeStudentData();
 }
 
+  Future<void> _refreshData() async {
+    await _loadUserData();
+  }
+
   void initializeStudentData() {
     setState(() {
       isLoadingStudent = true;
@@ -614,9 +618,12 @@ Future<void> _loadUserData() async {
                 constraints: BoxConstraints(maxWidth: maxWidth),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
+                  child: RefreshIndicator(
+                    onRefresh: _refreshData,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
                         Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -995,7 +1002,8 @@ Future<void> _loadUserData() async {
                           padding: const EdgeInsets.all(20),
                           child: _buildTabContent(),
                         ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

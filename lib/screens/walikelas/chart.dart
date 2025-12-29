@@ -232,6 +232,14 @@ class _GrafikScreenState extends State<GrafikScreen>
     }
   }
 
+  Future<void> _refreshData() async {
+    if (_teacherClassId.isEmpty || _nipWalikelas.isEmpty) {
+      await _loadTeacherData();
+      return;
+    }
+    await _fetchChartData();
+  }
+
   String _getMonthName(int month) {
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
@@ -293,22 +301,26 @@ class _GrafikScreenState extends State<GrafikScreen>
                       children: [
                         _buildAppBar(),
                         Expanded(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              children: [
-                                _buildStatisticsCards(),
-                                const SizedBox(height: 20),
-                                _buildPeriodSelector(),
-                                const SizedBox(height: 20),
-                                _buildChartTypeSelector(),
-                                const SizedBox(height: 20),
-                                _buildMainChart(),
-                                const SizedBox(height: 20),
-                                _buildDetailedAnalysis(),
-                                const SizedBox(height: 20),
-                                _buildTrendAnalysis(),
-                              ],
+                          child: RefreshIndicator(
+                            onRefresh: _refreshData,
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                children: [
+                                  _buildStatisticsCards(),
+                                  const SizedBox(height: 20),
+                                  _buildPeriodSelector(),
+                                  const SizedBox(height: 20),
+                                  _buildChartTypeSelector(),
+                                  const SizedBox(height: 20),
+                                  _buildMainChart(),
+                                  const SizedBox(height: 20),
+                                  _buildDetailedAnalysis(),
+                                  const SizedBox(height: 20),
+                                  _buildTrendAnalysis(),
+                                ],
+                              ),
                             ),
                           ),
                         ),

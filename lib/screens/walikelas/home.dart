@@ -489,9 +489,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 constraints: BoxConstraints(maxWidth: maxWidth),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
+                  child: RefreshIndicator(
+                    onRefresh: _manualRefresh,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
                         Container(
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
@@ -960,7 +963,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ],
                           ),
                         ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

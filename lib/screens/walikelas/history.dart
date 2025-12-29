@@ -279,6 +279,10 @@ class _HistoryScreenState extends State<HistoryScreen>
     }
   }
 
+  Future<void> _refreshData() async {
+    await fetchAspekPenilaian();
+  }
+
 
   void _sortHistory() {
     allHistory.sort((a, b) {
@@ -1008,69 +1012,80 @@ class _HistoryScreenState extends State<HistoryScreen>
                           ),
                         ),
                       Expanded(
-                        child:
-                            filteredHistory.isEmpty
-                                ? Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                        child: RefreshIndicator(
+                          onRefresh: _refreshData,
+                          child:
+                              filteredHistory.isEmpty
+                                  ? ListView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
                                     children: [
-                                      Container(
-                                        width: 80,
-                                        height: 80,
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color(0xFF61B8FF),
-                                              Color(0xFF0083EE),
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            40,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Color(0x200083EE),
-                                              blurRadius: 20,
-                                              offset: Offset(0, 10),
+                                      const SizedBox(height: 24),
+                                      Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Container(
+                                              width: 80,
+                                              height: 80,
+                                              decoration: BoxDecoration(
+                                                gradient: const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF61B8FF),
+                                                    Color(0xFF0083EE),
+                                                  ],
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(40),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Color(0x200083EE),
+                                                    blurRadius: 20,
+                                                    offset: Offset(0, 10),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: const Icon(
+                                                Icons.search_off,
+                                                color: Colors.white,
+                                                size: 40,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 20),
+                                            Text(
+                                              'Tidak ada data yang sesuai dengan filter',
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF6B7280),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'Coba ubah pengaturan filter',
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color: Color(0xFF9CA3AF),
+                                              ),
                                             ),
                                           ],
                                         ),
-                                        child: const Icon(
-                                          Icons.search_off,
-                                          color: Colors.white,
-                                          size: 40,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      Text(
-                                        'Tidak ada data yang sesuai dengan filter',
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF6B7280),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Coba ubah pengaturan filter',
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: Color(0xFF9CA3AF),
-                                        ),
                                       ),
                                     ],
-                                  ),
-                                )
-                                : SingleChildScrollView(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (newItems.isNotEmpty) ...[
+                                  )
+                                  : SingleChildScrollView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.all(20),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (newItems.isNotEmpty) ...[
                                         Container(
                                           margin: const EdgeInsets.only(
                                             bottom: 16,
@@ -1284,9 +1299,10 @@ class _HistoryScreenState extends State<HistoryScreen>
                                             )
                                             .toList(),
                                       ],
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
+                        ),
                       ),
                     ],
                   ),

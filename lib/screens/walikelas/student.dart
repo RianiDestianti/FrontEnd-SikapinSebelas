@@ -334,12 +334,14 @@ Future<void> fetchSiswa() async {
     );
   }
 
-  void _refreshData() {
+  Future<void> _refreshData() async {
     if (_isRefreshing) return;
     setState(() => _isRefreshing = true);
-    Future.wait([fetchKelas(), fetchSiswa()]).whenComplete(() {
+    try {
+      await Future.wait([fetchKelas(), fetchSiswa()]);
+    } finally {
       if (mounted) setState(() => _isRefreshing = false);
-    });
+    }
   }
 
   Widget _buildHeaderContent() {
@@ -470,9 +472,12 @@ Future<void> fetchSiswa() async {
                 width: maxWidth,
                 child: FadeTransition(
                   opacity: _fadeAnimation,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
+                  child: RefreshIndicator(
+                    onRefresh: _refreshData,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
                         Container(
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
@@ -771,7 +776,8 @@ Future<void> fetchSiswa() async {
                             ],
                           ),
                         ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
