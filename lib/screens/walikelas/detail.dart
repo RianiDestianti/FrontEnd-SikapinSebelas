@@ -268,7 +268,7 @@ void initializeStudentData() {
       );
 
       if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
+        final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
         if (jsonData['success']) {
           setState(() {
             aspekPenilaianData = jsonData['data'];
@@ -310,7 +310,7 @@ void initializeStudentData() {
         return;
       }
 
-      final jsonData = jsonDecode(response.body);
+      final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
       final List<dynamic> evaluations =
           (jsonData['penilaian']?['data'] as List<dynamic>? ?? [])
               .where((e) => e['nis'].toString() == nis)
@@ -401,7 +401,7 @@ void initializeStudentData() {
         return;
       }
 
-      final jsonData = jsonDecode(response.body);
+      final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
       final List<dynamic> evaluations =
           (jsonData['penilaian']?['data'] as List<dynamic>? ?? [])
               .where((e) => e['nis'].toString() == nis)
