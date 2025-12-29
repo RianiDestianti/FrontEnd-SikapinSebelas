@@ -118,7 +118,7 @@ class _GrafikScreenState extends State<GrafikScreen>
 
       Future<http.Response> _doRequest(String endpoint) {
         final uri = Uri.parse(
-          'http://10.0.2.2:8000/api/$endpoint?nip=$_nipWalikelas&id_kelas=$_teacherClassId',
+          'http://sijuwara.student.smkn11bdg.sch.id/api/$endpoint?nip=$_nipWalikelas&id_kelas=$_teacherClassId',
         );
         return http.get(uri, headers: {'Accept': 'application/json'});
       }

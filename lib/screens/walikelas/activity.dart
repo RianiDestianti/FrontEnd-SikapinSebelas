@@ -153,7 +153,7 @@ class _ActivityScreenState extends State<ActivityScreen>
   String _teacherClassId = '';
   String _walikelasId = '';
   String? _errorMessage;
-  final String _baseUrl = 'http://10.0.2.2:8000/api';
+  final String _baseUrl = 'http://sijuwara.student.smkn11bdg.sch.id/api';
 
   final List<String> _filterOptions = [
     'Semua',

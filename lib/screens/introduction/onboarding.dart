@@ -702,7 +702,7 @@ void _handleLogin() async {
   }
   try {
     final response = await http.post(
-      Uri.parse("http://10.0.2.2:8000/api/login"),
+      Uri.parse("http://sijuwara.student.smkn11bdg.sch.id/api/login"),
       body: {"nip": nip, "password": password},
     );
     final data = jsonDecode(response.body);

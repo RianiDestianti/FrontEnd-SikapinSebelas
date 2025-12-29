@@ -69,7 +69,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
 
       final response = await http.get(
         Uri.parse(
-          'http://10.0.2.2:8000/api/notifikasi?nip=$_walikelasId&id_kelas=$_teacherClassId',
+          'http://sijuwara.student.smkn11bdg.sch.id/api/notifikasi?nip=$_walikelasId&id_kelas=$_teacherClassId',
         ),
       );
       if (response.statusCode == 200) {

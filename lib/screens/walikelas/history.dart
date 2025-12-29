@@ -60,7 +60,7 @@ class _HistoryScreenState extends State<HistoryScreen>
   bool isLoading = true;
   String? errorMessage;
   List<dynamic> aspekPenilaianData = [];
-  final String _baseUrl = 'http://10.0.2.2:8000/api';
+  final String _baseUrl = 'http://sijuwara.student.smkn11bdg.sch.id/api';
 
   String _nipWalikelas = '';
   String _idKelas = '';

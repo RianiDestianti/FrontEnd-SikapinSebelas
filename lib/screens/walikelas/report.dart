@@ -374,7 +374,7 @@ class _LaporanScreenState extends State<LaporanScreen>
 
     try {
       final response = await http
-          .get(Uri.parse('http://10.0.2.2:8000/api/kelas'))
+          .get(Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/kelas'))
           .timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -433,7 +433,7 @@ class _LaporanScreenState extends State<LaporanScreen>
 
     try {
       final response = await http
-          .get(Uri.parse('http://10.0.2.2:8000/api/akumulasi'))
+          .get(Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/akumulasi'))
           .timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -477,14 +477,14 @@ class _LaporanScreenState extends State<LaporanScreen>
     try {
       final penghargaanResponse = await http
           .get(
-            Uri.parse('http://10.0.2.2:8000/api/skoring_penghargaan?nis=$nis'),
+            Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/skoring_penghargaan?nis=$nis'),
           )
           .timeout(Duration(seconds: 10));
       if (penghargaanResponse.statusCode == 200) {
         final jsonData = jsonDecode(penghargaanResponse.body);
         if (jsonData['penilaian']['data'].isNotEmpty) {
           final appreciationsResponse = await http
-              .get(Uri.parse('http://10.0.2.2:8000/api/Penghargaan'))
+              .get(Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/Penghargaan'))
               .timeout(Duration(seconds: 10));
           if (appreciationsResponse.statusCode == 200) {
             final appreciationsData = jsonDecode(appreciationsResponse.body);
@@ -541,14 +541,14 @@ class _LaporanScreenState extends State<LaporanScreen>
 
       final peringatanResponse = await http
           .get(
-            Uri.parse('http://10.0.2.2:8000/api/skoring_pelanggaran?nis=$nis'),
+            Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nis=$nis'),
           )
           .timeout(Duration(seconds: 10));
       if (peringatanResponse.statusCode == 200) {
         final jsonData = jsonDecode(peringatanResponse.body);
         if (jsonData['penilaian']['data'].isNotEmpty) {
           final violationsResponse = await http
-              .get(Uri.parse('http://10.0.2.2:8000/api/peringatan'))
+              .get(Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/peringatan'))
               .timeout(Duration(seconds: 10));
           if (violationsResponse.statusCode == 200) {
             final violationsData = jsonDecode(violationsResponse.body);
@@ -611,7 +611,7 @@ class _LaporanScreenState extends State<LaporanScreen>
 
     try {
       final response = await http
-          .get(Uri.parse('http://10.0.2.2:8000/api/aspekpenilaian'))
+          .get(Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/aspekpenilaian'))
           .timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);

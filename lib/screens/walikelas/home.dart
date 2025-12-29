@@ -185,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       Map<String, dynamic>? pelanggaranJson;
 
       final kelasResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/kelas'),
+        Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/kelas'),
       );
       if (kelasResponse.statusCode == 200) {
         final kelasJson = jsonDecode(kelasResponse.body);
@@ -193,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
 
       final akumulasiResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/akumulasi'),
+        Uri.parse('http://sijuwara.student.smkn11bdg.sch.id/api/akumulasi'),
       );
       if (akumulasiResponse.statusCode == 200) {
         final akumulasiJson = jsonDecode(akumulasiResponse.body);
@@ -261,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (_walikelasId.isNotEmpty && _teacherClassId.isNotEmpty) {
         final penghargaanResponse = await http.get(
           Uri.parse(
-            'http://10.0.2.2:8000/api/skoring_penghargaan?nip=$_walikelasId&id_kelas=$_teacherClassId',
+            'http://sijuwara.student.smkn11bdg.sch.id/api/skoring_penghargaan?nip=$_walikelasId&id_kelas=$_teacherClassId',
           ),
         );
         if (penghargaanResponse.statusCode == 200) {
@@ -286,13 +286,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
         var pelanggaranResponse = await http.get(
           Uri.parse(
-            'http://10.0.2.2:8000/api/skoring_pelanggaran?nip=$_walikelasId&id_kelas=$_teacherClassId',
+            'http://sijuwara.student.smkn11bdg.sch.id/api/skoring_pelanggaran?nip=$_walikelasId&id_kelas=$_teacherClassId',
           ),
         );
         if (pelanggaranResponse.statusCode != 200) {
           pelanggaranResponse = await http.get(
             Uri.parse(
-              'http://10.0.2.2:8000/api/skoring_2pelanggaran?nip=$_walikelasId&id_kelas=$_teacherClassId',
+              'http://sijuwara.student.smkn11bdg.sch.id/api/skoring_2pelanggaran?nip=$_walikelasId&id_kelas=$_teacherClassId',
             ),
           );
         }
