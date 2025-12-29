@@ -1,8 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:skoring/screens/introduction/onboarding.dart';
 import 'package:skoring/screens/walikelas/home.dart';
+import 'package:skoring/services/notification_service.dart';
+import 'package:skoring/services/fcm_token_service.dart';
 
-void main() {
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  FirebaseMessaging.onMessage.listen((message) {
+    NotificationService.instance.showNotificationFromMessage(message);
+  });
+
+  await NotificationService.instance.init();
+  await FcmTokenService.instance.init();
+
   runApp(const MyApp());
 }
 

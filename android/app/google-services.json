@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1066797386192",
+    "project_id": "sijuawara",
+    "storage_bucket": "sijuawara.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1066797386192:android:44aba6d9db518d6aadd1d5",
+        "android_client_info": {
+          "package_name": "com.example.skoring"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4cMBmaZn4RePXbQzw-uQuRkHqQFUuFRA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:skoring/services/fcm_token_service.dart';
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
@@ -736,6 +737,7 @@ void _handleLogin() async {
       // Simpan kredensial untuk login biometrik cepat (non-token)
       await prefs.setString('biometric_nip', nip);
       await prefs.setString('biometric_password', password);
+      await FcmTokenService.instance.syncToken();
 
       // Cek role dan navigasi
       String role = data['role'].toString();
