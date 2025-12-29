@@ -126,7 +126,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _loadTeacherData() async {
     final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
     setState(() {
       _teacherName = prefs.getString('name') ?? 'Teacher';
       _teacherClassId = prefs.getString('id_kelas') ?? '';
@@ -167,7 +166,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     activities.sort((a, b) => b.fullDate.compareTo(a.fullDate));
-    if (!mounted) return;
     setState(() {
       _activityData = activities;
     });
@@ -327,7 +325,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         apresiasiJson: penghargaanJson,
         pelanggaranJson: pelanggaranJson,
       );
-      if (!mounted) return;
       setState(() {});
     } catch (e) {
       print('Error fetching data: $e');
