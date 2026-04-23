@@ -179,30 +179,8 @@ class _LoginFormState extends State<LoginForm> {
                         setState(() => _pwdVisible = !_pwdVisible),
                   ),
                   SizedBox(height: isWeb ? 32 : 24),
-                  if (_biometricAvailable) ...[
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                          backgroundColor: const Color(0xFFE0F2FE),
-                          foregroundColor: const Color(0xFF1D4ED8),
-                        ),
-                        icon: const Icon(Icons.fingerprint, size: 20),
-                        label: Text(
-                          'Masuk dengan Sidik Jari',
-                          style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w700,
-                              fontSize: isWeb ? 15 : 14),
-                        ),
-                        onPressed: _handleBiometricLogin,
-                      ),
-                    ),
-                    SizedBox(height: isWeb ? 20 : 16),
-                  ],
+                 
+        
                   if (_isLoading)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 18),

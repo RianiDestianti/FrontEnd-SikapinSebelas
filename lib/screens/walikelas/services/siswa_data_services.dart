@@ -26,6 +26,7 @@ class SiswaDataService {
       final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
       if (jsonData['success']) {
         final List<dynamic> data = jsonData['data'];
+        print(jsonData['data']);
         if (data.isNotEmpty) return data.map((j) => Kelas.fromJson(j)).toList();
         throw Exception('Tidak ada data kelas ditemukan');
       }

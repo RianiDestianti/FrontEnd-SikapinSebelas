@@ -79,7 +79,9 @@ class SiswaHeaderWidgets {
           ),
           const SizedBox(height: 4),
           Text(
-            '${selectedKelas.jurusan.toUpperCase()}',
+            '${selectedKelas?.jurusan.namaJurusan.isNotEmpty == true
+      ? selectedKelas!.jurusan.namaJurusan.toUpperCase()
+      : 'Tidak Diketahui'}',
             style: GoogleFonts.poppins(
               color: Colors.white.withValues(alpha: 0.9),
               fontSize: 12,

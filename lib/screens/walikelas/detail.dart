@@ -79,6 +79,9 @@ class DetailScreenState extends State<DetailScreen> with TickerProviderStateMixi
   }
 
   Future<void> _load() async {
+     setState(() {
+    _errorStudent = null; // 🔥 penting
+  });
     final prefs = await SharedPreferences.getInstance();
     final nip = prefs.getString('walikelas_id') ?? '';
     final idKelas = prefs.getString('id_kelas') ?? '';
@@ -164,13 +167,18 @@ class DetailScreenState extends State<DetailScreen> with TickerProviderStateMixi
   }
 
   Future<void> _refresh() async {
-    setState(() {
-      _loadingStudent = true;
-      _loadingViolations = true;
-      _loadingAppreciations = true;
-    });
-    await _load();
-  }
+  setState(() {
+    _loadingStudent = true;
+    _loadingViolations = true;
+    _loadingAppreciations = true;
+
+    _errorStudent = null;
+    _errorViolations = null;
+    _errorAppreciations = null;
+  });
+
+  await _load();
+}
 
   @override
   Widget build(BuildContext context) {
@@ -180,8 +188,9 @@ class DetailScreenState extends State<DetailScreen> with TickerProviderStateMixi
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    if (_errorStudent != null) return _errorScreen(_errorStudent!);
-
+    if (_errorStudent != null && !_loadingStudent) {
+  return _errorScreen(_errorStudent!);
+}
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -251,7 +260,7 @@ class DetailScreenState extends State<DetailScreen> with TickerProviderStateMixi
                 _refresh();
               },
               onPenanganan: () async {
-                 showBKNotePopup(context, _student.name, _student.nis, _student.kelas);
+                 showAddPenangananPopup(context, _student.name, _student.nis, _student.kelas);
                 _refresh();
               },
             ),

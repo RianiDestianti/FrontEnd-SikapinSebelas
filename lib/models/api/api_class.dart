@@ -1,7 +1,9 @@
+import 'api_jurusan.dart';
+
 class Kelas {
   final String idKelas;
   final String namaKelas;
-  final String jurusan;
+  final Jurusan jurusan;
   final String? createdAt;
   final String? updatedAt;
 
@@ -17,7 +19,7 @@ class Kelas {
     return Kelas(
       idKelas: json['id_kelas'],
       namaKelas: json['nama_kelas'],
-      jurusan: json['jurusan'],
+     jurusan: Jurusan.fromJson(json['jurusan']),
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
     );

@@ -78,7 +78,7 @@ class StudentProfileHeader extends StatelessWidget {
             name,
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
@@ -91,7 +91,7 @@ class StudentProfileHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '$kelas · $programKeahlian',
+              '$kelas',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 13,

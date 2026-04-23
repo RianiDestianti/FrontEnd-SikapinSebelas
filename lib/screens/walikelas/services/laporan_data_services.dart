@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skoring/config/api_client.dart';
 import 'package:skoring/models/api/api_report.dart';
-import 'package:skoring/widgets/faq.dart';
 
 class LaporanDataService {
   static Future<Map<String, String?>> loadCredentials() async {

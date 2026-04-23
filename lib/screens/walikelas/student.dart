@@ -164,7 +164,9 @@ class SiswaScreenState extends State<SiswaScreen>
                 'absen': student.nis,
                 'idKelas': student.idKelas,
                 'programKeahlian':
-                    selectedKelas?.jurusan.toUpperCase() ?? 'Tidak Diketahui',
+                    selectedKelas?.jurusan.namaJurusan.isNotEmpty == true
+                        ? selectedKelas!.jurusan.namaJurusan.toUpperCase()
+                        : 'Tidak Diketahui',
                 'kelas': selectedKelas?.namaKelas ?? 'Tidak Diketahui',
                 'poinApresiasi': student.poinApresiasi ?? 0,
                 'poinPelanggaran': student.poinPelanggaran ?? 0,

@@ -46,6 +46,18 @@ class HistoryScreenState extends State<HistoryScreen>
     loadUserData();
   }
 
+  /// Builds authenticated headers including Bearer token from SharedPreferences.
+  /// Change 'token' key below if your login stores the token under a different key
+  /// (e.g. 'access_token', 'auth_token', etc.).
+  Future<Map<String, String>> _authHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+    return {
+      'Accept': 'application/json',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
+
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -79,10 +91,8 @@ class HistoryScreenState extends State<HistoryScreen>
       final uri = Uri.parse(
         '${ApiConfig.baseUrl}/aspekpenilaian?nip=$nipWalikelas&id_kelas=$idKelas',
       );
-      final response = await http.get(
-        uri,
-        headers: {'Accept': 'application/json'},
-      );
+      final headers = await _authHeaders();
+      final response = await http.get(uri, headers: headers);
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -98,6 +108,11 @@ class HistoryScreenState extends State<HistoryScreen>
             isLoading = false;
           });
         }
+      } else if (response.statusCode == 401) {
+        setState(() {
+          errorMessage = 'Sesi habis. Silakan login ulang.';
+          isLoading = false;
+        });
       } else {
         setState(() {
           errorMessage = 'Gagal mengambil data (${response.statusCode})';
@@ -118,6 +133,8 @@ class HistoryScreenState extends State<HistoryScreen>
       errorMessage = null;
     });
     try {
+      final headers = await _authHeaders();
+
       final skoringPenghargaanUri = Uri.parse(
         '${ApiConfig.baseUrl}/skoring_penghargaan?nis=$nis&nip=$nipWalikelas&id_kelas=$idKelas',
       );
@@ -127,19 +144,29 @@ class HistoryScreenState extends State<HistoryScreen>
 
       final skoringPenghargaanResponse = await http.get(
         skoringPenghargaanUri,
-        headers: {'Accept': 'application/json'},
+        headers: headers,
       );
       var skoringPelanggaranResponse = await http.get(
         skoringPelanggaranUri,
-        headers: {'Accept': 'application/json'},
+        headers: headers,
       );
+
+      if (skoringPelanggaranResponse.statusCode == 401 ||
+          skoringPenghargaanResponse.statusCode == 401) {
+        setState(() {
+          errorMessage = 'Sesi habis. Silakan login ulang.';
+          isLoading = false;
+        });
+        return;
+      }
+
       if (skoringPelanggaranResponse.statusCode != 200) {
         skoringPelanggaranUri = Uri.parse(
           '${ApiConfig.baseUrl}/skoring_2pelanggaran?nis=$nis&nip=$nipWalikelas&id_kelas=$idKelas',
         );
         skoringPelanggaranResponse = await http.get(
           skoringPelanggaranUri,
-          headers: {'Accept': 'application/json'},
+          headers: headers,
         );
       }
 
@@ -348,7 +375,8 @@ class HistoryScreenState extends State<HistoryScreen>
   }
 
   _TimeRange _rangeFromCustom(DateTimeRange range) {
-    final start = DateTime(range.start.year, range.start.month, range.start.day);
+    final start =
+        DateTime(range.start.year, range.start.month, range.start.day);
     final endInclusive =
         DateTime(range.end.year, range.end.month, range.end.day);
     final endExclusive = endInclusive.add(const Duration(days: 1));
@@ -482,9 +510,7 @@ class HistoryScreenState extends State<HistoryScreen>
                             'Semester',
                             'Tahunan',
                             'Rentang Tanggal',
-                          ].map((
-                            filter,
-                          ) {
+                          ].map((filter) {
                             bool isSelected = selectedTimeFilter == filter;
                             return GestureDetector(
                               onTap: () {
@@ -563,8 +589,16 @@ class HistoryScreenState extends State<HistoryScreen>
                                 final initialRange =
                                     customDateRange ??
                                     DateTimeRange(
-                                      start: DateTime(now.year, now.month, 1),
-                                      end: DateTime(now.year, now.month, now.day),
+                                      start: DateTime(
+                                        now.year,
+                                        now.month,
+                                        1,
+                                      ),
+                                      end: DateTime(
+                                        now.year,
+                                        now.month,
+                                        now.day,
+                                      ),
                                     );
                                 final picked = await showDateRangePicker(
                                   context: context,
@@ -704,11 +738,13 @@ class HistoryScreenState extends State<HistoryScreen>
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                        borderSide:
+                            const BorderSide(color: Color(0xFFE5E7EB)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF0083EE)),
+                        borderSide:
+                            const BorderSide(color: Color(0xFF0083EE)),
                       ),
                     ),
                     onChanged: (value) {
@@ -723,9 +759,9 @@ class HistoryScreenState extends State<HistoryScreen>
                                         item.type.toLowerCase().contains(
                                           value.toLowerCase(),
                                         ) ||
-                                        item.description.toLowerCase().contains(
-                                          value.toLowerCase(),
-                                        ) ||
+                                        item.description
+                                            .toLowerCase()
+                                            .contains(value.toLowerCase()) ||
                                         item.kategori.toLowerCase().contains(
                                           value.toLowerCase(),
                                         ),
@@ -877,7 +913,9 @@ class HistoryScreenState extends State<HistoryScreen>
         filteredHistory.where((item) => !item.isNew).toList();
 
     if (isLoading) {
-      return Scaffold(body: const Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (errorMessage != null) {
@@ -889,6 +927,7 @@ class HistoryScreenState extends State<HistoryScreen>
               Text(
                 errorMessage!,
                 style: GoogleFonts.poppins(color: Colors.red),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               ElevatedButton(
@@ -961,7 +1000,9 @@ class HistoryScreenState extends State<HistoryScreen>
                                       Text(
                                         '${widget.student['name']}',
                                         style: GoogleFonts.poppins(
-                                          color: Colors.white.withValues(alpha: 0.9),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.9,
+                                          ),
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -1000,8 +1041,11 @@ class HistoryScreenState extends State<HistoryScreen>
                                         vertical: 12,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.2),
-                                        borderRadius: BorderRadius.circular(12),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(12),
                                       ),
                                       child: Row(
                                         mainAxisAlignment:
@@ -1035,8 +1079,11 @@ class HistoryScreenState extends State<HistoryScreen>
                                         vertical: 12,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.2),
-                                        borderRadius: BorderRadius.circular(12),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(12),
                                       ),
                                       child: Row(
                                         mainAxisAlignment:
@@ -1073,10 +1120,14 @@ class HistoryScreenState extends State<HistoryScreen>
                           margin: const EdgeInsets.all(20),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0083EE).withValues(alpha: 0.1),
+                            color: const Color(0xFF0083EE).withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFF0083EE).withValues(alpha: 0.2),
+                              color: const Color(0xFF0083EE).withValues(
+                                alpha: 0.2,
+                              ),
                             ),
                           ),
                           child: Row(
@@ -1089,7 +1140,7 @@ class HistoryScreenState extends State<HistoryScreen>
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  'Filter aktif: ${selectedFilter}${selectedTimeFilter != 'Semua' ? ', $selectedTimeFilter' : ''}${showOnlyNew ? ', Data Terbaru' : ''}',
+                                  'Filter aktif: $selectedFilter${selectedTimeFilter != 'Semua' ? ', $selectedTimeFilter' : ''}${showOnlyNew ? ', Data Terbaru' : ''}',
                                   style: GoogleFonts.poppins(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -1133,15 +1184,16 @@ class HistoryScreenState extends State<HistoryScreen>
                                               width: 80,
                                               height: 80,
                                               decoration: BoxDecoration(
-                                                gradient: const LinearGradient(
-                                                  colors: [
-                                                    Color(0xFF61B8FF),
-                                                    Color(0xFF0083EE),
-                                                  ],
-                                                ),
+                                                gradient:
+                                                    const LinearGradient(
+                                                      colors: [
+                                                        Color(0xFF61B8FF),
+                                                        Color(0xFF0083EE),
+                                                      ],
+                                                    ),
                                                 borderRadius:
                                                     BorderRadius.circular(40),
-                                                boxShadow: [
+                                                boxShadow: const [
                                                   BoxShadow(
                                                     color: Color(0x200083EE),
                                                     blurRadius: 20,
@@ -1162,7 +1214,7 @@ class HistoryScreenState extends State<HistoryScreen>
                                               style: GoogleFonts.poppins(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.w600,
-                                                color: Color(0xFF6B7280),
+                                                color: const Color(0xFF6B7280),
                                               ),
                                             ),
                                             const SizedBox(height: 8),
@@ -1172,7 +1224,7 @@ class HistoryScreenState extends State<HistoryScreen>
                                               style: GoogleFonts.poppins(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w500,
-                                                color: Color(0xFF9CA3AF),
+                                                color: const Color(0xFF9CA3AF),
                                               ),
                                             ),
                                           ],
@@ -1216,12 +1268,13 @@ class HistoryScreenState extends State<HistoryScreen>
                                             child: Row(
                                               children: [
                                                 Container(
-                                                  padding: const EdgeInsets.all(
-                                                    8,
-                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.all(8),
                                                   decoration: BoxDecoration(
                                                     color: Colors.white
-                                                        .withValues(alpha: 0.2),
+                                                        .withValues(
+                                                          alpha: 0.2,
+                                                        ),
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                           10,
@@ -1242,8 +1295,8 @@ class HistoryScreenState extends State<HistoryScreen>
                                                     children: [
                                                       Text(
                                                         'Data Terbaru',
-                                                        style:
-                                                            GoogleFonts.poppins(
+                                                        style: GoogleFonts
+                                                            .poppins(
                                                               fontSize: 16,
                                                               fontWeight:
                                                                   FontWeight
@@ -1254,15 +1307,17 @@ class HistoryScreenState extends State<HistoryScreen>
                                                       ),
                                                       Text(
                                                         '${newItems.length} item baru tersedia',
-                                                        style:
-                                                            GoogleFonts.poppins(
+                                                        style: GoogleFonts
+                                                            .poppins(
                                                               fontSize: 12,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .w500,
                                                               color: Colors
                                                                   .white
-                                                                  .withValues(alpha: 0.8,),
+                                                                  .withValues(
+                                                                    alpha: 0.8,
+                                                                  ),
                                                             ),
                                                       ),
                                                     ],
@@ -1276,7 +1331,9 @@ class HistoryScreenState extends State<HistoryScreen>
                                                       ),
                                                   decoration: BoxDecoration(
                                                     color: Colors.white
-                                                        .withValues(alpha: 0.2),
+                                                        .withValues(
+                                                          alpha: 0.2,
+                                                        ),
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                           12,
@@ -1327,12 +1384,13 @@ class HistoryScreenState extends State<HistoryScreen>
                                             child: Row(
                                               children: [
                                                 Container(
-                                                  padding: const EdgeInsets.all(
-                                                    8,
-                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.all(8),
                                                   decoration: BoxDecoration(
                                                     color: Colors.white
-                                                        .withValues(alpha: 0.2),
+                                                        .withValues(
+                                                          alpha: 0.2,
+                                                        ),
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                           10,
@@ -1353,8 +1411,8 @@ class HistoryScreenState extends State<HistoryScreen>
                                                     children: [
                                                       Text(
                                                         'Data Sebelumnya',
-                                                        style:
-                                                            GoogleFonts.poppins(
+                                                        style: GoogleFonts
+                                                            .poppins(
                                                               fontSize: 16,
                                                               fontWeight:
                                                                   FontWeight
@@ -1365,15 +1423,17 @@ class HistoryScreenState extends State<HistoryScreen>
                                                       ),
                                                       Text(
                                                         'Riwayat data yang sudah tersimpan',
-                                                        style:
-                                                            GoogleFonts.poppins(
+                                                        style: GoogleFonts
+                                                            .poppins(
                                                               fontSize: 12,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .w500,
                                                               color: Colors
                                                                   .white
-                                                                  .withValues(alpha: 0.8,),
+                                                                  .withValues(
+                                                                    alpha: 0.8,
+                                                                  ),
                                                             ),
                                                       ),
                                                     ],
@@ -1387,7 +1447,9 @@ class HistoryScreenState extends State<HistoryScreen>
                                                       ),
                                                   decoration: BoxDecoration(
                                                     color: Colors.white
-                                                        .withValues(alpha: 0.2),
+                                                        .withValues(
+                                                          alpha: 0.2,
+                                                        ),
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                           12,
@@ -1447,10 +1509,12 @@ class HistoryScreenState extends State<HistoryScreen>
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: const Color(0xFF0083EE).withValues(alpha: 0.08),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               border: Border(bottom: BorderSide(color: borderColor)),
             ),
             child: Row(
@@ -1511,11 +1575,17 @@ class HistoryScreenState extends State<HistoryScreen>
             final isLast = index == items.length - 1;
             final isStriped = index.isOdd;
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: isStriped ? const Color(0xFFF9FAFB) : Colors.white,
+                color:
+                    isStriped ? const Color(0xFFF9FAFB) : Colors.white,
                 border:
-                    isLast ? null : Border(bottom: BorderSide(color: borderColor)),
+                    isLast
+                        ? null
+                        : Border(
+                          bottom: BorderSide(color: borderColor),
+                        ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1678,7 +1748,6 @@ class HistoryScreenState extends State<HistoryScreen>
       ),
     );
   }
-
 }
 
 class _TimeRange {

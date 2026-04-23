@@ -9,11 +9,14 @@ class ApiClient {
   static Future<Map<String, String>> _headers({bool json = false}) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('sanctum_token') ?? '';
+    print("TOKEN DI HEADER: $token");
     return {
+      
       'Accept': 'application/json',
       if (json) 'Content-Type': 'application/json',
       if (token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
+    
   }
 
   /// GET with optional query params.
