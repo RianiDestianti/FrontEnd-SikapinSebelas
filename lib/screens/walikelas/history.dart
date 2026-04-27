@@ -7,6 +7,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skoring/config/api.dart';
 import 'package:skoring/models/types/history.dart';
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const _kBlue        = Color(0xFF378ADD);
+const _kBlueBg      = Color(0xFFE6F1FB);
+const _kBlueDark    = Color(0xFF0C447C);
+const _kGreen       = Color(0xFF639922);
+const _kGreenBg     = Color(0xFFC0DD97);
+const _kGreenDark   = Color(0xFF27500A);
+const _kRed         = Color(0xFFE24B4A);
+const _kRedBg       = Color(0xFFF7C1C1);
+const _kRedDark     = Color(0xFF791F1F);
+const _kGray        = Color(0xFF888780);
+const _kGrayBg      = Color(0xFFF1EFE8);
+const _kSurface     = Color(0xFFF8FAFC);
+const _kBorder      = Color(0xFFE5E7EB);
+const _kText1       = Color(0xFF111827);
+const _kText2       = Color(0xFF6B7280);
+const _kText3       = Color(0xFF9CA3AF);
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
+
 class HistoryScreen extends StatefulWidget {
   final Map<String, dynamic> student;
   const HistoryScreen({Key? key, required this.student}) : super(key: key);
@@ -17,1742 +38,730 @@ class HistoryScreen extends StatefulWidget {
 
 class HistoryScreenState extends State<HistoryScreen>
     with TickerProviderStateMixin {
-  static const int _academicYearStartMonth = 7; // July
-  late AnimationController animationController;
-  late Animation<double> fadeAnimation;
-  String selectedFilter = 'Semua';
-  String selectedTimeFilter = 'Semua';
-  bool showOnlyNew = false;
-  DateTimeRange? customDateRange;
-  List<HistoryItem> allHistory = [];
-  bool isLoading = true;
-  String? errorMessage;
-  List<dynamic> aspekPenilaianData = [];
+  static const int _academicYearStartMonth = 7;
+
+  late AnimationController _animCtrl;
+  late Animation<double> _fadeAnim;
+
+  // ── Filter state ──────────────────────────────────────────────────────────
+  String _typeFilter    = 'Semua';
+  String _timeFilter    = 'Semua';
+  bool   _onlyNew       = false;
+  DateTimeRange? _customRange;
+
+  // ── Data state ────────────────────────────────────────────────────────────
+  List<HistoryItem>  allHistory        = [];
+  List<dynamic>      aspekPenilaianData = [];
+  bool               isLoading         = true;
+  String?            errorMessage;
 
   String nipWalikelas = '';
-  String idKelas = '';
+  String idKelas      = '';
 
   @override
   void initState() {
     super.initState();
-    animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
+    _animCtrl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 500),
     );
-    fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: animationController, curve: Curves.easeInOut),
-    );
-    animationController.forward();
-    loadUserData();
-  }
-
-  /// Builds authenticated headers including Bearer token from SharedPreferences.
-  /// Change 'token' key below if your login stores the token under a different key
-  /// (e.g. 'access_token', 'auth_token', etc.).
-  Future<Map<String, String>> _authHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    return {
-      'Accept': 'application/json',
-      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
-    };
-  }
-
-  Future<void> loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      nipWalikelas = prefs.getString('walikelas_id') ?? '';
-      idKelas = prefs.getString('id_kelas') ?? '';
-    });
-
-    if (nipWalikelas.isEmpty || idKelas.isEmpty) {
-      setState(() {
-        errorMessage = 'Data guru tidak lengkap. Silakan login ulang.';
-        isLoading = false;
-      });
-      return;
-    }
-
-    fetchAspekPenilaian();
+    _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    _animCtrl.forward();
+    _loadUserData();
   }
 
   @override
   void dispose() {
-    animationController.dispose();
+    _animCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> fetchAspekPenilaian() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
-    try {
-      final uri = Uri.parse(
-        '${ApiConfig.baseUrl}/aspekpenilaian?nip=$nipWalikelas&id_kelas=$idKelas',
-      );
-      final headers = await _authHeaders();
-      final response = await http.get(uri, headers: headers);
+  // ─── Auth ──────────────────────────────────────────────────────────────────
 
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-        if (jsonData['success']) {
-          setState(() {
-            aspekPenilaianData = jsonData['data'];
-          });
-          await fetchHistory(widget.student['nis']);
+  Future<Map<String, String>> _authHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('sanctum_token') ?? '';
+    return {
+      'Accept':        'application/json',
+      'Content-Type':  'application/json',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  // ─── Data loading ──────────────────────────────────────────────────────────
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      nipWalikelas = prefs.getString('walikelas_id') ?? '';
+      idKelas      = prefs.getString('id_kelas')     ?? '';
+    });
+    if (nipWalikelas.isEmpty || idKelas.isEmpty) {
+      setState(() {
+        errorMessage = 'Data guru tidak lengkap. Silakan login ulang.';
+        isLoading    = false;
+      });
+      return;
+    }
+    _fetchAspekPenilaian();
+  }
+
+  Future<void> _fetchAspekPenilaian() async {
+    setState(() { isLoading = true; errorMessage = null; });
+    try {
+      final uri     = Uri.parse('${ApiConfig.baseUrl}/aspekpenilaian?nip=$nipWalikelas&id_kelas=$idKelas');
+      final headers = await _authHeaders();
+      final res     = await http.get(uri, headers: headers);
+
+      if (res.statusCode == 200) {
+        final json = jsonDecode(res.body);
+        if (json['success'] == true) {
+          setState(() => aspekPenilaianData = json['data']);
+          await _fetchHistory(widget.student['nis']);
         } else {
-          setState(() {
-            errorMessage =
-                jsonData['message'] ?? 'Gagal mengambil aspek penilaian';
-            isLoading = false;
-          });
+          _setError(json['message'] ?? 'Gagal mengambil aspek penilaian');
         }
-      } else if (response.statusCode == 401) {
-        setState(() {
-          errorMessage = 'Sesi habis. Silakan login ulang.';
-          isLoading = false;
-        });
+      } else if (res.statusCode == 401) {
+        _setError('Sesi habis. Silakan login ulang.');
       } else {
-        setState(() {
-          errorMessage = 'Gagal mengambil data (${response.statusCode})';
-          isLoading = false;
-        });
+        _setError('Gagal mengambil data (${res.statusCode})');
       }
     } catch (e) {
-      setState(() {
-        errorMessage = 'Terjadi kesalahan: $e';
-        isLoading = false;
-      });
+      _setError('Terjadi kesalahan: $e');
     }
   }
 
-  Future<void> fetchHistory(String nis) async {
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
+  Future<void> _fetchHistory(String nis) async {
+    setState(() { isLoading = true; errorMessage = null; });
     try {
       final headers = await _authHeaders();
 
-      final skoringPenghargaanUri = Uri.parse(
+      final penghargaanUri = Uri.parse(
         '${ApiConfig.baseUrl}/skoring_penghargaan?nis=$nis&nip=$nipWalikelas&id_kelas=$idKelas',
       );
-      var skoringPelanggaranUri = Uri.parse(
+      var pelanggaranUri = Uri.parse(
         '${ApiConfig.baseUrl}/skoring_pelanggaran?nis=$nis&nip=$nipWalikelas&id_kelas=$idKelas',
       );
 
-      final skoringPenghargaanResponse = await http.get(
-        skoringPenghargaanUri,
-        headers: headers,
-      );
-      var skoringPelanggaranResponse = await http.get(
-        skoringPelanggaranUri,
-        headers: headers,
-      );
+      final penghargaanRes  = await http.get(penghargaanUri,  headers: headers);
+      var   pelanggaranRes  = await http.get(pelanggaranUri,  headers: headers);
 
-      if (skoringPelanggaranResponse.statusCode == 401 ||
-          skoringPenghargaanResponse.statusCode == 401) {
-        setState(() {
-          errorMessage = 'Sesi habis. Silakan login ulang.';
-          isLoading = false;
-        });
-        return;
+      if (pelanggaranRes.statusCode == 401 || penghargaanRes.statusCode == 401) {
+        _setError('Sesi habis. Silakan login ulang.'); return;
       }
 
-      if (skoringPelanggaranResponse.statusCode != 200) {
-        skoringPelanggaranUri = Uri.parse(
+      if (pelanggaranRes.statusCode != 200) {
+        pelanggaranUri = Uri.parse(
           '${ApiConfig.baseUrl}/skoring_2pelanggaran?nis=$nis&nip=$nipWalikelas&id_kelas=$idKelas',
         );
-        skoringPelanggaranResponse = await http.get(
-          skoringPelanggaranUri,
-          headers: headers,
-        );
+        pelanggaranRes = await http.get(pelanggaranUri, headers: headers);
       }
 
-      if (skoringPenghargaanResponse.statusCode == 200 &&
-          skoringPelanggaranResponse.statusCode == 200) {
-        final skoringPenghargaanData = jsonDecode(
-          skoringPenghargaanResponse.body,
-        );
-        final skoringPelanggaranData = jsonDecode(
-          skoringPelanggaranResponse.body,
-        );
+      if (penghargaanRes.statusCode == 200 && pelanggaranRes.statusCode == 200) {
+        final penghargaanData = jsonDecode(penghargaanRes.body);
+        final pelanggaranData = jsonDecode(pelanggaranRes.body);
+        final List<HistoryItem> list = [];
 
-        List<HistoryItem> historyList = [];
-
+        // Apresiasi
         final apresiasiList =
-            (skoringPenghargaanData['penilaian']?['data'] as List<dynamic>? ??
-                    [])
-                .where((eval) => eval['nis'].toString() == nis)
+            (penghargaanData['penilaian']?['data'] as List<dynamic>? ?? [])
+                .where((e) => e['nis'].toString() == nis)
                 .toList();
 
-        for (var eval in apresiasiList) {
+        for (final eval in apresiasiList) {
           final aspek = aspekPenilaianData.firstWhere(
-            (a) =>
-                a['id_aspekpenilaian'].toString() ==
-                eval['id_aspekpenilaian'].toString(),
+            (a) => a['id_aspekpenilaian'].toString() == eval['id_aspekpenilaian'].toString(),
             orElse: () => null,
           );
           if (aspek == null) continue;
-          final createdAt =
-              DateTime.tryParse(eval['created_at'] ?? '') ?? DateTime.now();
-          historyList.add(
-            HistoryItem(
-              id:
-                  'apr_${eval['id_penilaian'] ?? createdAt.millisecondsSinceEpoch}',
-              type: (aspek['kategori'] ?? 'Apresiasi').toString(),
-              description: aspek['uraian']?.toString() ?? 'Apresiasi',
-              date: createdAt.toIso8601String().substring(0, 10),
-              time: createdAt.toIso8601String().substring(11, 16),
-              points: ((aspek['indikator_poin'] as num? ?? 0).abs()).toInt(),
-              icon: Icons.star,
-              color: const Color(0xFF10B981),
-              pemberi:
-                  eval['nip_wakasek'] != null
-                      ? 'Wakasek'
-                      : eval['nip_walikelas'] != null
-                      ? 'Walikelas'
-                      : eval['nip_bk'] != null
-                      ? 'BK'
-                      : 'Tidak diketahui',
-              isNew: DateTime.now().difference(createdAt).inDays < 7,
-              isPelanggaran: false,
-              createdAt: createdAt,
-              pelanggaranKe: aspek['pelanggaran_ke'],
-              kategori: aspek['kategori'] ?? 'Umum',
-            ),
-          );
+          final dt = DateTime.tryParse(eval['created_at'] ?? '') ?? DateTime.now();
+          list.add(HistoryItem(
+            id:           'apr_${eval['id_penilaian'] ?? dt.millisecondsSinceEpoch}',
+            type:         (aspek['kategori'] ?? 'Apresiasi').toString(),
+            description:  aspek['uraian']?.toString() ?? 'Apresiasi',
+            date:         dt.toIso8601String().substring(0, 10),
+            time:         dt.toIso8601String().substring(11, 16),
+            points:       ((aspek['indikator_poin'] as num? ?? 0).abs()).toInt(),
+            icon:         Icons.star_rounded,
+            color:        _kGreen,
+            pemberi:      _resolveRole(eval),
+            isNew:        DateTime.now().difference(dt).inDays < 7,
+            isPelanggaran: false,
+            createdAt:    dt,
+            pelanggaranKe: aspek['pelanggaran_ke'],
+            kategori:     aspek['kategori'] ?? 'Umum',
+          ));
         }
 
+        // Pelanggaran
         final pelanggaranList =
-            (skoringPelanggaranData['penilaian']?['data'] as List<dynamic>? ??
-                    [])
-                .where((eval) => eval['nis'].toString() == nis)
+            (pelanggaranData['penilaian']?['data'] as List<dynamic>? ?? [])
+                .where((e) => e['nis'].toString() == nis)
                 .toList();
 
-        for (var eval in pelanggaranList) {
+        for (final eval in pelanggaranList) {
           final aspek = aspekPenilaianData.firstWhere(
-            (a) =>
-                a['id_aspekpenilaian'].toString() ==
-                eval['id_aspekpenilaian'].toString(),
+            (a) => a['id_aspekpenilaian'].toString() == eval['id_aspekpenilaian'].toString(),
             orElse: () => null,
           );
           if (aspek == null) continue;
-          final createdAt =
-              DateTime.tryParse(eval['created_at'] ?? '') ?? DateTime.now();
-          historyList.add(
-            HistoryItem(
-              id:
-                  'pel_${eval['id_penilaian'] ?? createdAt.millisecondsSinceEpoch}',
-              type: (aspek['kategori'] ?? 'Pelanggaran').toString(),
-              description: aspek['uraian']?.toString() ?? 'Pelanggaran',
-              date: createdAt.toIso8601String().substring(0, 10),
-              time: createdAt.toIso8601String().substring(11, 16),
-              points: ((aspek['indikator_poin'] as num? ?? 0).abs()).toInt(),
-              icon: Icons.warning,
-              color: const Color(0xFFFF6B6D),
-              pelapor:
-                  eval['nip_wakasek'] != null
-                      ? 'Wakasek'
-                      : eval['nip_walikelas'] != null
-                      ? 'Walikelas'
-                      : eval['nip_bk'] != null
-                      ? 'BK'
-                      : 'Tidak diketahui',
-              isNew: DateTime.now().difference(createdAt).inDays < 7,
-              isPelanggaran: true,
-              createdAt: createdAt,
-              pelanggaranKe: aspek['pelanggaran_ke'],
-              kategori: aspek['kategori'] ?? 'Umum',
-            ),
-          );
+          final dt = DateTime.tryParse(eval['created_at'] ?? '') ?? DateTime.now();
+          list.add(HistoryItem(
+            id:           'pel_${eval['id_penilaian'] ?? dt.millisecondsSinceEpoch}',
+            type:         (aspek['kategori'] ?? 'Pelanggaran').toString(),
+            description:  aspek['uraian']?.toString() ?? 'Pelanggaran',
+            date:         dt.toIso8601String().substring(0, 10),
+            time:         dt.toIso8601String().substring(11, 16),
+            points:       ((aspek['indikator_poin'] as num? ?? 0).abs()).toInt(),
+            icon:         Icons.warning_rounded,
+            color:        _kRed,
+            pelapor:      _resolveRole(eval),
+            isNew:        DateTime.now().difference(dt).inDays < 7,
+            isPelanggaran: true,
+            createdAt:    dt,
+            pelanggaranKe: aspek['pelanggaran_ke'],
+            kategori:     aspek['kategori'] ?? 'Umum',
+          ));
         }
 
-        historyList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-        setState(() {
-          allHistory = historyList;
-          isLoading = false;
-        });
+        list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        setState(() { allHistory = list; isLoading = false; });
       } else {
-        setState(() {
-          errorMessage = 'Gagal mengambil data dari server';
-          isLoading = false;
-        });
+        _setError('Gagal mengambil data dari server');
       }
     } catch (e) {
-      setState(() {
-        errorMessage = 'Terjadi kesalahan: $e';
-        isLoading = false;
-      });
+      _setError('Terjadi kesalahan: $e');
     }
   }
 
-  Future<void> refreshData() async {
-    await fetchAspekPenilaian();
-  }
+  void _setError(String msg) =>
+      setState(() { errorMessage = msg; isLoading = false; });
 
-  void sortHistory() {
-    allHistory.sort((a, b) {
-      if (a.isNew != b.isNew) return a.isNew ? -1 : 1;
-      return b.createdAt.compareTo(a.createdAt);
-    });
-  }
+  String _resolveRole(Map e) =>
+      e['nip_wakasek'] != null ? 'Wakasek'
+      : e['nip_walikelas'] != null ? 'Walikelas'
+      : e['nip_bk'] != null ? 'BK'
+      : 'Tidak diketahui';
 
-  List<HistoryItem> getFilteredHistory() {
-    List<HistoryItem> filtered = List.from(allHistory);
+  Future<void> refreshData() => _fetchAspekPenilaian();
 
-    if (selectedFilter != 'Semua') {
-      if (selectedFilter == 'Apresiasi') {
-        filtered = filtered.where((item) => !item.isPelanggaran).toList();
-      } else if (selectedFilter == 'Pelanggaran') {
-        filtered = filtered.where((item) => item.isPelanggaran).toList();
-      }
-    }
+  // ─── Filtering ─────────────────────────────────────────────────────────────
 
-    if (selectedTimeFilter != 'Semua') {
-      final now = DateTime.now();
-      _TimeRange? range;
-      if (selectedTimeFilter == 'Rentang Tanggal') {
-        if (customDateRange != null) {
-          range = _rangeFromCustom(customDateRange!);
-        }
-      } else {
-        range = _resolveTimeRange(now, selectedTimeFilter);
-      }
-      if (range != null) {
-        final activeRange = range;
-        filtered =
-            filtered
-                .where(
-                  (item) =>
-                      !_isBeforeDay(item.createdAt, activeRange.start) &&
-                      item.createdAt.isBefore(activeRange.end),
-                )
-                .toList();
-      }
-    }
+  List<HistoryItem> get _filtered {
+    var list = List<HistoryItem>.from(allHistory);
 
-    if (showOnlyNew) {
-      filtered = filtered.where((item) => item.isNew).toList();
-    }
+    if (_typeFilter == 'Apresiasi')   list = list.where((i) => !i.isPelanggaran).toList();
+    if (_typeFilter == 'Pelanggaran') list = list.where((i) =>  i.isPelanggaran).toList();
 
-    sortHistory();
-    return filtered;
-  }
-
-  _TimeRange? _resolveTimeRange(DateTime now, String filter) {
+    final now   = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    switch (filter) {
-      case 'Mingguan':
+    _DateRange? range;
+
+    switch (_timeFilter) {
+      case 'Minggu ini':
         final start = today.subtract(Duration(days: today.weekday - 1));
-        final end = start.add(const Duration(days: 7));
-        return _TimeRange(start, end);
-      case 'Bulanan':
-        final start = DateTime(today.year, today.month, 1);
-        final end = DateTime(today.year, today.month + 1, 1);
-        return _TimeRange(start, end);
+        range = _DateRange(start, start.add(const Duration(days: 7)));
+        break;
+      case 'Bulan ini':
+        range = _DateRange(DateTime(today.year, today.month), DateTime(today.year, today.month + 1));
+        break;
       case 'Semester':
-        final yearStart = _academicYearStartFor(today);
-        final semester1Start = DateTime(yearStart, _academicYearStartMonth, 1);
-        final semester1End = DateTime(yearStart + 1, 1, 1);
-        final semester2Start = semester1End;
-        final semester2End =
-            DateTime(yearStart + 1, _academicYearStartMonth, 1);
-        if (!today.isBefore(semester1Start) && today.isBefore(semester1End)) {
-          return _TimeRange(semester1Start, semester1End);
+        final ys = today.month >= _academicYearStartMonth ? today.year : today.year - 1;
+        final s1 = DateTime(ys, _academicYearStartMonth);
+        final s2 = DateTime(ys + 1, 1);
+        final s3 = DateTime(ys + 1, _academicYearStartMonth);
+        range = today.isBefore(s2) ? _DateRange(s1, s2) : _DateRange(s2, s3);
+        break;
+      case 'Tahun ini':
+        final ys = today.month >= _academicYearStartMonth ? today.year : today.year - 1;
+        range = _DateRange(DateTime(ys, _academicYearStartMonth), DateTime(ys + 1, _academicYearStartMonth));
+        break;
+      case 'Rentang':
+        if (_customRange != null) {
+          range = _DateRange(
+            DateTime(_customRange!.start.year, _customRange!.start.month, _customRange!.start.day),
+            DateTime(_customRange!.end.year, _customRange!.end.month, _customRange!.end.day)
+                .add(const Duration(days: 1)),
+          );
         }
-        return _TimeRange(semester2Start, semester2End);
-      case 'Tahunan':
-        final yearStart = _academicYearStartFor(today);
-        final start = DateTime(yearStart, _academicYearStartMonth, 1);
-        final end = DateTime(yearStart + 1, _academicYearStartMonth, 1);
-        return _TimeRange(start, end);
-      default:
-        return null;
+        break;
     }
+
+    if (range != null) {
+      list = list.where((i) =>
+          !i.createdAt.isBefore(range!.start) && i.createdAt.isBefore(range.end)
+      ).toList();
+    }
+
+    if (_onlyNew) list = list.where((i) => i.isNew).toList();
+    return list;
   }
 
-  _TimeRange _rangeFromCustom(DateTimeRange range) {
-    final start =
-        DateTime(range.start.year, range.start.month, range.start.day);
-    final endInclusive =
-        DateTime(range.end.year, range.end.month, range.end.day);
-    final endExclusive = endInclusive.add(const Duration(days: 1));
-    return _TimeRange(start, endExclusive);
+  // ─── Stats ─────────────────────────────────────────────────────────────────
+
+  int get _totalPoints {
+    int total = 0;
+    for (final i in allHistory) {
+      total += i.isPelanggaran ? -i.points : i.points;
+    }
+    return total;
   }
 
-  int _academicYearStartFor(DateTime date) {
-    return date.month >= _academicYearStartMonth ? date.year : date.year - 1;
-  }
+  int get _totalApr => allHistory.where((i) => !i.isPelanggaran).fold(0, (s, i) => s + i.points);
+  int get _totalPel => allHistory.where((i) =>  i.isPelanggaran).fold(0, (s, i) => s + i.points);
 
-  bool _isBeforeDay(DateTime value, DateTime day) {
-    final normalized = DateTime(value.year, value.month, value.day);
-    return normalized.isBefore(day);
-  }
-
-  String _formatDate(DateTime date) {
-    final y = date.year.toString();
-    final m = date.month.toString().padLeft(2, '0');
-    final d = date.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
-  }
-
-  void showFilterBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setBottomSheetState) {
-            return SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE5E7EB),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Filter Riwayat',
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1F2937),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Jenis Data',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF374151),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      children:
-                          ['Semua', 'Apresiasi', 'Pelanggaran'].map((filter) {
-                            bool isSelected = selectedFilter == filter;
-                            return GestureDetector(
-                              onTap: () {
-                                setBottomSheetState(() {
-                                  selectedFilter = filter;
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      isSelected
-                                          ? const Color(0xFF0083EE)
-                                          : const Color(0xFFF3F4F6),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color:
-                                        isSelected
-                                            ? const Color(0xFF0083EE)
-                                            : const Color(0xFFE5E7EB),
-                                  ),
-                                ),
-                                child: Text(
-                                  filter,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color:
-                                        isSelected
-                                            ? Colors.white
-                                            : const Color(0xFF6B7280),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Periode Waktu',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF374151),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children:
-                          [
-                            'Semua',
-                            'Mingguan',
-                            'Bulanan',
-                            'Semester',
-                            'Tahunan',
-                            'Rentang Tanggal',
-                          ].map((filter) {
-                            bool isSelected = selectedTimeFilter == filter;
-                            return GestureDetector(
-                              onTap: () {
-                                setBottomSheetState(() {
-                                  selectedTimeFilter = filter;
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      isSelected
-                                          ? const Color(0xFF0083EE)
-                                          : const Color(0xFFF3F4F6),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color:
-                                        isSelected
-                                            ? const Color(0xFF0083EE)
-                                            : const Color(0xFFE5E7EB),
-                                  ),
-                                ),
-                                child: Text(
-                                  filter,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color:
-                                        isSelected
-                                            ? Colors.white
-                                            : const Color(0xFF6B7280),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                    ),
-                    if (selectedTimeFilter == 'Rentang Tanggal') ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.date_range,
-                              size: 18,
-                              color: Color(0xFF6B7280),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                customDateRange == null
-                                    ? 'Pilih rentang tanggal'
-                                    : '${_formatDate(customDateRange!.start)} s/d ${_formatDate(customDateRange!.end)}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                final now = DateTime.now();
-                                final initialRange =
-                                    customDateRange ??
-                                    DateTimeRange(
-                                      start: DateTime(
-                                        now.year,
-                                        now.month,
-                                        1,
-                                      ),
-                                      end: DateTime(
-                                        now.year,
-                                        now.month,
-                                        now.day,
-                                      ),
-                                    );
-                                final picked = await showDateRangePicker(
-                                  context: context,
-                                  firstDate: DateTime(now.year - 5, 1, 1),
-                                  lastDate: DateTime(now.year + 1, 12, 31),
-                                  initialDateRange: initialRange,
-                                  helpText: 'Pilih Rentang Tanggal',
-                                );
-                                if (picked != null) {
-                                  setBottomSheetState(() {
-                                    customDateRange = picked;
-                                  });
-                                }
-                              },
-                              child: Text(
-                                'Pilih',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF0083EE),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Hanya Data Terbaru',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF374151),
-                          ),
-                        ),
-                        Switch(
-                          value: showOnlyNew,
-                          onChanged: (value) {
-                            setBottomSheetState(() {
-                              showOnlyNew = value;
-                            });
-                          },
-                          activeColor: const Color(0xFF0083EE),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          setState(() {});
-                          Navigator.pop(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0083EE),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          'Terapkan Filter',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void showSearchBottomSheet() {
-    TextEditingController searchController = TextEditingController();
-    List<HistoryItem> searchResults = [];
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setBottomSheetState) {
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.8,
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE5E7EB),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      const Icon(Icons.search, color: Color(0xFF0083EE)),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Cari Riwayat',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1F2937),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Cari berdasarkan jenis, deskripsi...',
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: Color(0xFF6B7280),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            const BorderSide(color: Color(0xFFE5E7EB)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            const BorderSide(color: Color(0xFF0083EE)),
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setBottomSheetState(() {
-                        if (value.isEmpty) {
-                          searchResults = [];
-                        } else {
-                          searchResults =
-                              allHistory
-                                  .where(
-                                    (item) =>
-                                        item.type.toLowerCase().contains(
-                                          value.toLowerCase(),
-                                        ) ||
-                                        item.description
-                                            .toLowerCase()
-                                            .contains(value.toLowerCase()) ||
-                                        item.kategori.toLowerCase().contains(
-                                          value.toLowerCase(),
-                                        ),
-                                  )
-                                  .toList();
-                        }
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child:
-                        searchResults.isEmpty &&
-                                searchController.text.isNotEmpty
-                            ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.search_off,
-                                    size: 64,
-                                    color: Color(0xFF9CA3AF),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Tidak ada hasil ditemukan',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF6B7280),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                            : searchResults.isEmpty
-                            ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.search,
-                                    size: 64,
-                                    color: Color(0xFF9CA3AF),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Mulai mengetik untuk mencari',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF6B7280),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                            : ListView.builder(
-                              itemCount: searchResults.length,
-                              itemBuilder: (context, index) {
-                                return buildSearchResultCard(
-                                  searchResults[index],
-                                );
-                              },
-                            ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget buildSearchResultCard(HistoryItem item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: item.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(item.icon, color: item.color, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.type,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1F2937),
-                  ),
-                ),
-                Text(
-                  item.description,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF6B7280),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  'Kategori: ${item.kategori}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF6B7280),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            '${item.points > 0 ? '+' : '-'}${item.points.abs()}',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: item.color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // ─── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    List<HistoryItem> filteredHistory = getFilteredHistory();
-    List<HistoryItem> newItems =
-        filteredHistory.where((item) => item.isNew).toList();
-    List<HistoryItem> oldItems =
-        filteredHistory.where((item) => !item.isNew).toList();
-
-    if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (errorMessage != null) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                errorMessage!,
-                style: GoogleFonts.poppins(color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: fetchAspekPenilaian,
-                child: Text('Coba Lagi', style: GoogleFonts.poppins()),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-      ),
+      value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            double maxWidth =
-                constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
-            return Center(
-              child: SizedBox(
-                width: maxWidth,
-                child: FadeTransition(
-                  opacity: fadeAnimation,
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(24).add(
-                          EdgeInsets.only(
-                            top: MediaQuery.of(context).padding.top,
-                          ),
-                        ),
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Color(0xFF61B8FF), Color(0xFF0083EE)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0x200083EE),
-                              blurRadius: 20,
-                              offset: Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                const SizedBox(width: 40, height: 40),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Riwayat Lengkap',
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${widget.student['name']}',
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.9,
-                                          ),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    '${filteredHistory.length} Item',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: showSearchBottomSheet,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 12,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.search,
-                                            color: Colors.white,
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Cari',
-                                            style: GoogleFonts.poppins(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: showFilterBottomSheet,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 12,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.filter_list,
-                                            color: Colors.white,
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Filter',
-                                            style: GoogleFonts.poppins(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (selectedFilter != 'Semua' ||
-                          selectedTimeFilter != 'Semua' ||
-                          showOnlyNew)
-                        Container(
-                          margin: const EdgeInsets.all(20),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0083EE).withValues(
-                              alpha: 0.1,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFF0083EE).withValues(
-                                alpha: 0.2,
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.filter_alt,
-                                color: Color(0xFF0083EE),
-                                size: 16,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Filter aktif: $selectedFilter${selectedTimeFilter != 'Semua' ? ', $selectedTimeFilter' : ''}${showOnlyNew ? ', Data Terbaru' : ''}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF0083EE),
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    selectedFilter = 'Semua';
-                                    selectedTimeFilter = 'Semua';
-                                    showOnlyNew = false;
-                                  });
-                                },
-                                child: const Icon(
-                                  Icons.close,
-                                  color: Color(0xFF0083EE),
-                                  size: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      Expanded(
-                        child: RefreshIndicator(
-                          onRefresh: refreshData,
-                          child:
-                              filteredHistory.isEmpty
-                                  ? ListView(
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
-                                    children: [
-                                      const SizedBox(height: 24),
-                                      Center(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Container(
-                                              width: 80,
-                                              height: 80,
-                                              decoration: BoxDecoration(
-                                                gradient:
-                                                    const LinearGradient(
-                                                      colors: [
-                                                        Color(0xFF61B8FF),
-                                                        Color(0xFF0083EE),
-                                                      ],
-                                                    ),
-                                                borderRadius:
-                                                    BorderRadius.circular(40),
-                                                boxShadow: const [
-                                                  BoxShadow(
-                                                    color: Color(0x200083EE),
-                                                    blurRadius: 20,
-                                                    offset: Offset(0, 10),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: const Icon(
-                                                Icons.search_off,
-                                                color: Colors.white,
-                                                size: 40,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            Text(
-                                              'Tidak ada data yang sesuai dengan filter',
-                                              textAlign: TextAlign.center,
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                color: const Color(0xFF6B7280),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              'Coba ubah pengaturan filter',
-                                              textAlign: TextAlign.center,
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w500,
-                                                color: const Color(0xFF9CA3AF),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                  : SingleChildScrollView(
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
-                                    padding: const EdgeInsets.all(20),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (newItems.isNotEmpty) ...[
-                                          Container(
-                                            margin: const EdgeInsets.only(
-                                              bottom: 16,
-                                            ),
-                                            padding: const EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
-                                                colors: [
-                                                  Color(0xFF0EA5E9),
-                                                  Color(0xFF0284C7),
-                                                ],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              boxShadow: const [
-                                                BoxShadow(
-                                                  color: Color(0x200EA5E9),
-                                                  blurRadius: 15,
-                                                  offset: Offset(0, 5),
-                                                ),
-                                              ],
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.all(8),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white
-                                                        .withValues(
-                                                          alpha: 0.2,
-                                                        ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          10,
-                                                        ),
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.fiber_new_rounded,
-                                                    color: Colors.white,
-                                                    size: 20,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 12),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        'Data Terbaru',
-                                                        style: GoogleFonts
-                                                            .poppins(
-                                                              fontSize: 16,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                              color:
-                                                                  Colors.white,
-                                                            ),
-                                                      ),
-                                                      Text(
-                                                        '${newItems.length} item baru tersedia',
-                                                        style: GoogleFonts
-                                                            .poppins(
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                              color: Colors
-                                                                  .white
-                                                                  .withValues(
-                                                                    alpha: 0.8,
-                                                                  ),
-                                                            ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 6,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white
-                                                        .withValues(
-                                                          alpha: 0.2,
-                                                        ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          12,
-                                                        ),
-                                                  ),
-                                                  child: Text(
-                                                    '${newItems.length}',
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          buildHistoryTable(newItems),
-                                        ],
-                                        if (oldItems.isNotEmpty) ...[
-                                          if (newItems.isNotEmpty)
-                                            const SizedBox(height: 24),
-                                          Container(
-                                            margin: const EdgeInsets.only(
-                                              bottom: 16,
-                                            ),
-                                            padding: const EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
-                                                colors: [
-                                                  Color(0xFF64748B),
-                                                  Color(0xFF475569),
-                                                ],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              boxShadow: const [
-                                                BoxShadow(
-                                                  color: Color(0x2064748B),
-                                                  blurRadius: 15,
-                                                  offset: Offset(0, 5),
-                                                ),
-                                              ],
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.all(8),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white
-                                                        .withValues(
-                                                          alpha: 0.2,
-                                                        ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          10,
-                                                        ),
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.history_rounded,
-                                                    color: Colors.white,
-                                                    size: 20,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 12),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        'Data Sebelumnya',
-                                                        style: GoogleFonts
-                                                            .poppins(
-                                                              fontSize: 16,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                              color:
-                                                                  Colors.white,
-                                                            ),
-                                                      ),
-                                                      Text(
-                                                        'Riwayat data yang sudah tersimpan',
-                                                        style: GoogleFonts
-                                                            .poppins(
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                              color: Colors
-                                                                  .white
-                                                                  .withValues(
-                                                                    alpha: 0.8,
-                                                                  ),
-                                                            ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 6,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white
-                                                        .withValues(
-                                                          alpha: 0.2,
-                                                        ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          12,
-                                                        ),
-                                                  ),
-                                                  child: Text(
-                                                    '${oldItems.length}',
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          buildHistoryTable(oldItems),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
+        backgroundColor: _kSurface,
+        body: isLoading
+            ? _buildLoading()
+            : errorMessage != null
+                ? _buildError()
+                : FadeTransition(opacity: _fadeAnim, child: _buildContent()),
       ),
     );
   }
 
-  Widget buildHistoryTable(List<HistoryItem> items) {
-    final borderColor = const Color(0xFFE5E7EB);
-    if (items.isEmpty) {
-      return buildEmptyHistoryTable();
-    }
+  Widget _buildLoading() => const Center(
+    child: CircularProgressIndicator(color: _kBlue, strokeWidth: 2),
+  );
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
+  Widget _buildError() => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.wifi_off_rounded, size: 48, color: _kText3),
+        const SizedBox(height: 16),
+        Text(errorMessage!,
+            style: GoogleFonts.poppins(fontSize: 14, color: _kText2),
+            textAlign: TextAlign.center),
+        const SizedBox(height: 20),
+        TextButton(
+          onPressed: _fetchAspekPenilaian,
+          child: Text('Coba lagi', style: GoogleFonts.poppins(
+              fontSize: 14, fontWeight: FontWeight.w600, color: _kBlue)),
+        ),
+      ]),
+    ),
+  );
+
+  Widget _buildContent() {
+    final filtered = _filtered;
+    final newItems = filtered.where((i) => i.isNew).toList();
+    final oldItems = filtered.where((i) => !i.isNew).toList();
+
+    return RefreshIndicator(
+      color: _kBlue,
+      onRefresh: refreshData,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          // ── Header ──────────────────────────────────────────────────────
+          SliverToBoxAdapter(child: _buildHeader(filtered.length)),
+
+          // ── Filters ─────────────────────────────────────────────────────
+          SliverToBoxAdapter(child: _buildFilterChips()),
+
+          // ── Active filter banner ─────────────────────────────────────────
+          if (_typeFilter != 'Semua' || _timeFilter != 'Semua' || _onlyNew)
+            SliverToBoxAdapter(child: _buildActiveBanner()),
+
+          // ── Empty state ──────────────────────────────────────────────────
+          if (filtered.isEmpty)
+            SliverFillRemaining(child: _buildEmpty()),
+
+          // ── New items ────────────────────────────────────────────────────
+          if (newItems.isNotEmpty) ...[
+            SliverToBoxAdapter(child: _sectionLabel('Terbaru — 7 hari ini', newItems.length)),
+            SliverList(delegate: SliverChildBuilderDelegate(
+              (_, i) => _buildCard(newItems[i]),
+              childCount: newItems.length,
+            )),
+          ],
+
+          // ── Old items ────────────────────────────────────────────────────
+          if (oldItems.isNotEmpty) ...[
+            SliverToBoxAdapter(child: _sectionLabel('Sebelumnya', oldItems.length)),
+            SliverList(delegate: SliverChildBuilderDelegate(
+              (_, i) => _buildCard(oldItems[i]),
+              childCount: oldItems.length,
+            )),
+          ],
+
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
-      child: Column(
-        children: [
+    );
+  }
+
+  // ─── Header ────────────────────────────────────────────────────────────────
+
+  Widget _buildHeader(int count) {
+    final name = widget.student['name']?.toString() ?? '';
+    final initials = name.trim().split(' ')
+        .take(2).map((w) => w.isNotEmpty ? w[0].toUpperCase() : '').join();
+    final net = _totalPoints;
+
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.fromLTRB(
+          20, MediaQuery.of(context).padding.top + 20, 20, 16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Title row
+        Row(children: [
+          // Avatar
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            width: 40, height: 40,
+            decoration: const BoxDecoration(color: _kBlueBg, shape: BoxShape.circle),
+            alignment: Alignment.center,
+            child: Text(initials,
+                style: GoogleFonts.poppins(
+                    fontSize: 14, fontWeight: FontWeight.w600, color: _kBlueDark)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(name,
+                style: GoogleFonts.poppins(
+                    fontSize: 15, fontWeight: FontWeight.w600, color: _kText1),
+                overflow: TextOverflow.ellipsis),
+            Text('Riwayat poin lengkap',
+                style: GoogleFonts.poppins(fontSize: 12, color: _kText2)),
+          ])),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF0083EE).withValues(alpha: 0.08),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
-              border: Border(bottom: BorderSide(color: borderColor)),
+              color: _kGrayBg, borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: _kBorder, width: 0.5),
             ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 92,
-                  child: Text(
-                    'Tanggal',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1F2937),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 82,
-                  child: Text(
-                    'Kategori',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1F2937),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Keterangan',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1F2937),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 56,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      'Poin',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1F2937),
+            child: Text('$count catatan',
+                style: GoogleFonts.poppins(
+                    fontSize: 12, fontWeight: FontWeight.w500, color: _kGray)),
+          ),
+        ]),
+
+        const SizedBox(height: 16),
+
+        // Stats row
+        Row(children: [
+          _statCard('Total poin', net >= 0 ? '+$net' : '$net',
+              net >= 0 ? _kBlue : _kRed, net >= 0 ? _kBlueBg : Color(0xFFFCEBEB)),
+          const SizedBox(width: 10),
+          _statCard('Apresiasi', '+$_totalApr', _kGreen, Color(0xFFEAF3DE)),
+          const SizedBox(width: 10),
+          _statCard('Pelanggaran', '−$_totalPel', _kRed, Color(0xFFFCEBEB)),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _statCard(String label, String val, Color valColor, Color bg) =>
+      Expanded(child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: GoogleFonts.poppins(fontSize: 11, color: _kText2)),
+          const SizedBox(height: 4),
+          Text(val, style: GoogleFonts.poppins(
+              fontSize: 18, fontWeight: FontWeight.w600, color: valColor)),
+        ]),
+      ));
+
+  // ─── Filter chips ──────────────────────────────────────────────────────────
+
+  Widget _buildFilterChips() {
+    return Container(
+      color: Colors.white,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Divider(height: 1, thickness: 0.5, color: _kBorder),
+        // Type row
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Row(children: [
+            for (final f in ['Semua', 'Apresiasi', 'Pelanggaran'])
+              _chip(f, _typeFilter == f, () => setState(() => _typeFilter = f)),
+          ]),
+        ),
+        // Time row
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          child: Row(children: [
+            for (final f in ['Semua', 'Minggu ini', 'Bulan ini', 'Semester', 'Tahun ini', 'Rentang'])
+              _chip(f, _timeFilter == f, () async {
+                if (f == 'Rentang') {
+                  final now = DateTime.now();
+                  final picked = await showDateRangePicker(
+                    context: context,
+                    firstDate: DateTime(now.year - 5),
+                    lastDate: DateTime(now.year + 1, 12, 31),
+                    initialDateRange: _customRange ??
+                        DateTimeRange(start: DateTime(now.year, now.month), end: now),
+                    builder: (ctx, child) => Theme(
+                      data: Theme.of(ctx).copyWith(
+                        colorScheme: const ColorScheme.light(primary: _kBlue),
                       ),
+                      child: child!,
                     ),
-                  ),
+                  );
+                  if (picked != null) setState(() { _customRange = picked; _timeFilter = 'Rentang'; });
+                } else {
+                  setState(() => _timeFilter = f);
+                }
+              }),
+            // Only new toggle
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: () => setState(() => _onlyNew = !_onlyNew),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _onlyNew ? const Color(0xFFEAF3DE) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: _onlyNew ? _kGreen : _kBorder, width: 0.5),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.fiber_new_rounded,
+                      size: 14, color: _onlyNew ? _kGreen : _kText3),
+                  const SizedBox(width: 4),
+                  Text('Baru saja',
+                      style: GoogleFonts.poppins(
+                          fontSize: 12, fontWeight: FontWeight.w500,
+                          color: _onlyNew ? _kGreenDark : _kText2)),
+                ]),
+              ),
+            ),
+          ]),
+        ),
+        const Divider(height: 1, thickness: 0.5, color: _kBorder),
+      ]),
+    );
+  }
+
+  Widget _chip(String label, bool active, VoidCallback onTap) => Padding(
+    padding: const EdgeInsets.only(right: 6),
+    child: GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: active ? _kText1 : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: active ? _kText1 : _kBorder, width: 0.5),
+        ),
+        child: Text(label,
+            style: GoogleFonts.poppins(
+                fontSize: 12, fontWeight: FontWeight.w500,
+                color: active ? Colors.white : _kText2)),
+      ),
+    ),
+  );
+
+  // ─── Active filter banner ──────────────────────────────────────────────────
+
+  Widget _buildActiveBanner() => Container(
+    margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      color: _kBlueBg,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: _kBlue.withOpacity(0.3), width: 0.5),
+    ),
+    child: Row(children: [
+      const Icon(Icons.filter_alt_outlined, size: 14, color: _kBlue),
+      const SizedBox(width: 8),
+      Expanded(child: Text(
+        [
+          if (_typeFilter != 'Semua') _typeFilter,
+          if (_timeFilter != 'Semua')
+            _timeFilter == 'Rentang' && _customRange != null
+                ? '${_fmt(_customRange!.start)} – ${_fmt(_customRange!.end)}'
+                : _timeFilter,
+          if (_onlyNew) 'Baru saja',
+        ].join(' · '),
+        style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500, color: _kBlueDark),
+      )),
+      GestureDetector(
+        onTap: () => setState(() {
+          _typeFilter = 'Semua'; _timeFilter = 'Semua'; _onlyNew = false;
+        }),
+        child: const Icon(Icons.close, size: 14, color: _kBlue),
+      ),
+    ]),
+  );
+
+  // ─── Section label ─────────────────────────────────────────────────────────
+
+  Widget _sectionLabel(String title, int count) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+    child: Row(children: [
+      Text(title.toUpperCase(),
+          style: GoogleFonts.poppins(
+              fontSize: 11, fontWeight: FontWeight.w600,
+              color: _kText3, letterSpacing: 0.4)),
+      const SizedBox(width: 8),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+        decoration: BoxDecoration(
+          color: _kGrayBg, borderRadius: BorderRadius.circular(20)),
+        child: Text('$count',
+            style: GoogleFonts.poppins(
+                fontSize: 11, fontWeight: FontWeight.w600, color: _kGray)),
+      ),
+    ]),
+  );
+
+  // ─── History card ──────────────────────────────────────────────────────────
+
+  Widget _buildCard(HistoryItem item) {
+    final isApr  = !item.isPelanggaran;
+    final ptColor  = isApr ? _kGreen  : _kRed;
+    final ptBg     = isApr ? const Color(0xFFEAF3DE) : const Color(0xFFFCEBEB);
+    final ptDark   = isApr ? _kGreenDark : _kRedDark;
+    final ptBadge  = isApr ? _kGreenBg   : _kRedBg;
+    final iconBg   = isApr ? const Color(0xFFEAF3DE) : const Color(0xFFFCEBEB);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _kBorder, width: 0.5),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Icon
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
+            child: Icon(item.icon, size: 18, color: ptColor),
+          ),
+          const SizedBox(width: 12),
+
+          // Body
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Badges row
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: ptBadge, borderRadius: BorderRadius.circular(20)),
+                child: Text(item.kategori,
+                    style: GoogleFonts.poppins(
+                        fontSize: 10, fontWeight: FontWeight.w600, color: ptDark)),
+              ),
+              if (item.isNew) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _kBlueBg, borderRadius: BorderRadius.circular(20)),
+                  child: Text('Baru',
+                      style: GoogleFonts.poppins(
+                          fontSize: 10, fontWeight: FontWeight.w600, color: _kBlueDark)),
                 ),
               ],
+            ]),
+            const SizedBox(height: 5),
+
+            // Description
+            Text(item.description,
+                style: GoogleFonts.poppins(
+                    fontSize: 13, fontWeight: FontWeight.w600, color: _kText1),
+                maxLines: 2, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 4),
+
+            // Meta
+            Text(
+              isApr
+                  ? 'Oleh: ${item.pemberi ?? "—"}'
+                  : 'Pelapor: ${item.pelapor ?? "—"}',
+              style: GoogleFonts.poppins(fontSize: 11, color: _kText2),
             ),
-          ),
-          ...items.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            final isLast = index == items.length - 1;
-            final isStriped = index.isOdd;
-            return Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            if (item.isPelanggaran && item.pelanggaranKe != null) ...[
+              const SizedBox(height: 2),
+              Text('Pelanggaran ke: ${item.pelanggaranKe}',
+                  style: GoogleFonts.poppins(fontSize: 11, color: _kText2)),
+            ],
+          ])),
+
+          const SizedBox(width: 12),
+
+          // Right column
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color:
-                    isStriped ? const Color(0xFFF9FAFB) : Colors.white,
-                border:
-                    isLast
-                        ? null
-                        : Border(
-                          bottom: BorderSide(color: borderColor),
-                        ),
+                color: ptBg, borderRadius: BorderRadius.circular(8)),
+              child: Text(
+                isApr ? '+${item.points}' : '−${item.points}',
+                style: GoogleFonts.poppins(
+                    fontSize: 13, fontWeight: FontWeight.w700, color: ptColor),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 92,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.date,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1F2937),
-                          ),
-                        ),
-                        Text(
-                          item.time,
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF9CA3AF),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    width: 82,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.kategori,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF1F2937),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: item.color.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: item.color.withValues(alpha: 0.35),
-                            ),
-                          ),
-                          child: Text(
-                            item.isPelanggaran ? 'Pelanggaran' : 'Apresiasi',
-                            style: GoogleFonts.poppins(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                              color: item.color,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.description,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1F2937),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item.isPelanggaran
-                              ? 'Pelapor: ${item.pelapor ?? 'Tidak diketahui'}'
-                              : 'Oleh: ${item.pemberi ?? 'Tidak diketahui'}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF6B7280),
-                          ),
-                        ),
-                        if (item.isPelanggaran &&
-                            item.pelanggaranKe != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            'Pelanggaran ke: ${item.pelanggaranKe}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF6B7280),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    width: 56,
-                    child: Align(
-                      alignment: Alignment.topRight,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: item.color.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: item.color.withValues(alpha: 0.35),
-                          ),
-                        ),
-                        child: Text(
-                          '${item.points > 0 ? '+' : '-'}${item.points.abs()}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: item.color,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
+            ),
+            const SizedBox(height: 8),
+            Text(item.date,
+                style: GoogleFonts.poppins(fontSize: 11, color: _kText3)),
+            const SizedBox(height: 2),
+            Text(item.time,
+                style: GoogleFonts.poppins(fontSize: 11, color: _kText3)),
+          ]),
+        ]),
       ),
     );
   }
 
-  Widget buildEmptyHistoryTable() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+  // ─── Empty state ───────────────────────────────────────────────────────────
+
+  Widget _buildEmpty() => Center(
+    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Container(
+        width: 64, height: 64,
+        decoration: const BoxDecoration(color: _kGrayBg, shape: BoxShape.circle),
+        child: const Icon(Icons.inbox_rounded, size: 30, color: _kText3),
       ),
-      child: Center(
-        child: Text(
-          'Tidak ada data riwayat.',
+      const SizedBox(height: 16),
+      Text('Tidak ada data',
           style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF6B7280),
-          ),
+              fontSize: 15, fontWeight: FontWeight.w600, color: _kText2)),
+      const SizedBox(height: 6),
+      Text('Coba ubah atau hapus filter aktif',
+          style: GoogleFonts.poppins(fontSize: 13, color: _kText3)),
+      const SizedBox(height: 20),
+      if (_typeFilter != 'Semua' || _timeFilter != 'Semua' || _onlyNew)
+        TextButton(
+          onPressed: () => setState(() {
+            _typeFilter = 'Semua'; _timeFilter = 'Semua'; _onlyNew = false;
+          }),
+          child: Text('Hapus semua filter',
+              style: GoogleFonts.poppins(
+                  fontSize: 13, fontWeight: FontWeight.w600, color: _kBlue)),
         ),
-      ),
-    );
-  }
+    ]),
+  );
+
+  // ─── Helpers ───────────────────────────────────────────────────────────────
+
+  String _fmt(DateTime dt) =>
+      '${dt.day.toString().padLeft(2,'0')}/${dt.month.toString().padLeft(2,'0')}/${dt.year}';
 }
 
-class _TimeRange {
+// ─── Internal types ───────────────────────────────────────────────────────────
+
+class _DateRange {
   final DateTime start;
   final DateTime end;
-
-  const _TimeRange(this.start, this.end);
+  const _DateRange(this.start, this.end);
 }
