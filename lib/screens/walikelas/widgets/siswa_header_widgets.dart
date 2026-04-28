@@ -246,32 +246,30 @@ class SiswaHeaderWidgets {
   }
 
   static Widget buildTopBar({
-    required VoidCallback onNotificationTap,
+    required VoidCallback onBackTap,
     required VoidCallback onProfileTap,
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const SizedBox(width: 40, height: 40),
+        GestureDetector(
+          onTap: onBackTap,
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.arrow_back_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
+        ),
         Row(
           children: [
-            GestureDetector(
-              onTap: onNotificationTap,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.notifications_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
             GestureDetector(
               onTap: onProfileTap,
               child: Container(

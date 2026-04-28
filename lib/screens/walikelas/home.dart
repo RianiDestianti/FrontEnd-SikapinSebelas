@@ -10,7 +10,6 @@ import 'package:skoring/screens/walikelas/utils/chart_utils.dart';
 import 'package:skoring/screens/walikelas/widgets/chart_widgets.dart';
 import 'package:skoring/screens/walikelas/widgets/header_widgets.dart';
 import 'package:skoring/screens/walikelas/widgets/section_widgets.dart';
-import 'package:skoring/screens/walikelas/notification.dart';
 import 'package:skoring/screens/walikelas/profile.dart';
 import 'package:skoring/screens/walikelas/chart.dart';
 import 'package:skoring/screens/walikelas/activity.dart';
@@ -514,17 +513,6 @@ class HomeScreenContentState extends State<HomeScreenContent>
 
                 Row(
                   children: [
-                    HeaderWidgets.buildCompactIconButton(
-                      Icons.notifications_rounded,
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NotifikasiScreen(),
-                        ),
-                      ),
-                      isSmallScreen,
-                    ),
-                    SizedBox(width: isSmallScreen ? 6 : 8),
                     HeaderWidgets.buildCompactProfileButton(
                       () => Navigator.push(
                         context,

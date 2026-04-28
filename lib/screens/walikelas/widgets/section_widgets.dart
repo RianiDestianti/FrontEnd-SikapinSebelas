@@ -405,7 +405,7 @@ class SectionWidgets {
                         ),
                       ),
                       Text(
-                        'Update terbaru',
+                        'Skoring & Penanganan',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.poppins(
@@ -433,7 +433,7 @@ class SectionWidgets {
             SizedBox(height: isSmall ? 14 : 16),
             if (activityData.isEmpty)
               Text(
-                'Belum ada aktivitas skoring.',
+                'Belum ada aktivitas.',
                 style: GoogleFonts.poppins(
                   fontSize: isSmall ? 11 : 12,
                   color: const Color(0xFF9CA3AF),

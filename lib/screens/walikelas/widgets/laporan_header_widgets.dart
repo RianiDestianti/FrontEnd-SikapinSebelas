@@ -10,19 +10,6 @@ class LaporanHeaderWidgets {
       children: [
         GestureDetector(
           onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const NotifikasiScreen())),
-          child: Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.notifications_rounded, color: Colors.white, size: 22),
-          ),
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () => Navigator.push(context,
               MaterialPageRoute(builder: (_) => const ProfileScreen())),
           child: Container(
             width: 40, height: 40,

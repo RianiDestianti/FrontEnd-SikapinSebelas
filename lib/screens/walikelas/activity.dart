@@ -27,7 +27,7 @@ class ActivityScreenState extends State<ActivityScreen>
   String teacherClassId = '';
   String walikelasId = '';
   String? errorMessage;
-  final List<String> filterOptions = ['Semua', 'Apresiasi', 'Pelanggaran'];
+  final List<String> filterOptions = ['Semua', 'Apresiasi', 'Pelanggaran', 'Penanganan'];
 
   @override
   void initState() {
@@ -137,7 +137,91 @@ class ActivityScreenState extends State<ActivityScreen>
     }
 
     activities.sort((a, b) => b.fullDate.compareTo(a.fullDate));
+
+    await _loadPenanganan(activities, teacherClassId, walikelasId);
+
+    activities.sort((a, b) => b.fullDate.compareTo(a.fullDate));
     return activities;
+  }
+
+  Future<void> _loadPenanganan(
+    List<Activity> activities,
+    String teacherClassId,
+    String walikelasId,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('sanctum_token') ?? '';
+      final url = Uri.parse(
+        '${ApiConfig.baseUrl}/penanganan/list?nip=$walikelasId&id_kelas=$teacherClassId',
+      );
+
+      final response = await http.get(
+        url,
+        headers: {
+          'Accept': 'application/json',
+          if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          final List<dynamic> list = data['data'];
+          for (final item in list) {
+            activities.add(Activity(
+              id: item['id'] ?? 0,
+              type: 'penanganan',
+              icon: Icons.assignment_rounded,
+              gradient: [const Color(0xFFF59E0B), const Color(0xFFD97706)],
+              title: item['nama_intervensi'] ?? 'Penanganan',
+              subtitle: item['isi_intervensi'] ?? '',
+              time: _formatTime(item['created_at']?.toString() ?? ''),
+              date: _formatDate(item['created_at']?.toString() ?? ''),
+              fullDate: DateTime.tryParse(item['created_at']?.toString() ?? '') ?? DateTime.now(),
+              status: item['status'] ?? '',
+              statusColor: _getPenangananStatusColor(item['status'] ?? ''),
+              details: item['perubahan_setelah_intervensi']?.toString() ?? '',
+            ));
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[_loadPenanganan] error: $e');
+    }
+  }
+
+  Color _getPenangananStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'selesai':
+        return const Color(0xFF10B981);
+      case 'dalam proses':
+        return const Color(0xFFF59E0B);
+      case 'belum ditindaklanjuti':
+        return const Color(0xFFEF4444);
+      default:
+        return const Color(0xFF6B7280);
+    }
+  }
+
+  String _formatTime(String isoString) {
+    if (isoString.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(isoString);
+      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  String _formatDate(String isoString) {
+    if (isoString.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(isoString);
+      return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return '';
+    }
   }
 
   void filterActivities() {
@@ -356,7 +440,7 @@ class ActivityScreenState extends State<ActivityScreen>
                         ),
                       ),
                       Text(
-                        'Aktivitas skoring terbaru di kelas Anda',
+                        'Aktivitas skoring & penanganan terbaru',
                         style: GoogleFonts.poppins(
                           color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 14,
@@ -575,7 +659,7 @@ class ActivityScreenState extends State<ActivityScreen>
         message != null
             ? 'Tidak dapat memuat aktivitas'
             : 'Belum ada aktivitas tercatat';
-    final description = message ?? 'Aktivitas skoring akan muncul di sini';
+    final description = message ?? 'Aktivitas skoring & penanganan akan muncul di sini';
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

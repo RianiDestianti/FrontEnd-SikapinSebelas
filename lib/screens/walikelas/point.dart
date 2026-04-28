@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/screens/walikelas/services/point_services.dart';
 import 'package:skoring/screens/walikelas/utils/point_utils.dart';
 import 'package:skoring/screens/walikelas/widgets/point_widgets.dart';
 
 // ─── Show Helper ─────────────────────────────────────────────────────────────
 
-void showPointPopup(BuildContext context, String studentName, String nis, String className) {
-  showModalBottomSheet(
+Future<bool?> showPointPopup(BuildContext context, String studentName, String nis, String className) {
+  return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     isDismissible: false,
@@ -24,11 +25,11 @@ class PointSheet extends StatefulWidget {
   final String className;
 
   const PointSheet({
-    Key? key,
-    required this.studentName,
-    required this.nis,
-    required this.className,
-  }) : super(key: key);
+  super.key,  // was: Key? key,
+  required this.studentName,
+  required this.nis,
+  required this.className,
+});
 
   @override
   State<PointSheet> createState() => _PointSheetState();
@@ -85,9 +86,9 @@ class _PointSheetState extends State<PointSheet> with SingleTickerProviderStateM
     }
   }
 
-  void _close() {
+  void _close({bool success = false}) {
     _animCtrl.reverse().then((_) {
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop(success);
     });
   }
 
@@ -107,9 +108,11 @@ class _PointSheetState extends State<PointSheet> with SingleTickerProviderStateM
     setState(() {
       _categorySearch = value;
       final filtered = _filteredAspek;
-      if (filtered.isNotEmpty &&
-          !filtered.any((a) => a['id_aspekpenilaian'].toString() == _selectedCategory)) {
-        _selectedCategory = filtered.first['id_aspekpenilaian'].toString();
+      // Auto-select first result when searching (improves UX)
+      if (filtered.isNotEmpty && _categorySearch.isNotEmpty) {
+        if (!filtered.any((a) => a['id_aspekpenilaian'].toString() == _selectedCategory)) {
+          _selectedCategory = filtered.first['id_aspekpenilaian'].toString();
+        }
       }
     });
   }
@@ -168,7 +171,7 @@ class _PointSheetState extends State<PointSheet> with SingleTickerProviderStateM
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);
-    if (point != null) _close();
+    if (point != null) _close(success: true);
   }
 
   @override
@@ -277,14 +280,106 @@ class _PointSheetState extends State<PointSheet> with SingleTickerProviderStateM
                     ),
                     const SizedBox(height: 8),
 
-                    // Category dropdown
-                    CategoryDropdownWidget(
-                      selectedCategory: _selectedCategory,
-                      aspekPenilaian: _filteredAspek,
-                      onChanged: (v) => setState(() => _selectedCategory = v),
-                      isLoading: _isLoadingCategories,
-                      errorMessage: _errorMessageCategories,
-                    ),
+                    // Category search & results
+                    if (_categorySearch.isNotEmpty && _filteredAspek.isNotEmpty)
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 180),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF3B82F6), width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          itemCount: _filteredAspek.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final aspek = _filteredAspek[index];
+                            final isSelected = aspek['id_aspekpenilaian'].toString() == _selectedCategory;
+                            return InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _selectedCategory = aspek['id_aspekpenilaian'].toString();
+                                  _categorySearch = '';
+                                  _categorySearchController.clear();
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                color: isSelected ? const Color(0xFF3B82F6).withOpacity(0.1) : null,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            aspek['kategori'] ?? '',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xFF1F2937),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            aspek['uraian'] ?? '',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              color: const Color(0xFF6B7280),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                       color: ((aspek['indikator_poin'] as int?) ?? 0) < 0
+    ? const Color(0xFFEF4444).withValues(alpha: 0.1)   // also fixes deprecated withOpacity
+    : const Color(0xFF10B981).withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '${aspek['indikator_poin']} poin',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                         color: ((aspek['indikator_poin'] as int?) ?? 0) < 0
+    ? const Color(0xFFEF4444)
+    : const Color(0xFF10B981),
+                                        ),
+                                      ),
+                                    ),
+                                    if (isSelected) ...[
+                                      const SizedBox(width: 8),
+                                      const Icon(Icons.check_circle, color: Color(0xFF3B82F6), size: 20),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    else
+                      CategoryDropdownWidget(
+                        selectedCategory: _selectedCategory,
+                        aspekPenilaian: _filteredAspek,
+                        onChanged: (v) => setState(() => _selectedCategory = v),
+                        isLoading: _isLoadingCategories,
+                        errorMessage: _errorMessageCategories,
+                      ),
 
                     const SizedBox(height: 20),
 
@@ -397,9 +492,11 @@ class PointSheetHeader extends StatelessWidget {
   final bool isViolation;
   final VoidCallback onClose;
 
-  const PointSheetHeader({Key? key, required this.isViolation, required this.onClose})
-      : super(key: key);
-
+  const PointSheetHeader({
+  super.key,  // was: Key? key,
+  required this.isViolation,
+  required this.onClose,
+});
   @override
   Widget build(BuildContext context) {
     final gradientColors = isViolation

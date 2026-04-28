@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:skoring/models/api/api_student.dart';
 import 'package:skoring/models/api/api_class.dart';
 import 'package:skoring/screens/walikelas/detail.dart';
-import 'package:skoring/screens/walikelas/notification.dart';
 import 'package:skoring/screens/walikelas/profile.dart';
 import 'package:skoring/screens/walikelas/services/siswa_data_services.dart';
 import 'package:skoring/screens/walikelas/utils/siswa_utils.dart';
@@ -149,33 +148,34 @@ class SiswaScreenState extends State<SiswaScreen>
     }
   }
 
-  void navigateToDetail(Student student) {
-    Navigator.push(
+  void navigateToDetail(Student student) async {
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder:
-            (context) => DetailScreen(
-              student: {
-                'name': student.namaSiswa,
-                'nis': student.nis.toString(),
-                'status': student.status,
-                'points': student.points,
-                'absent': 0,
-                'absen': student.nis,
-                'idKelas': student.idKelas,
-                'programKeahlian':
-                    selectedKelas?.jurusan.namaJurusan.isNotEmpty == true
-                        ? selectedKelas!.jurusan.namaJurusan.toUpperCase()
-                        : 'Tidak Diketahui',
-                'kelas': selectedKelas?.namaKelas ?? 'Tidak Diketahui',
-                'poinApresiasi': student.poinApresiasi ?? 0,
-                'poinPelanggaran': student.poinPelanggaran ?? 0,
-                'spLevel': student.spLevelDisplay,
-                'phLevel': student.phLevelDisplay,
-              },
-            ),
+        builder: (context) => DetailScreen(
+          student: {
+            'name': student.namaSiswa,
+            'nis': student.nis.toString(),
+            'status': student.status,
+            'points': student.points,
+            'absent': 0,
+            'absen': student.nis,
+            'idKelas': student.idKelas,
+            'programKeahlian': selectedKelas?.jurusan.namaJurusan.isNotEmpty == true
+                ? selectedKelas!.jurusan.namaJurusan.toUpperCase()
+                : 'Tidak Diketahui',
+            'kelas': selectedKelas?.namaKelas ?? 'Tidak Diketahui',
+            'poinApresiasi': student.poinApresiasi ?? 0,
+            'poinPelanggaran': student.poinPelanggaran ?? 0,
+            'spLevel': student.spLevelDisplay,
+            'phLevel': student.phLevelDisplay,
+          },
+        ),
       ),
     );
+    if (result == true) {
+      await _loadCredentialsThenFetch();
+    }
   }
 
   @override
@@ -289,13 +289,7 @@ class SiswaScreenState extends State<SiswaScreen>
                 Row(
                   children: [
                     GestureDetector(
-                      onTap:
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const NotifikasiScreen(),
-                            ),
-                          ),
+                      onTap: () => Navigator.pop(context),
                       child: Container(
                         width: 40,
                         height: 40,
@@ -304,7 +298,7 @@ class SiswaScreenState extends State<SiswaScreen>
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
-                          Icons.notifications_rounded,
+                          Icons.arrow_back_rounded,
                           color: Colors.white,
                           size: 22,
                         ),

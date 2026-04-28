@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:skoring/config/api.dart';
+import 'services/penanganan_service.dart';
 
 // ─── Model ────────────────────────────────────────────────────────────────────
 
@@ -14,6 +15,7 @@ class Penanganan {
   final String status;
   final String tanggalMulai;
   final String tanggalSelesai;
+  final String? perubahan;
 
   Penanganan({
     required this.nis,
@@ -22,6 +24,7 @@ class Penanganan {
     required this.status,
     required this.tanggalMulai,
     required this.tanggalSelesai,
+    this.perubahan,
   });
 }
 
@@ -41,6 +44,7 @@ class PenangananUtils {
     required String status,
     required String tanggalMulai,
     required String tanggalSelesai,
+    String? perubahan,
     required BuildContext context,
   }) async {
     try {
@@ -88,6 +92,7 @@ class PenangananUtils {
         "status": status,
         "tanggal_Mulai_Perbaikan": tanggalMulai,
         "tanggal_Selesai_Perbaikan": tanggalSelesai,
+        "perubahan_setelah_intervensi": perubahan,
       }}');
 
       final token = prefs.getString('sanctum_token') ?? '';
@@ -105,6 +110,8 @@ class PenangananUtils {
           'status': status,
           'tanggal_Mulai_Perbaikan': tanggalMulai,
           'tanggal_Selesai_Perbaikan': tanggalSelesai,
+          if (perubahan != null)
+            'perubahan_setelah_intervensi': perubahan,
         }),
       );
 
@@ -195,13 +202,13 @@ class PenangananUtils {
 
 // ─── Show Helper ──────────────────────────────────────────────────────────────
 
-void showAddPenangananPopup(
+Future<bool?> showAddPenangananPopup(
   BuildContext context,
   String studentName,
   String nis,
   String className,
 ) {
-  showModalBottomSheet(
+  return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     isDismissible: false,
@@ -240,8 +247,10 @@ class _AddPenangananSheetState extends State<AddPenangananSheet>
 
   final _namaController = TextEditingController();
   final _isiController = TextEditingController();
+  final _perubahanController = TextEditingController();
   final _namaFocus = FocusNode();
   final _isiFocus = FocusNode();
+  final _perubahanFocus = FocusNode();
 
   bool _isSubmitting = false;
   String? _namaError;
@@ -249,6 +258,7 @@ class _AddPenangananSheetState extends State<AddPenangananSheet>
   String? _statusError;
   String? _tanggalMulaiError;
   String? _tanggalSelesaiError;
+  String? _perubahanError;
 
   String? _selectedStatus;
   DateTime? _tanggalMulai;
@@ -267,14 +277,16 @@ class _AddPenangananSheetState extends State<AddPenangananSheet>
     _animCtrl.dispose();
     _namaController.dispose();
     _isiController.dispose();
+    _perubahanController.dispose();
     _namaFocus.dispose();
     _isiFocus.dispose();
+    _perubahanFocus.dispose();
     super.dispose();
   }
 
-  void _close() {
+  void _close({bool success = false}) {
     _animCtrl.reverse().then((_) {
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop(success);
     });
   }
 
@@ -289,12 +301,15 @@ class _AddPenangananSheetState extends State<AddPenangananSheet>
           : (_tanggalSelesai!.isBefore(_tanggalMulai!)
               ? 'Tanggal selesai harus setelah tanggal mulai'
               : null);
+      _perubahanError = _selectedStatus == 'Selesai' && _perubahanController.text.trim().isEmpty
+          ? 'Perubahan setelah penanganan wajib diisi' : null;
     });
     return _namaError == null &&
         _isiError == null &&
         _statusError == null &&
         _tanggalMulaiError == null &&
-        _tanggalSelesaiError == null;
+        _tanggalSelesaiError == null &&
+        _perubahanError == null;
   }
 
   Future<void> _submit() async {
@@ -310,6 +325,7 @@ class _AddPenangananSheetState extends State<AddPenangananSheet>
         status: _selectedStatus!,
         tanggalMulai: _formatDate(_tanggalMulai!),
         tanggalSelesai: _formatDate(_tanggalSelesai!),
+        perubahan: _selectedStatus == 'Selesai' ? _perubahanController.text.trim() : null,
         context: context,
       );
     } finally {
@@ -318,7 +334,7 @@ class _AddPenangananSheetState extends State<AddPenangananSheet>
     }
 
     if (!mounted) return;
-    if (result != null) _close();
+    if (result != null) _close(success: true);
   }
 
   String _formatDate(DateTime dt) => dt.toString().split(' ')[0];
@@ -504,6 +520,26 @@ class _AddPenangananSheetState extends State<AddPenangananSheet>
                         ),
                       ],
                     ),
+
+                    // Show perubahan field when status is Selesai
+                    if (_selectedStatus == 'Selesai') ...[
+                      const SizedBox(height: 20),
+                      _SectionLabel(
+                        label: 'Perubahan Setelah Penanganan',
+                        icon: Icons.check_circle_outline_rounded,
+                      ),
+                      const SizedBox(height: 8),
+                      _InputField(
+                        controller: _perubahanController,
+                        focusNode: _perubahanFocus,
+                        label: 'Perubahan Setelah Penanganan',
+                        hint: 'Jelaskan perubahan yang terjadi pada siswa setelah penanganan selesai...',
+                        icon: Icons.notes_rounded,
+                        maxLines: 4,
+                        errorText: _perubahanError,
+                        textInputAction: TextInputAction.done,
+                      ),
+                    ],
 
                     const SizedBox(height: 20),
 
@@ -943,6 +979,441 @@ class _DropdownField extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+void showEditPenangananPopup(
+  BuildContext context,
+  String studentName,
+  String nis,
+  String className,
+  Map<String, dynamic> penanganan,
+  VoidCallback onSuccess,
+) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    isDismissible: false,
+    enableDrag: false,
+    backgroundColor: Colors.transparent,
+    builder: (_) => EditPenangananSheet(
+      studentName: studentName,
+      nis: nis,
+      className: className,
+      penanganan: penanganan,
+      onSuccess: onSuccess,
+    ),
+  );
+}
+
+class EditPenangananSheet extends StatefulWidget {
+  final String studentName;
+  final String nis;
+  final String className;
+  final Map<String, dynamic> penanganan;
+  final VoidCallback onSuccess;
+
+  const EditPenangananSheet({
+    Key? key,
+    required this.studentName,
+    required this.nis,
+    required this.className,
+    required this.penanganan,
+    required this.onSuccess,
+  }) : super(key: key);
+
+  @override
+  State<EditPenangananSheet> createState() => _EditPenangananSheetState();
+}
+
+class _EditPenangananSheetState extends State<EditPenangananSheet>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animCtrl;
+  late Animation<double> _fadeAnim;
+
+  final _namaController = TextEditingController();
+  final _isiController = TextEditingController();
+  final _perubahanController = TextEditingController();
+  final _namaFocus = FocusNode();
+  final _isiFocus = FocusNode();
+  final _perubahanFocus = FocusNode();
+
+  bool _isSubmitting = false;
+  String? _namaError;
+  String? _isiError;
+  String? _statusError;
+  String? _tanggalMulaiError;
+  String? _tanggalSelesaiError;
+  String? _perubahanError;
+
+  String? _selectedStatus;
+  DateTime? _tanggalMulai;
+  DateTime? _tanggalSelesai;
+  int? _penangananId;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 260));
+    _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    _animCtrl.forward();
+    _initData();
+  }
+
+  void _initData() {
+    _penangananId = widget.penanganan['id'];
+    _namaController.text = widget.penanganan['nama_intervensi'] ?? '';
+    _isiController.text = widget.penanganan['isi_intervensi'] ?? '';
+    _selectedStatus = widget.penanganan['status'];
+    _perubahanController.text = widget.penanganan['perubahan_setelah_intervensi'] ?? '';
+
+    final mulaiStr = widget.penanganan['tanggal_mulai_perbaikan'] ?? widget.penanganan['tanggal_Mulai_Perbaikan'] ?? '';
+    final selesaiStr = widget.penanganan['tanggal_selesai_perbaikan'] ?? widget.penanganan['tanggal_Selesai_Perbaikan'] ?? '';
+
+    if (mulaiStr.isNotEmpty) {
+      try {
+        _tanggalMulai = DateTime.parse(mulaiStr);
+      } catch (_) {}
+    }
+    if (selesaiStr.isNotEmpty) {
+      try {
+        _tanggalSelesai = DateTime.parse(selesaiStr);
+      } catch (_) {}
+    }
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    _namaController.dispose();
+    _isiController.dispose();
+    _perubahanController.dispose();
+    _namaFocus.dispose();
+    _isiFocus.dispose();
+    _perubahanFocus.dispose();
+    super.dispose();
+  }
+
+  void _close({bool success = false}) {
+    _animCtrl.reverse().then((_) {
+      if (mounted) Navigator.of(context).pop(success);
+    });
+  }
+
+  bool _validate() {
+    setState(() {
+      _namaError = _namaController.text.trim().isEmpty ? 'Nama penanganan wajib diisi' : null;
+      _isiError = _isiController.text.trim().isEmpty ? 'Isi penanganan wajib diisi' : null;
+      _statusError = _selectedStatus == null ? 'Status wajib dipilih' : null;
+      _tanggalMulaiError = _tanggalMulai == null ? 'Tanggal mulai wajib dipilih' : null;
+      _tanggalSelesaiError = _tanggalSelesai == null
+          ? 'Tanggal selesai wajib dipilih'
+          : (_tanggalMulai != null && _tanggalSelesai!.isBefore(_tanggalMulai!)
+              ? 'Tanggal selesai harus setelah tanggal mulai'
+              : null);
+      _perubahanError = _selectedStatus == 'Selesai' && _perubahanController.text.trim().isEmpty
+          ? 'Perubahan setelah penanganan wajib diisi' : null;
+    });
+    return _namaError == null &&
+        _isiError == null &&
+        _statusError == null &&
+        _tanggalMulaiError == null &&
+        _tanggalSelesaiError == null &&
+        _perubahanError == null;
+  }
+
+  Future<void> _submit() async {
+    if (!_validate() || _penangananId == null) return;
+    setState(() => _isSubmitting = true);
+
+    bool result = await PenangananService.updatePenintaan(
+      id: _penangananId!,
+      namaIntervensi: _namaController.text.trim(),
+      isiIntervensi: _isiController.text.trim(),
+      status: _selectedStatus!,
+      tanggalMulai: _formatDate(_tanggalMulai!),
+      tanggalSelesai: _formatDate(_tanggalSelesai!),
+      perubahan: _selectedStatus == 'Selesai' ? _perubahanController.text.trim() : null,
+      context: context,
+    );
+
+    if (mounted) setState(() => _isSubmitting = false);
+    if (!mounted) return;
+
+    if (result) {
+      widget.onSuccess();
+      _close();
+    }
+  }
+
+  String _formatDate(DateTime dt) => dt.toString().split(' ')[0];
+
+  Future<void> _pickDate({required bool isMulai}) async {
+    final now = DateTime.now();
+    final initial = isMulai
+        ? (_tanggalMulai ?? now)
+        : (_tanggalSelesai ?? (_tanggalMulai ?? now));
+    final first = isMulai ? DateTime(2020) : (_tanggalMulai ?? DateTime(2020));
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: first,
+      lastDate: DateTime(2030),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(primary: Color(0xFF3B82F6)),
+        ),
+        child: child!,
+      ),
+    );
+
+    if (picked != null && mounted) {
+      setState(() {
+        if (isMulai) {
+          _tanggalMulai = picked;
+          if (_tanggalSelesai != null && _tanggalSelesai!.isBefore(picked)) {
+            _tanggalSelesai = null;
+          }
+        } else {
+          _tanggalSelesai = picked;
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 4),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE5E7EB),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            _EditSheetHeader(onClose: _close),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(20, 16, 20, bottomInset + 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _SectionLabel(label: 'Informasi Siswa', icon: Icons.person_outline_rounded),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: _ReadOnlyTile(
+                            value: widget.studentName,
+                            label: 'Nama Siswa',
+                            icon: Icons.person_rounded,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: _ReadOnlyTile(
+                            value: widget.className,
+                            label: 'Kelas',
+                            icon: Icons.class_rounded,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _SectionLabel(label: 'Detail Penanganan', icon: Icons.assignment_outlined),
+                    const SizedBox(height: 8),
+                    _InputField(
+                      controller: _namaController,
+                      focusNode: _namaFocus,
+                      label: 'Nama Penanganan',
+                      hint: 'cth: Penindak Lanjutan Kehadiran Siswa',
+                      icon: Icons.title_rounded,
+                      errorText: _namaError,
+                      textInputAction: TextInputAction.next,
+                      onSubmitted: (_) => _isiFocus.requestFocus(),
+                    ),
+                    const SizedBox(height: 12),
+                    _InputField(
+                      controller: _isiController,
+                      focusNode: _isiFocus,
+                      label: 'Isi Penanganan',
+                      hint: 'cth: Memberikan bimbingan khusus kepada siswa yang sering absen...',
+                      icon: Icons.notes_rounded,
+                      maxLines: 4,
+                      errorText: _isiError,
+                      textInputAction: TextInputAction.done,
+                    ),
+                    const SizedBox(height: 12),
+                    _DropdownField(
+                      label: 'Status',
+                      icon: Icons.flag_outlined,
+                      value: _selectedStatus,
+                      items: ['Binaan Khusus', 'Dalam Binaan', 'Selesai'],
+                      errorText: _statusError,
+                      onChanged: (val) => setState(() {
+                        _selectedStatus = val;
+                        _statusError = null;
+                      }),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _pickDate(isMulai: true),
+                            child: _ReadOnlyTile(
+                              value: _tanggalMulai != null ? _formatDate(_tanggalMulai!) : 'Pilih tanggal',
+                              label: 'Tanggal Mulai',
+                              icon: Icons.calendar_today_rounded,
+                              trailingIcon: Icons.edit_calendar_rounded,
+                              errorText: _tanggalMulaiError,
+                              isEmpty: _tanggalMulai == null,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _pickDate(isMulai: false),
+                            child: _ReadOnlyTile(
+                              value: _tanggalSelesai != null ? _formatDate(_tanggalSelesai!) : 'Pilih tanggal',
+                              label: 'Tanggal Selesai',
+                              icon: Icons.event_available_rounded,
+                              trailingIcon: Icons.edit_calendar_rounded,
+                              errorText: _tanggalSelesaiError,
+                              isEmpty: _tanggalSelesai == null,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_selectedStatus == 'Selesai') ...[
+                      const SizedBox(height: 20),
+                      _SectionLabel(label: 'Perubahan Setelah Penanganan', icon: Icons.check_circle_outline_rounded),
+                      const SizedBox(height: 8),
+                      _InputField(
+                        controller: _perubahanController,
+                        focusNode: _perubahanFocus,
+                        label: 'Perubahan Setelah Penanganan',
+                        hint: 'Jelaskan perubahan yang terjadi pada siswa setelah penanganan selesai...',
+                        icon: Icons.notes_rounded,
+                        maxLines: 4,
+                        errorText: _perubahanError,
+                        textInputAction: TextInputAction.done,
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _isSubmitting ? null : _close,
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              side: const BorderSide(color: Color(0xFFE5E7EB)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            child: Text('Batal', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            onPressed: _isSubmitting ? null : _submit,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              backgroundColor: const Color(0xFF3B82F6),
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: const Color(0xFF93C5FD),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            child: _isSubmitting
+                                ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)))
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.save_rounded, size: 16),
+                                      const SizedBox(width: 8),
+                                      Text('Simpan Perubahan', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                                    ],
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EditSheetHeader extends StatelessWidget {
+  final VoidCallback onClose;
+  const _EditSheetHeader({required this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 14, 12, 14),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.edit_note, color: Colors.white, size: 21),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Edit Penanganan', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                Text('Perbarui data intervensi siswa', style: GoogleFonts.poppins(fontSize: 12, color: Colors.white.withOpacity(0.85))),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onClose,
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.close, color: Colors.white, size: 18),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

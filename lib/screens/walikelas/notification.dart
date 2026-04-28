@@ -120,6 +120,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
 
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
@@ -363,6 +364,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen>
           GestureDetector(
             onTap: () => showModalBottomSheet(
               context: context,
+              useSafeArea: true,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
