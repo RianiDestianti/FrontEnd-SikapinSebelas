@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 class ChartColors {
 
-  static const List<Color> apresiasiGradient = [Color(0xFF61B8FF), Color(0xFF0083EE)];
+static const List<Color> apresiasiGradient = [Color(0xFF61B8FF), Color(0xFF0083EE)];
   static const List<Color> apresiasiPie = [
     Color(0xFF61B8FF), Color(0xFF0083EE), Color(0xFF3B82F6),
     Color(0xFF1E40AF), Color(0xFF1E3A8A),
-  ];
+  ]; 
 
 
-  static const List<Color> pelanggaranGradient = [Color(0xFFFF6B6D), Color(0xFFFF8E8F)];
+  static const List<Color> pelanggaranGradient = [Color(0xFF61B8FF), Color(0xFF0083EE)];
   static const List<Color> pelanggaranPie = [
     Color(0xFFFF6B6D), Color(0xFFFF8E8F), Color(0xFFEF4444),
     Color(0xFFDC2626), Color(0xFFB91C1C),
@@ -29,11 +29,11 @@ class ChartColors {
   static const Color statGold      = Color(0xFFFFD700);
 
   static List<Color> gradient(String chartType) =>
-      chartType == 'apresiasi' ? apresiasiGradient : pelanggaranGradient;
+      [Color(0xFF61B8FF), Color(0xFF0083EE)];
 
   static List<Color> pieColors(String chartType) =>
-      chartType == 'apresiasi' ? apresiasiPie : pelanggaranPie;
+      apresiasiPie;
 
   static Color base(String chartType) =>
-      chartType == 'apresiasi' ? const Color(0xFF0083EE) : const Color(0xFFFF6B6D);
+      const Color(0xFF0083EE);
 }

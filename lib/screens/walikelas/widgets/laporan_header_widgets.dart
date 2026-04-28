@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skoring/models/api/api_report.dart';
-import 'package:skoring/screens/walikelas/notification.dart';
 import 'package:skoring/screens/walikelas/profile.dart';
 
 class LaporanHeaderWidgets {
@@ -71,12 +70,6 @@ class LaporanHeaderWidgets {
             style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, height: 1.2),
           ),
           const SizedBox(height: 2),
-          Text(
-            selectedKelas.jurusan.toUpperCase(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.85), fontSize: 11),
-          ),
           const SizedBox(height: 2),
           Text(
             '$studentCount siswa • Ganjil 2025/2026',

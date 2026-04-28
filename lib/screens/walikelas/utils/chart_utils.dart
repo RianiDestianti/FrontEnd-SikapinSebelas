@@ -73,7 +73,8 @@ class ChartUtils {
 
     if (!hasData) return [];
 
-    return List.generate(totalWeeks, (i) {
+    final int weeksToShow = totalWeeks > 4 ? 4 : totalWeeks;
+    return List.generate(weeksToShow, (i) {
       final int week = i + 1;
       return {
         'label': 'Minggu $week',
